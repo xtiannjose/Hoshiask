@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\Departments\UpdateDepartmentRequest;
 use App\Models\Department;
 use App\Models\User;
 use App\Services\SystemLogService;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -30,11 +31,22 @@ class DepartmentManagementController extends Controller
             ->groupBy('department')
             ->pluck('aggregate', 'department');
 
+        $ticketCounts = DB::table('tickets')
+            ->selectRaw('department, COUNT(*) as aggregate')
+            ->whereNotNull('department')
+            ->groupBy('department')
+            ->pluck('aggregate', 'department');
+
         $departments = Department::query()
             ->orderByRaw('LOWER(name)')
             ->get()
-            ->map(function (Department $department) use ($userCounts) {
-                $department->setAttribute('user_count', (int) ($userCounts[$department->name] ?? 0));
+            ->map(function (Department $department) use ($userCounts, $ticketCounts) {
+                $userCount = (int) ($userCounts[$department->name] ?? 0);
+                $ticketCount = (int) ($ticketCounts[$department->name] ?? 0);
+
+                $department->setAttribute('user_count', $userCount);
+                $department->setAttribute('ticket_count', $ticketCount);
+                $department->setAttribute('delete_blocked_reason', $department->deletionBlockedReason($userCount, $ticketCount));
 
                 return $department;
             });
@@ -129,6 +141,38 @@ class DepartmentManagementController extends Controller
 
         return redirect()->route('admin.departments.index')
             ->with('success', 'Department updated successfully.');
+    }
+
+    public function destroy(Request $request, Department $department)
+    {
+        $this->authorize('delete', $department);
+
+        $blockedReason = $department->deletionBlockedReason();
+        if ($blockedReason !== null) {
+            return redirect()->route('admin.departments.index')
+                ->with('error', "{$department->name} was not deleted. {$blockedReason}");
+        }
+
+        DB::transaction(fn () => $department->delete());
+        $department->deleteManagedLogoIfPresent();
+
+        $this->systemLogs->record(
+            'department.deleted',
+            'Deleted a department.',
+            [
+                'category' => 'configuration',
+                'target_type' => Department::class,
+                'target_id' => $department->id,
+                'metadata' => [
+                    'name' => $department->name,
+                    'slug' => $department->slug,
+                ],
+                'request' => $request,
+            ]
+        );
+
+        return redirect()->route('admin.departments.index')
+            ->with('success', 'Department deleted.');
     }
 
     private function storeUploadedLogo(UploadedFile $logo, string $slug): string

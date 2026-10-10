@@ -313,6 +313,9 @@ Route::middleware(['auth', 'active', 'consent.accepted', 'role:ticket_console', 
         Route::put('/departments/{department}', [DepartmentManagementController::class, 'update'])
             ->middleware('throttle:20,1')
             ->name('departments.update');
+        Route::delete('/departments/{department}', [DepartmentManagementController::class, 'destroy'])
+            ->middleware('throttle:20,1')
+            ->name('departments.destroy');
 
         Route::get('/assignment-rules', [TicketAssignmentRuleController::class, 'index'])->name('assignment-rules.index');
         Route::post('/assignment-rules', [TicketAssignmentRuleController::class, 'store'])

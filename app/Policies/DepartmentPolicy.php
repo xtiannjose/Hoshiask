@@ -21,4 +21,9 @@ class DepartmentPolicy
     {
         return $actor->canManageStaffAccounts();
     }
+
+    public function delete(User $actor, Department $department): bool
+    {
+        return $actor->canManageStaffAccounts();
+    }
 }

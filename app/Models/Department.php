@@ -6,6 +6,7 @@ use App\Models\Concerns\GeneratesUniqueSlug;
 use App\Services\SupportBrandingService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -77,6 +78,35 @@ class Department extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Why this department cannot be deleted, or null when it can. Accounts and tickets keep their department as
+     * text and the filters list only the departments that exist, so deleting one that is still used would leave
+     * them with a name that no list offers. Pass the counts when the caller already has them.
+     */
+    public function deletionBlockedReason(?int $userCount = null, ?int $ticketCount = null): ?string
+    {
+        if (strcasecmp($this->name, User::supportDepartment()) === 0) {
+            return "{$this->name} is the support department and cannot be deleted.";
+        }
+
+        $userCount ??= User::query()->where('department', $this->name)->count();
+        $ticketCount ??= DB::table('tickets')->where('department', $this->name)->count();
+
+        $uses = [];
+        if ($userCount > 0) {
+            $uses[] = $userCount.' '.Str::plural('account', $userCount);
+        }
+        if ($ticketCount > 0) {
+            $uses[] = $ticketCount.' '.Str::plural('ticket', $ticketCount);
+        }
+
+        if ($uses === []) {
+            return null;
+        }
+
+        return 'Still used by '.implode(' and ', $uses).'. Only a department that nothing uses can be deleted; rename it instead.';
     }
 
     public function deleteManagedLogoIfPresent(): void

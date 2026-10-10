@@ -39,6 +39,14 @@ These project variables are used by seeders and account workflows:
 - `HELPDESK_PASSWORD_HELP_CONTACT` (optional; an email address, phone number or name shown as "Forgot your password? Contact your administrator at ..." on the sign-in page and in the lockout message. Left empty, the line says only "Contact your administrator")
 - `HELPDESK_CLIENT_EMAIL_RECEIVED`, `HELPDESK_CLIENT_EMAIL_RESOLVED`, `HELPDESK_CLIENT_EMAIL_AUTO_CLOSE_WARNING` (default `true`) and `HELPDESK_CLIENT_EMAIL_CLOSED` (default `false`) switch each client-facing email on or off
 - `HELPDESK_CLIENT_EMAIL_REPLY_BATCH_MINUTES` (defaults to `5`; agent replies posted within this window are merged into one email per ticket, `0` sends each immediately. Needs the scheduler and a queue worker running)
+- `HELPDESK_SLA_SUPER_USER_NEW_TICKET_NOTIFY` (defaults to `true`; email the super users when a new ticket is submitted)
+- `HELPDESK_SLA_SUPER_USER_UNCHECKED_MINUTES` (defaults to `120`; minutes an active ticket may stay unassigned before the super users get an "unchecked ticket" alert)
+- `HELPDESK_SLA_SUPER_USER_UNASSIGNED_SLA_MINUTES` (defaults to `180`; minutes an active ticket may stay unassigned before the super users get an "unassigned SLA warning")
+- `HELPDESK_SUPPORT_DEPARTMENT`, `HELPDESK_SUPPORT_BRAND_NAME`, `HELPDESK_SUPPORT_ORGANIZATION_NAME` and `HELPDESK_SUPPORT_TEAM_NAME` (branding: the support department's name, the product name, and the organisation and team names shown to users; all default to the Hoshishi values in `config/helpdesk.php`)
+- `HELPDESK_SUPPORT_LOGO_PATH` (defaults to `images/Hoshishi Logo.png`; a file under `public/`, the app falls back to the default logo when it does not exist)
+- `HELPDESK_BACKUP_RETENTION_DAYS` (defaults to `14`; the daily runtime clean-up deletes backup files older than this, but always keeps the newest three)
+- `HELPDESK_SEEDED_CLIENT_CREDENTIAL_RETENTION_DAYS` (defaults to `14`) and `HELPDESK_IMPORT_RETENTION_DAYS` (defaults to `7`): days the daily runtime clean-up keeps the seeded-client credential exports and the uploaded import files
+- `HELPDESK_CANNED_REPLIES_ENABLED` (defaults to `true`; `false` hides canned replies without a code change)
 
 Legal/consent behavior is versioned and configurable using:
 

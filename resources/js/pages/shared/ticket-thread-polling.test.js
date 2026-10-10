@@ -143,4 +143,25 @@ describe('createReplyPolling', function () {
         expect(window.setTimeout).toHaveBeenNthCalledWith(2, expect.any(Function), 20000);
         expect(window.setTimeout).toHaveBeenNthCalledWith(3, expect.any(Function), 5000);
     });
+
+    it('backs off, up to the cap, while the feed answers with an error status', async function () {
+        fetch.mockResolvedValue({ ok: false, status: 503 });
+
+        const polling = createReplyPolling({
+            repliesUrl: () => '/tickets/15/replies',
+            getCursor: () => '',
+            setCursor: vi.fn(),
+            syncReplies: vi.fn(),
+            queueSeenSync: vi.fn(),
+            intervalMs: 5000,
+        });
+
+        await polling.poll();
+        await polling.poll();
+        await polling.poll();
+
+        expect(window.setTimeout).toHaveBeenNthCalledWith(1, expect.any(Function), 10000);
+        expect(window.setTimeout).toHaveBeenNthCalledWith(2, expect.any(Function), 20000);
+        expect(window.setTimeout).toHaveBeenNthCalledWith(3, expect.any(Function), 30000);
+    });
 });

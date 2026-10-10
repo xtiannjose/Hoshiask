@@ -26,9 +26,14 @@ const loginAsSeededSuperUser = async (page) => {
     await expect(page).toHaveURL(/\/admin\/dashboard$/);
 };
 
+// The page's own script attaches the row click handler a moment after the page paints (app.js sets this marker when
+// it is done); an earlier click would follow the row's plain link instead of opening the popup.
+const waitForPageScripts = (page) => expect(page.locator('html')).toHaveAttribute('data-page-scripts-ready', 'true');
+
 test('a knowledge base row opens the article in a popup and closes when clicking outside', async ({ page }) => {
     await loginAsSeededSuperUser(page);
     await page.goto('/admin/knowledge-base');
+    await waitForPageScripts(page);
 
     const row = page.locator('.divide-y > div', { hasText: 'E2E popup article' });
     const popup = page.getByRole('dialog');
@@ -78,6 +83,7 @@ test('Edit on a knowledge base row still goes to the edit page instead of openin
 test('the popup is a native modal dialog: page scroll locks and Tab stays inside it', async ({ page }) => {
     await loginAsSeededSuperUser(page);
     await page.goto('/admin/knowledge-base');
+    await waitForPageScripts(page);
 
     const row = page.locator('.divide-y > div', { hasText: 'E2E popup article' });
     const popup = page.locator('dialog#kb-article-modal');

@@ -24,6 +24,10 @@ const loginAsSeededClient = async (page) => {
     await expect(page).toHaveURL(/\/client\/dashboard$/);
 };
 
+// The page's own script attaches the button handlers a moment after the page paints (app.js sets this marker when
+// it is done), so a click that comes earlier is lost.
+const waitForPageScripts = (page) => expect(page.locator('html')).toHaveAttribute('data-page-scripts-ready', 'true');
+
 // Files a ticket and returns its subject. Province and city are plain text boxes with suggestions.
 const fileTicket = async (page, subject, { withAttachment = false } = {}) => {
     await page.goto('/client/tickets/create');
@@ -46,6 +50,7 @@ const fileTicket = async (page, subject, { withAttachment = false } = {}) => {
     await page.locator('#ticket_consent').check();
     await page.getByRole('button', { name: 'Create Ticket' }).click();
     await expect(page.getByText(subject).first()).toBeVisible();
+    await waitForPageScripts(page);
 
     return subject;
 };

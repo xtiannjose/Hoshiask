@@ -25,7 +25,9 @@ export default defineConfig({
             command: 'php artisan serve --host=127.0.0.1 --port=8000',
             url: `${baseURL}/login`,
             timeout: 120_000,
-            reuseExistingServer: !process.env.CI,
+            // Whatever answers on the port would receive the tests' sign-ins and form posts, and it may be another
+            // project's dev server. Reuse a running server only when asked: PLAYWRIGHT_REUSE_SERVER=1.
+            reuseExistingServer: process.env.PLAYWRIGHT_REUSE_SERVER === '1',
         },
     projects: [
         {

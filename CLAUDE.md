@@ -9,8 +9,9 @@ Helpdesk: Laravel 13 / PHP 8.3 ticketing system with a client portal (`/client`)
 ```bash
 composer qa && npm run qa     # the full gate CI runs; add `npm run qa:full` (Playwright) when UI behaviour changes
 php artisan test --filter=ClientTicketReopenTest      # one class, or a test_ method name
+php artisan test --parallel                           # whole suite across CPU cores, about 70 s instead of 165 s
 npx vitest run resources/js/lib/upload-guard.test.js
-npx playwright test tests/e2e/admin-smoke.spec.js     # starts `php artisan serve` itself
+npx playwright test tests/e2e/admin-smoke.spec.js     # starts `php artisan serve` itself; give it a database of its own first (docs/testing.md)
 vendor/bin/pint                                       # fix style
 php artisan helpdesk:ops-status                       # runtime health and advisories
 ```

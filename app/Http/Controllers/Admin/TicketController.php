@@ -379,14 +379,14 @@ class TicketController extends Controller
             ->with('success', 'Ticket created successfully.');
     }
 
-    public function show(Ticket $ticket)
+    public function show(Request $request, Ticket $ticket)
     {
         $this->authorizeTicketAccess($ticket);
         $this->recordReadOnlyView($ticket);
 
         TicketUserState::markSeenAndDismiss($ticket, (int) auth()->id(), $ticket->updated_at ?? now());
 
-        $this->loadTicketWithVisibleReplies($ticket);
+        $hiddenReplyCount = $this->loadTicketWithVisibleReplies($ticket, all: $request->boolean('all_messages'));
         $ticket->loadMissing(['assignedUser', 'assignedUsers']);
         $replyFeedCursor = $this->replyFeedCursorForReplies($ticket->replies);
         $assignees = $this->ticketIndex->activeAssignableAgents();
@@ -395,7 +395,7 @@ class TicketController extends Controller
             ->where('user_id', (int) auth()->id())
             ->first();
 
-        return view('admin.tickets.show', compact('ticket', 'assignees', 'currentUserState', 'replyFeedCursor'));
+        return view('admin.tickets.show', compact('ticket', 'assignees', 'currentUserState', 'replyFeedCursor', 'hiddenReplyCount'));
     }
 
     /**

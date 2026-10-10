@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\TicketAssignmentRuleController;
 use App\Http\Controllers\Admin\TicketBulkActionController;
 use App\Http\Controllers\Admin\TicketController as AdminTicketController;
 use App\Http\Controllers\Admin\TicketReplyController as AdminTicketReplyController;
+use App\Http\Controllers\Admin\TicketRequesterAccountController;
 use App\Http\Controllers\Admin\TicketSavedViewController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AttachmentController;
@@ -148,6 +149,10 @@ Route::middleware(['auth', 'active', 'consent.accepted', 'role:ticket_console', 
     Route::get('/tickets/export', [AdminTicketController::class, 'export'])
         ->middleware('throttle:10,1')
         ->name('tickets.export');
+    // Searched as the person types. 90 is used by no other route, so this has a counter of its own (equal limits share one).
+    Route::get('/tickets/requester-accounts', TicketRequesterAccountController::class)
+        ->middleware(['throttle:90,1', 'role:ticket_creator'])
+        ->name('tickets.requester-accounts');
     Route::post('/ticket-saved-views', [TicketSavedViewController::class, 'store'])
         ->middleware('throttle:20,1')
         ->name('ticket-saved-views.store');

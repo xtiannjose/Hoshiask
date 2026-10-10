@@ -12,6 +12,92 @@ use Illuminate\Support\Facades\Gate;
 
 class UserDirectoryService
 {
+    /** How many accounts the new-ticket requester picker lists at once; the rest is reached by searching. */
+    public const REQUESTER_ACCOUNT_LIMIT = 50;
+
+    /**
+     * The accounts a staff member may pick as the requester of a new ticket: active clients for a client ticket,
+     * active staff who can be assigned tickets for a staff ticket. Returns the first accounts by name, or the
+     * matches for $search, and how many accounts match in all. $alsoIncludeIds are listed even when they fall
+     * outside the limit (the account chosen before a validation error, or the signed-in staff member).
+     *
+     * @param  'client'|'support'  $group
+     * @param  list<int>  $alsoIncludeIds
+     * @return array{accounts: list<array{value: string, label: string, name: string, email: ?string, phone: ?string, group: string, role: ?string}>, total: int}
+     */
+    public function requesterAccounts(string $group, string $search = '', array $alsoIncludeIds = []): array
+    {
+        $columns = ['id', 'name', 'email', 'phone', 'role'];
+        $matching = $this->requesterAccountScope($group);
+
+        if (trim($search) !== '') {
+            $this->applySearchFilter($matching, trim($search));
+        }
+
+        $accounts = (clone $matching)
+            ->orderBy('name')
+            ->orderBy('id')
+            ->limit(self::REQUESTER_ACCOUNT_LIMIT)
+            ->get($columns);
+
+        $missingIds = array_values(array_diff(
+            array_filter(array_map('intval', $alsoIncludeIds)),
+            $accounts->pluck('id')->map(fn ($id): int => (int) $id)->all()
+        ));
+
+        if ($missingIds !== []) {
+            $accounts = $accounts->concat(
+                $this->requesterAccountScope($group)->whereKey($missingIds)->orderBy('name')->orderBy('id')->get($columns)
+            );
+        }
+
+        return [
+            'accounts' => $accounts->map(fn (User $account): array => [
+                'value' => (string) $account->id,
+                'label' => (string) $account->name,
+                'name' => (string) $account->name,
+                'email' => $account->email,
+                'phone' => $account->phone,
+                'group' => $group,
+                'role' => $group === 'support' ? $account->role : null,
+            ])->values()->all(),
+            'total' => (clone $matching)->count(),
+        ];
+    }
+
+    /**
+     * @return Builder<User>
+     */
+    private function requesterAccountScope(string $group): Builder
+    {
+        return User::query()
+            ->where('is_active', true)
+            ->when(
+                $group === 'support',
+                fn (Builder $query) => $query->whereIn('role', User::TICKET_ASSIGNABLE_ROLES),
+                fn (Builder $query) => $query->where('role', User::ROLE_CLIENT),
+            );
+    }
+
+    /**
+     * Case-insensitive "contains" over the fields staff know an account by.
+     *
+     * @param  Builder<User>  $query
+     */
+    private function applySearchFilter(Builder $query, string $search): void
+    {
+        $pattern = LikePattern::contains(mb_strtolower($search));
+        $like = 'LIKE ? '.LikePattern::LIKE_ESCAPE;
+
+        $query->where(function (Builder $builder) use ($pattern, $like) {
+            $builder->whereRaw("LOWER(COALESCE(username, '')) {$like}", [$pattern])
+                ->orWhereRaw("LOWER(COALESCE(name, '')) {$like}", [$pattern])
+                ->orWhereRaw("LOWER(COALESCE(email, '')) {$like}", [$pattern])
+                ->orWhereRaw("LOWER(COALESCE(phone, '')) {$like}", [$pattern])
+                ->orWhereRaw("LOWER(COALESCE(department, '')) {$like}", [$pattern]);
+        });
+    }
+
     public function buildIndexViewData(Request $request, User $currentUser, string $segment): array
     {
         if (! $this->canManageStaffAccounts($currentUser)) {
@@ -45,17 +131,7 @@ class UserDirectoryService
         }
 
         if ($request->filled('search')) {
-            $search = trim((string) $request->search);
-            $pattern = LikePattern::contains(mb_strtolower($search));
-            $like = 'LIKE ? '.LikePattern::LIKE_ESCAPE;
-
-            $query->where(function (Builder $builder) use ($pattern, $like) {
-                $builder->whereRaw("LOWER(COALESCE(username, '')) {$like}", [$pattern])
-                    ->orWhereRaw("LOWER(COALESCE(name, '')) {$like}", [$pattern])
-                    ->orWhereRaw("LOWER(COALESCE(email, '')) {$like}", [$pattern])
-                    ->orWhereRaw("LOWER(COALESCE(phone, '')) {$like}", [$pattern])
-                    ->orWhereRaw("LOWER(COALESCE(department, '')) {$like}", [$pattern]);
-            });
+            $this->applySearchFilter($query, trim((string) $request->search));
         }
 
         if ($request->filled('department') && $request->department !== 'all') {

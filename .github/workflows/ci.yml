@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: ["main", "master"]
 
+# The jobs only read the repository, so the token gets no more than that.
+permissions:
+  contents: read
+
+# A new push to the same pull request replaces the run that is still going.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   secret-scan:
     runs-on: ubuntu-latest

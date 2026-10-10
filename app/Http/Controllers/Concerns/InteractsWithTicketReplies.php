@@ -8,6 +8,7 @@ use App\Models\TicketReply;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -313,9 +314,12 @@ trait InteractsWithTicketReplies
             ->with([
                 'user',
                 'attachments',
-                'replyTo' => fn ($query) => $query
-                    ->visibleToViewer($this->currentReplyViewer())
-                    ->with('user'),
+                'replyTo' => function ($query) {
+                    /** @var BelongsTo<TicketReply, TicketReply> $query */
+                    return $query
+                        ->visibleToViewer($this->currentReplyViewer())
+                        ->with('user');
+                },
             ]);
     }
 

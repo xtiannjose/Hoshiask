@@ -1,0 +1,3 @@
+ticket_number,subject,description,created_at,updated_at,user_email,name,contact_number,email,province,municipality,category,priority,status,assigned_to_email,assigned_at,resolved_at,closed_at
+,Hoshishi Branch - Re-activation of Starlink,Imported from the previous ticket sheet,2025-06-24 15:04:43,2025-06-24 15:04:43,legacy-import@example.com,Requester Snapshot,09998887777,requester@example.com,Agusan del Norte,Butuan City,Other,high,open,,,
+

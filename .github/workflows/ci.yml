@@ -1,0 +1,208 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install gitleaks
+        run: |
+          GITLEAKS_VERSION="8.30.1"
+          ARCHIVE="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          CHECKSUMS_FILE="gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${ARCHIVE}" -o "${ARCHIVE}"
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${CHECKSUMS_FILE}" -o "${CHECKSUMS_FILE}"
+
+          grep " ${ARCHIVE}$" "${CHECKSUMS_FILE}" | sha256sum --check --
+          tar -xzf "${ARCHIVE}" gitleaks
+          sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
+
+      - name: Scan working tree for secrets
+        run: gitleaks detect --source . --no-git --redact --exit-code 1
+
+  verify:
+    runs-on: ubuntu-latest
+    needs: secret-scan
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, intl, fileinfo, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Ensure CA certificates are available
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ca-certificates
+          sudo update-ca-certificates
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Validate Composer config
+        run: composer validate --strict
+
+      - name: Diagnose Composer environment
+        continue-on-error: true
+        run: composer diagnose
+
+      - name: Audit PHP dependencies
+        run: composer audit --no-interaction --locked
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          touch database/database.sqlite
+          echo "DB_CONNECTION=sqlite" >> .env
+          echo "DB_DATABASE=database/database.sqlite" >> .env
+
+      - name: Run static analysis
+        run: composer analyse
+
+      - name: Check coding style
+        run: vendor/bin/pint --test
+
+      - name: Run test suite
+        run: php artisan test
+
+      - name: Lint PHP syntax
+        run: find app config routes database -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Lint frontend JavaScript
+        run: npm run lint
+
+      - name: Run frontend unit tests
+        run: npm run test:unit
+
+      - name: Audit Node dependencies
+        run: npm audit --audit-level=high
+
+      - name: Build frontend assets
+        run: npm run build
+
+  # The suite above runs on SQLite, but production targets PostgreSQL. This job runs the same
+  # tests against a real PostgreSQL server so dialect differences (date functions, ILIKE, strict
+  # GROUP BY, migrations that branch on the driver) are caught before deploy.
+  postgres:
+    runs-on: ubuntu-latest
+    needs: secret-scan
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: helpdesk
+          POSTGRES_PASSWORD: helpdesk
+          POSTGRES_DB: helpdesk_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U helpdesk -d helpdesk_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: "5432"
+      DB_DATABASE: helpdesk_test
+      DB_USERNAME: helpdesk
+      DB_PASSWORD: helpdesk
+      # tests/Feature/DatabaseDriverTest.php fails the job if the suite is not really on PostgreSQL.
+      CI_EXPECT_DB_DRIVER: pgsql
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, intl, fileinfo, pdo_pgsql, pgsql
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run test suite on PostgreSQL
+        run: php artisan test
+
+  e2e:
+    runs-on: windows-latest
+    needs: verify
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, intl, fileinfo, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install chromium
+
+      - name: Prepare environment
+        shell: pwsh
+        run: |
+          Copy-Item .env.example .env
+          php artisan key:generate
+          New-Item -ItemType File -Path database/database.sqlite -Force | Out-Null
+          Add-Content -Path .env -Value "DB_CONNECTION=sqlite"
+          Add-Content -Path .env -Value "DB_DATABASE=database/database.sqlite"
+          Add-Content -Path .env -Value "LEGAL_REQUIRE_ACCEPTANCE=false"
+          php artisan migrate --force
+          php artisan db:seed --class=E2eSmokeSeeder --force
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Run end-to-end UI checks
+        run: npm run test:e2e

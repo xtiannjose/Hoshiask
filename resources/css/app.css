@@ -1,0 +1,1890 @@
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+/* The dashboard volume chart sizes its bars with h-[N%] classes built from the data (4 to 100). */
+@source inline("h-[{4..100}%]");
+
+/* ---------------------------------------------------------------------------
+   Web fonts (files come from the @fontsource packages).
+
+   The five faces every page uses are also preloaded in the page head
+   (App\Support\FontPreloads) and use `font-display: optional`: the browser
+   either has the font right away or keeps the fallback for that page view,
+   but never swaps fonts mid-load, which is what made the text widen and the
+   page re-flow. Space Grotesk 500/700 are rare, so they may still swap.
+   --------------------------------------------------------------------------- */
+@font-face {
+    font-family: "Plus Jakarta Sans";
+    font-style: normal;
+    font-weight: 400;
+    font-display: optional;
+    src: url("../../node_modules/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Plus Jakarta Sans";
+    font-style: normal;
+    font-weight: 500;
+    font-display: optional;
+    src: url("../../node_modules/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Plus Jakarta Sans";
+    font-style: normal;
+    font-weight: 600;
+    font-display: optional;
+    src: url("../../node_modules/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Plus Jakarta Sans";
+    font-style: normal;
+    font-weight: 700;
+    font-display: optional;
+    src: url("../../node_modules/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Space Grotesk";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url("../../node_modules/@fontsource/space-grotesk/files/space-grotesk-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Space Grotesk";
+    font-style: normal;
+    font-weight: 600;
+    font-display: optional;
+    src: url("../../node_modules/@fontsource/space-grotesk/files/space-grotesk-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Space Grotesk";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("../../node_modules/@fontsource/space-grotesk/files/space-grotesk-latin-700-normal.woff2") format("woff2");
+}
+
+@layer base {
+    :root {
+        --app-bg: #f3f5f7;
+        --app-ink: #0f172a;
+        --app-muted: #64748b;
+        --app-panel: #ffffff;
+        --motion-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+        --motion-ease-emphasis: cubic-bezier(0.2, 0.8, 0.2, 1);
+        --motion-duration-fast: 160ms;
+        --motion-duration-base: 220ms;
+        --motion-duration-slow: 320ms;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* Signed-in pages are long (tables, threads). Keep room for the scrollbar from the start so the page does not get
+       narrower, and re-wrap, the moment it grows past one screen. Not used on the short guest pages (login, errors). */
+    html.app-shell {
+        scrollbar-gutter: stable;
+    }
+
+    /* The sun/moon icon follows the theme class the head script sets before the first paint, so it is there
+       immediately instead of waiting for Alpine to start. Sun in light mode, moon in dark mode. */
+    .theme-icon-moon {
+        display: none;
+    }
+
+    html.theme-dark .theme-icon-moon {
+        display: block;
+    }
+
+    html.theme-dark .theme-icon-sun {
+        display: none;
+    }
+
+    body {
+        @apply bg-[#f3f5f7] text-slate-900;
+        color: var(--app-ink);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        transition:
+            background-color var(--motion-duration-base) var(--motion-ease-standard),
+            color var(--motion-duration-base) var(--motion-ease-standard),
+            opacity var(--motion-duration-fast) var(--motion-ease-standard),
+            transform var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+
+    html.theme-switching *,
+    html.theme-switching *::before,
+    html.theme-switching *::after {
+        transition: none !important;
+        animation: none !important;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        @apply font-display tracking-tight text-slate-900;
+    }
+
+    a {
+        @apply transition-colors duration-200;
+        transition-timing-function: var(--motion-ease-standard);
+    }
+
+    ::selection {
+        @apply bg-hoshishi-blue-200 text-hoshishi-blue-900;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent px-4 py-2.5 text-sm font-semibold transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-hoshishi-primary-dark focus-visible:ring-offset-2 focus-visible:ring-offset-white;
+    }
+
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent px-4 py-2.5 text-sm font-semibold text-white transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-hoshishi-primary-dark focus-visible:ring-offset-2 focus-visible:ring-offset-white hover:brightness-95 bg-hoshishi-dark;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-hoshishi-primary-dark focus-visible:ring-offset-2 focus-visible:ring-offset-white hover:bg-slate-50;
+    }
+
+    .btn-danger {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-hoshishi-primary-dark focus-visible:ring-offset-2 focus-visible:ring-offset-white hover:brightness-95;
+    }
+
+    .btn-warning {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent bg-amber-400 px-4 py-2.5 text-sm font-semibold text-amber-950 transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-hoshishi-primary-dark focus-visible:ring-offset-2 focus-visible:ring-offset-white hover:bg-amber-300;
+    }
+
+    .btn-success {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-hoshishi-primary-dark focus-visible:ring-offset-2 focus-visible:ring-offset-white hover:brightness-95;
+    }
+
+    .btn,
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger,
+    .btn-warning,
+    .btn-success {
+        transition:
+            transform var(--motion-duration-fast) var(--motion-ease-standard),
+            box-shadow var(--motion-duration-base) var(--motion-ease-standard),
+            background-color var(--motion-duration-base) var(--motion-ease-standard),
+            border-color var(--motion-duration-base) var(--motion-ease-standard),
+            color var(--motion-duration-base) var(--motion-ease-standard),
+            filter var(--motion-duration-base) var(--motion-ease-standard);
+    }
+
+    .btn:not(:disabled):hover,
+    .btn-primary:not(:disabled):hover,
+    .btn-secondary:not(:disabled):hover,
+    .btn-danger:not(:disabled):hover,
+    .btn-warning:not(:disabled):hover,
+    .btn-success:not(:disabled):hover {
+        transform: translateY(-1px);
+    }
+
+    .btn:not(:disabled):active,
+    .btn-primary:not(:disabled):active,
+    .btn-secondary:not(:disabled):active,
+    .btn-danger:not(:disabled):active,
+    .btn-warning:not(:disabled):active,
+    .btn-success:not(:disabled):active {
+        transform: translateY(0);
+    }
+
+    .app-pressable,
+    .app-nav-link,
+    .app-menu-link {
+        transition:
+            transform var(--motion-duration-fast) var(--motion-ease-standard),
+            color var(--motion-duration-base) var(--motion-ease-standard),
+            background-color var(--motion-duration-base) var(--motion-ease-standard),
+            border-color var(--motion-duration-base) var(--motion-ease-standard),
+            box-shadow var(--motion-duration-base) var(--motion-ease-standard);
+    }
+
+    .app-pressable:hover:not(:disabled),
+    .app-nav-link:hover:not(:disabled) {
+        transform: translateY(-1px);
+    }
+
+    .app-pressable:active:not(:disabled),
+    .app-nav-link:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    .app-menu-link:hover {
+        transform: translateX(2px);
+    }
+
+    .panel {
+        @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+        transition:
+            background-color var(--motion-duration-base) var(--motion-ease-standard),
+            border-color var(--motion-duration-base) var(--motion-ease-standard),
+            box-shadow var(--motion-duration-slow) var(--motion-ease-emphasis);
+    }
+
+    /* A bare file input sizes itself to its "No file chosen" label (~425px) and overflows narrow screens. */
+    .form-input[type="file"] {
+        @apply block w-full min-w-0 max-w-full;
+    }
+
+    .form-input:not([type="file"]) {
+        @apply mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-800 placeholder-slate-500;
+        background-color: #ffffff;
+        background-image: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.06),
+            inset 0 1px 0 rgba(255, 255, 255, 0.55);
+        transition:
+            border-color var(--motion-duration-base) var(--motion-ease-standard),
+            box-shadow var(--motion-duration-base) var(--motion-ease-standard),
+            background-color var(--motion-duration-base) var(--motion-ease-standard),
+            background-image var(--motion-duration-base) var(--motion-ease-standard),
+            color var(--motion-duration-base) var(--motion-ease-standard);
+    }
+
+    html:not(.theme-dark) input[type="text"]:not(.app-native-select-hidden):not(.form-input),
+    html:not(.theme-dark) input[type="email"]:not(.app-native-select-hidden):not(.form-input),
+    html:not(.theme-dark) input[type="password"]:not(.app-native-select-hidden):not(.form-input),
+    html:not(.theme-dark) input[type="search"]:not(.app-native-select-hidden):not(.form-input),
+    html:not(.theme-dark) input[type="tel"]:not(.app-native-select-hidden):not(.form-input),
+    html:not(.theme-dark) input[type="number"]:not(.app-native-select-hidden):not(.form-input),
+    html:not(.theme-dark) input[type="datetime-local"]:not(.app-native-select-hidden):not(.form-input),
+    html:not(.theme-dark) textarea:not(.form-input) {
+        @apply block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-800 placeholder-slate-500;
+        background-color: #ffffff;
+        background-image: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.06),
+            inset 0 1px 0 rgba(255, 255, 255, 0.55);
+        transition:
+            border-color var(--motion-duration-base) var(--motion-ease-standard),
+            box-shadow var(--motion-duration-base) var(--motion-ease-standard),
+            background-color var(--motion-duration-base) var(--motion-ease-standard),
+            background-image var(--motion-duration-base) var(--motion-ease-standard),
+            color var(--motion-duration-base) var(--motion-ease-standard);
+    }
+
+    .form-input:not([type="file"]):hover:not(:disabled):not([readonly]),
+    html:not(.theme-dark) input[type="text"]:not(.app-native-select-hidden):not(.form-input):hover:not(:disabled):not([readonly]),
+    html:not(.theme-dark) input[type="email"]:not(.app-native-select-hidden):not(.form-input):hover:not(:disabled):not([readonly]),
+    html:not(.theme-dark) input[type="password"]:not(.app-native-select-hidden):not(.form-input):hover:not(:disabled):not([readonly]),
+    html:not(.theme-dark) input[type="search"]:not(.app-native-select-hidden):not(.form-input):hover:not(:disabled):not([readonly]),
+    html:not(.theme-dark) input[type="tel"]:not(.app-native-select-hidden):not(.form-input):hover:not(:disabled):not([readonly]),
+    html:not(.theme-dark) input[type="number"]:not(.app-native-select-hidden):not(.form-input):hover:not(:disabled):not([readonly]),
+    html:not(.theme-dark) input[type="datetime-local"]:not(.app-native-select-hidden):not(.form-input):hover:not(:disabled):not([readonly]),
+    html:not(.theme-dark) textarea:not(.form-input):hover:not(:disabled):not([readonly]) {
+        @apply border-slate-400;
+        background-image: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+    }
+
+    .form-input:not([type="file"]):focus,
+    .form-input:not([type="file"]):focus-visible,
+    html:not(.theme-dark) input[type="text"]:not(.app-native-select-hidden):not(.form-input):focus,
+    html:not(.theme-dark) input[type="text"]:not(.app-native-select-hidden):not(.form-input):focus-visible,
+    html:not(.theme-dark) input[type="email"]:not(.app-native-select-hidden):not(.form-input):focus,
+    html:not(.theme-dark) input[type="email"]:not(.app-native-select-hidden):not(.form-input):focus-visible,
+    html:not(.theme-dark) input[type="password"]:not(.app-native-select-hidden):not(.form-input):focus,
+    html:not(.theme-dark) input[type="password"]:not(.app-native-select-hidden):not(.form-input):focus-visible,
+    html:not(.theme-dark) input[type="search"]:not(.app-native-select-hidden):not(.form-input):focus,
+    html:not(.theme-dark) input[type="search"]:not(.app-native-select-hidden):not(.form-input):focus-visible,
+    html:not(.theme-dark) input[type="tel"]:not(.app-native-select-hidden):not(.form-input):focus,
+    html:not(.theme-dark) input[type="tel"]:not(.app-native-select-hidden):not(.form-input):focus-visible,
+    html:not(.theme-dark) input[type="number"]:not(.app-native-select-hidden):not(.form-input):focus,
+    html:not(.theme-dark) input[type="number"]:not(.app-native-select-hidden):not(.form-input):focus-visible,
+    html:not(.theme-dark) input[type="datetime-local"]:not(.app-native-select-hidden):not(.form-input):focus,
+    html:not(.theme-dark) input[type="datetime-local"]:not(.app-native-select-hidden):not(.form-input):focus-visible,
+    html:not(.theme-dark) textarea:not(.form-input):focus,
+    html:not(.theme-dark) textarea:not(.form-input):focus-visible {
+        @apply border-hoshishi-primary;
+        box-shadow:
+            0 0 0 4px rgba(44, 61, 99, 0.18),
+            0 8px 18px rgba(15, 23, 42, 0.08);
+        outline: none;
+    }
+
+    .form-input:not([type="file"]):disabled,
+    .form-input:not([type="file"])[readonly],
+    html:not(.theme-dark) input[type="text"]:not(.app-native-select-hidden):not(.form-input):disabled,
+    html:not(.theme-dark) input[type="email"]:not(.app-native-select-hidden):not(.form-input):disabled,
+    html:not(.theme-dark) input[type="password"]:not(.app-native-select-hidden):not(.form-input):disabled,
+    html:not(.theme-dark) input[type="search"]:not(.app-native-select-hidden):not(.form-input):disabled,
+    html:not(.theme-dark) input[type="tel"]:not(.app-native-select-hidden):not(.form-input):disabled,
+    html:not(.theme-dark) input[type="number"]:not(.app-native-select-hidden):not(.form-input):disabled,
+    html:not(.theme-dark) input[type="datetime-local"]:not(.app-native-select-hidden):not(.form-input):disabled,
+    html:not(.theme-dark) textarea:not(.form-input):disabled {
+        @apply bg-slate-100 text-slate-500;
+        border-color: #cbd5e1;
+        background-image: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        cursor: not-allowed;
+        opacity: 1;
+    }
+
+    .form-input[type="file"] {
+        @apply px-2 py-1.5 text-sm text-slate-700;
+    }
+
+    .form-input[type="file"]::file-selector-button {
+        @apply mr-3 rounded-lg border border-hoshishi-dark bg-hoshishi-dark px-3 py-2 text-sm font-semibold text-white transition-colors duration-200;
+    }
+
+    .form-input[type="file"]::file-selector-button:hover {
+        @apply border-[#111a2e] bg-[#111a2e];
+    }
+
+    .form-label {
+        @apply block text-sm font-semibold text-slate-700;
+    }
+
+    .app-native-select-hidden {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        margin: -1px !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    .app-native-select-hidden ~ svg.pointer-events-none {
+        display: none !important;
+    }
+
+    .app-select {
+        @apply relative;
+    }
+
+    .app-select-form-field {
+        margin-top: 0.25rem;
+    }
+
+    .app-select-toggle {
+        @apply flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-slate-300 bg-white px-3 text-left text-sm text-slate-700 shadow-sm;
+        transition:
+            border-color var(--motion-duration-base) var(--motion-ease-standard),
+            box-shadow var(--motion-duration-base) var(--motion-ease-standard),
+            background-color var(--motion-duration-base) var(--motion-ease-standard),
+            transform var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+
+    .app-select-toggle:hover {
+        @apply border-slate-400;
+    }
+
+    .app-select-toggle:focus-visible {
+        @apply border-hoshishi-primary ring-2 ring-hoshishi-primary/20 outline-none;
+    }
+
+    .app-select.is-open .app-select-toggle {
+        @apply border-hoshishi-primary ring-2 ring-hoshishi-primary/20;
+        transform: translateY(-1px);
+    }
+
+    .app-select-caret {
+        @apply h-4 w-4 text-slate-500;
+        transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+
+    .app-select.is-open .app-select-caret {
+        transform: rotate(180deg);
+    }
+
+    .app-select-menu {
+        @apply pointer-events-none absolute left-0 top-[calc(100%+0.4rem)] z-40 max-h-64 min-w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 opacity-0 shadow-lg;
+        transform: translateY(-4px) scale(0.98);
+        transition:
+            opacity var(--motion-duration-fast) var(--motion-ease-standard),
+            transform var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+
+    .app-select.is-open .app-select-menu {
+        @apply pointer-events-auto opacity-100;
+        transform: translateY(0) scale(1);
+    }
+
+    .app-select-option {
+        @apply flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-slate-700;
+        transition:
+            background-color var(--motion-duration-fast) var(--motion-ease-standard),
+            color var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+
+    .app-select-option:hover,
+    .app-select-option:focus-visible {
+        @apply bg-slate-100 text-slate-900 outline-none;
+    }
+
+    .app-select-option.is-active {
+        @apply bg-[#e4eaf4] text-[#2c3d63];
+    }
+
+    .app-select--multiple .app-select-toggle {
+        min-height: 2.5rem;
+    }
+
+    .app-select--multiple .app-select-menu {
+        max-height: 13rem;
+    }
+
+    .app-select--multiple .app-select-option {
+        min-height: 2.75rem;
+    }
+
+    .search-history-panel {
+        @apply pointer-events-none absolute left-0 right-0 top-[calc(100%+0.45rem)] z-40 rounded-2xl border border-slate-200 bg-white p-2 opacity-0 shadow-lg;
+        transform: translateY(-4px) scale(0.98);
+        transition:
+            opacity var(--motion-duration-fast) var(--motion-ease-standard),
+            transform var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+
+    .search-history-panel.is-open {
+        @apply pointer-events-auto opacity-100;
+        transform: translateY(0) scale(1);
+    }
+
+    .search-history-head {
+        @apply mb-1 flex items-center justify-between px-2 pt-1 text-xs font-semibold uppercase tracking-wide text-slate-500;
+    }
+
+    .search-history-clear {
+        @apply rounded-lg px-1.5 py-1 text-xs font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-700;
+    }
+
+    .search-history-item {
+        @apply flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-slate-700 transition;
+    }
+
+    .search-history-item:hover,
+    .search-history-item:focus-visible {
+        @apply bg-slate-100 text-slate-900 outline-none;
+    }
+
+    .search-history-item strong {
+        @apply truncate font-medium;
+    }
+
+    .search-history-empty {
+        @apply px-2.5 py-2 text-xs text-slate-500;
+    }
+
+    .search-history-remove {
+        @apply inline-flex h-6 w-6 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-200 hover:text-slate-700;
+    }
+
+    button,
+    a,
+    input,
+    textarea,
+    [role='button'] {
+        transition-timing-function: var(--motion-ease-standard);
+    }
+
+    .stat-card {
+        @apply rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md;
+        transition:
+            transform var(--motion-duration-base) var(--motion-ease-emphasis),
+            box-shadow var(--motion-duration-slow) var(--motion-ease-emphasis),
+            border-color var(--motion-duration-base) var(--motion-ease-standard),
+            background-color var(--motion-duration-base) var(--motion-ease-standard);
+    }
+
+    .avatar-logo {
+        @apply h-full w-full object-contain;
+        transform: scale(1.22);
+        transform-origin: center;
+    }
+
+    .ticket-checkbox {
+        @apply h-4 w-4 rounded border border-slate-400 bg-white text-hoshishi-primary shadow-sm;
+        -webkit-appearance: none;
+        appearance: none;
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        vertical-align: middle;
+        border-width: 1.5px;
+        cursor: pointer;
+        transition:
+            border-color var(--motion-duration-fast) var(--motion-ease-standard),
+            background-color var(--motion-duration-fast) var(--motion-ease-standard),
+            box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
+            transform var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+
+    .ticket-checkbox::after {
+        content: '';
+        width: 0.28rem;
+        height: 0.56rem;
+        border: 2px solid #ffffff;
+        border-top: 0;
+        border-left: 0;
+        transform: rotate(45deg) scale(0);
+        transform-origin: center;
+        transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+
+    .ticket-checkbox:hover {
+        @apply border-hoshishi-primary;
+    }
+
+    .ticket-checkbox:focus-visible {
+        @apply ring-2 ring-[#4f6694]/45 ring-offset-0 outline-none;
+    }
+
+    .ticket-checkbox:checked {
+        @apply border-hoshishi-primary bg-hoshishi-primary;
+    }
+
+    .ticket-checkbox:checked::after {
+        transform: rotate(45deg) scale(1);
+    }
+
+    .ticket-checkbox:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+    }
+
+    .ticket-checkbox--large {
+        @apply h-5 w-5 rounded;
+        border-width: 1.5px;
+    }
+
+    .ticket-checkbox--large::after {
+        width: 0.34rem;
+        height: 0.7rem;
+        border-width: 2.25px;
+    }
+
+    .assigned-tech-btn {
+        @apply inline-flex items-center rounded-lg px-2.5 py-1 text-sm font-semibold transition;
+    }
+
+    .assigned-tech-btn--assigned {
+        @apply text-hoshishi-primary-dark;
+        background-color: #e7f8f7;
+    }
+
+    .assigned-tech-btn--assigned:hover {
+        color: #2c3d63;
+        background-color: #d5f1ef;
+    }
+
+    .assigned-tech-btn--unassigned {
+        color: #7a5a1a;
+        background-color: #fff6df;
+    }
+
+    .assigned-tech-btn--unassigned:hover {
+        color: #664a14;
+        background-color: #f9ebc5;
+    }
+
+    .client-ticket-row,
+    .admin-ticket-row,
+    .dashboard-ticket-link,
+    .js-header-notification {
+        will-change: background-color, transform;
+        overflow: hidden;
+        max-height: 8rem;
+        transition:
+            background-color var(--motion-duration-base) var(--motion-ease-standard),
+            box-shadow var(--motion-duration-base) var(--motion-ease-standard),
+            color var(--motion-duration-base) var(--motion-ease-standard),
+            transform var(--motion-duration-base) var(--motion-ease-emphasis),
+            opacity var(--motion-duration-fast) var(--motion-ease-standard),
+            max-height var(--motion-duration-base) var(--motion-ease-standard),
+            padding var(--motion-duration-fast) var(--motion-ease-standard),
+            border-width var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+
+    .client-ticket-row:hover {
+        background-color: rgba(241, 245, 249, 0.96);
+        transform: translateX(2px);
+    }
+
+    .admin-ticket-row:hover {
+        transform: translateX(2px);
+    }
+
+    .dashboard-ticket-link:hover {
+        background-color: rgba(241, 245, 249, 0.96);
+        transform: translateX(2px);
+    }
+
+    .js-header-notification:hover {
+        transform: translateX(1px);
+    }
+
+    .js-header-notification.is-removing {
+        opacity: 0;
+        max-height: 0;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        border-width: 0 !important;
+        transform: translateX(8px);
+        pointer-events: none;
+    }
+
+    .dashboard-summary-link {
+        transition:
+            background-color var(--motion-duration-base) var(--motion-ease-standard),
+            transform var(--motion-duration-base) var(--motion-ease-emphasis),
+            box-shadow var(--motion-duration-base) var(--motion-ease-standard);
+    }
+
+    .dashboard-summary-link:hover {
+        transform: translateX(2px);
+        box-shadow: inset 0 0 0 1px rgba(44, 61, 99, 0.16);
+    }
+
+    .app-pagination {
+        @apply w-full;
+    }
+
+    .app-pagination-track {
+        @apply inline-flex items-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm;
+    }
+
+    .app-pagination-page,
+    .app-pagination-arrow,
+    .app-pagination-mobile {
+        @apply inline-flex items-center justify-center border-slate-200 bg-white text-sm font-medium text-slate-600;
+        min-height: 2.5rem;
+        transition:
+            background-color var(--motion-duration-fast) var(--motion-ease-standard),
+            border-color var(--motion-duration-fast) var(--motion-ease-standard),
+            color var(--motion-duration-fast) var(--motion-ease-standard),
+            box-shadow var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+
+    .app-pagination-page {
+        @apply min-w-10 border-l px-3;
+    }
+
+    .app-pagination-arrow {
+        @apply w-10;
+    }
+
+    .app-pagination-arrow + .app-pagination-page,
+    .app-pagination-page + .app-pagination-page,
+    .app-pagination-page + .app-pagination-arrow {
+        @apply border-l;
+    }
+
+    .app-pagination-mobile {
+        @apply rounded-xl border px-4;
+    }
+
+    .app-pagination-page:hover,
+    .app-pagination-page:focus-visible,
+    .app-pagination-arrow:hover,
+    .app-pagination-arrow:focus-visible,
+    .app-pagination-mobile:hover,
+    .app-pagination-mobile:focus-visible {
+        @apply bg-slate-50 text-slate-900 outline-none;
+        box-shadow: inset 0 0 0 1px rgba(44, 61, 99, 0.12);
+    }
+
+    .app-pagination-page--current {
+        @apply border-hoshishi-primary bg-[#e4eaf4] font-semibold text-[#2c3d63];
+        box-shadow: inset 0 0 0 1px rgba(44, 61, 99, 0.2);
+    }
+
+    .app-pagination-page--ellipsis {
+        @apply cursor-default text-slate-400;
+    }
+
+    .app-pagination-page--ellipsis:hover,
+    .app-pagination-page--ellipsis:focus-visible {
+        @apply bg-white text-slate-400;
+        box-shadow: none;
+    }
+
+    .app-pagination-arrow--disabled,
+    .app-pagination-mobile--disabled {
+        @apply cursor-not-allowed bg-slate-50 text-slate-400;
+        box-shadow: none;
+    }
+
+    .pie-track {
+        stroke: #cbd5e1;
+    }
+
+    .pie-center-label {
+        fill: #64748b;
+    }
+
+    .pie-center-value {
+        fill: #0f172a;
+    }
+
+    .pie-legend-row {
+        transition:
+            background-color var(--motion-duration-fast) var(--motion-ease-standard),
+            box-shadow var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+
+    .pie-legend-row:hover {
+        box-shadow: inset 0 0 0 1px rgba(100, 116, 139, 0.22);
+    }
+
+    .chat-meta-badge {
+        @apply rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500;
+    }
+
+    .chat-meta-badge--deleted {
+        @apply bg-red-100 text-red-700;
+    }
+
+    .chat-bubble-deleted {
+        @apply border-slate-300 bg-slate-50;
+    }
+
+    .chat-bubble-deleted .js-message-text {
+        @apply text-slate-600;
+    }
+
+    /* A pasted link or error code with no spaces must wrap instead of pushing the thread sideways. */
+    .js-message-text {
+        overflow-wrap: anywhere;
+    }
+
+    .login-card {
+        background: rgba(255, 255, 255, 0.96);
+    }
+
+    .login-toggle {
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    #conversation-thread,
+    #admin-conversation-thread {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    #conversation-thread::-webkit-scrollbar,
+    #admin-conversation-thread::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+    }
+
+    #conversation-thread:hover,
+    #admin-conversation-thread:hover {
+        scrollbar-width: thin;
+    }
+
+    #conversation-thread:hover::-webkit-scrollbar,
+    #admin-conversation-thread:hover::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    #conversation-thread:hover::-webkit-scrollbar-thumb,
+    #admin-conversation-thread:hover::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 9999px;
+    }
+
+    #conversation-thread:hover::-webkit-scrollbar-track,
+    #admin-conversation-thread:hover::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .notification-dismiss-btn {
+        transition:
+            background-color var(--motion-duration-fast) var(--motion-ease-standard),
+            color var(--motion-duration-fast) var(--motion-ease-standard),
+            transform var(--motion-duration-fast) var(--motion-ease-standard);
+    }
+
+    .notification-dismiss-btn:hover {
+        transform: scale(1.04);
+    }
+
+    .motion-page-enter {
+        animation: app-page-enter var(--motion-duration-slow) var(--motion-ease-standard) both;
+    }
+
+    .app-submit-busy {
+        cursor: progress !important;
+        opacity: 0.85;
+        transform: none !important;
+    }
+
+    .app-table-body > tr:nth-child(-n + 12) {
+        animation: app-row-enter var(--motion-duration-base) var(--motion-ease-standard) both;
+    }
+
+    /* A modal is a native <dialog>: undo the browser's centred, bordered box so the overlay and
+       panel inside lay out as before. The overlay div does the dimming, so the ::backdrop stays clear. */
+    dialog.app-modal-root {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        overflow: visible;
+    }
+
+    dialog.app-modal-root::backdrop {
+        background: transparent;
+    }
+
+    body:has(dialog.app-modal-root[open]) {
+        overflow: hidden;
+    }
+
+    .app-modal-root {
+        pointer-events: none;
+    }
+
+    .app-modal-root.is-open {
+        pointer-events: auto;
+    }
+
+    .app-modal-root .app-modal-overlay,
+    .app-modal-root.app-modal-overlay {
+        opacity: 0;
+        transition: opacity var(--motion-duration-base) var(--motion-ease-standard);
+    }
+
+    .app-modal-root.is-closing {
+        pointer-events: none;
+    }
+
+    .app-modal-root .app-modal-panel {
+        opacity: 0;
+        transform: translateY(10px) scale(0.985);
+        transition:
+            opacity var(--motion-duration-base) var(--motion-ease-standard),
+            transform var(--motion-duration-base) var(--motion-ease-emphasis);
+    }
+
+    .app-modal-root.is-open .app-modal-overlay,
+    .app-modal-root.app-modal-overlay.is-open {
+        opacity: 1;
+    }
+
+    .app-modal-root.is-open .app-modal-panel {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   Disabled buttons must look disabled (the bulk-action buttons stay disabled
+   until rows are ticked). Unlayered so it wins over the component colours.
+   --------------------------------------------------------------------------- */
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled,
+.btn-success:disabled,
+.btn-warning:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+    filter: grayscale(0.35);
+}
+
+.btn-primary:disabled:hover,
+.btn-secondary:disabled:hover,
+.btn-danger:disabled:hover,
+.btn-success:disabled:hover,
+.btn-warning:disabled:hover {
+    filter: grayscale(0.35);
+}
+
+@layer utilities {
+    @view-transition {
+        navigation: auto;
+    }
+
+    ::view-transition-old(root) {
+        animation: app-view-transition-old var(--motion-duration-fast) var(--motion-ease-standard) both;
+    }
+
+    ::view-transition-new(root) {
+        animation: app-view-transition-new var(--motion-duration-base) var(--motion-ease-emphasis) both;
+    }
+
+    @keyframes app-page-enter {
+        0% {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes app-row-enter {
+        0% {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes app-view-transition-old {
+        0% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        100% {
+            opacity: 0.92;
+            transform: translateY(-2px);
+        }
+    }
+
+    @keyframes app-view-transition-new {
+        0% {
+            opacity: 0.93;
+            transform: translateY(6px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .stagger-fade > * {
+        @apply animate-fade-in-up;
+    }
+
+    .hero-glow {
+        background: linear-gradient(120deg, rgba(44, 61, 99, 0.08), rgba(255, 47, 136, 0.06));
+    }
+
+    .transition,
+    .transition-colors,
+    .transition-opacity,
+    .transition-transform {
+        transition-timing-function: var(--motion-ease-standard) !important;
+    }
+}
+
+@layer base {
+    html:not(.theme-dark) .text-slate-400 {
+        color: #64748b !important;
+    }
+
+    /* Muted text often sits directly on the pale #f3f5f7 page background of the signed-in layout,
+       where slate-500 is only 4.36:1 (WCAG AA needs 4.5:1). This is slightly darker (5.4:1) and
+       keeps utility hover colours working. Scoped to the signed-in layout so the login page is unchanged. */
+    html:not(.theme-dark) body.app-authenticated .text-slate-500:not(:hover) {
+        color: #56657c !important;
+    }
+
+    /* Brand navy text on white / the page background; the darker navy keeps it clearly above AA. */
+    html:not(.theme-dark) body.app-authenticated .text-hoshishi-primary:not(:hover) {
+        color: #21304f !important;
+    }
+
+    html:not(.theme-dark) .placeholder-slate-400::placeholder {
+        color: #64748b !important;
+        opacity: 1;
+    }
+
+    .theme-dark {
+        color-scheme: dark;
+        --dm-base: #101215;
+        --dm-surface: #171b21;
+        --dm-surface-soft: #1d232b;
+        --dm-border: #2b323c;
+        --dm-ink: #e7ebf2;
+        --dm-muted: #9aa4b2;
+        --dm-track: #12161c;
+        --dm-thumb: #38414d;
+        --dm-thumb-hover: #475463;
+    }
+
+    .theme-dark body {
+        background-color: var(--dm-base) !important;
+        color: var(--dm-ink) !important;
+    }
+
+    .theme-dark .bg-\[\#f3f5f7\],
+    .theme-dark .bg-\[\#f3f5f7\]\/95,
+    .theme-dark .min-h-dvh {
+        background-color: var(--dm-base) !important;
+    }
+
+    /* Popups wrap their content in a full-height box (min-h-dvh). The rule above would paint it solid and hide
+       the page the popup is meant to sit on top of; keep it see-through so only the dimming overlay covers the page. */
+    .theme-dark .app-modal-root .min-h-dvh {
+        background-color: transparent !important;
+    }
+
+    .theme-dark .bg-\[\#fafbfc\] {
+        background-color: var(--dm-surface-soft) !important;
+    }
+
+    .theme-dark .login-card {
+        background: linear-gradient(160deg, #161b22 0%, #11161d 100%) !important;
+        border-color: #2b323c !important;
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.58) !important;
+    }
+
+    .theme-dark .login-hero {
+        background: linear-gradient(140deg, rgba(44, 61, 99, 0.12), rgba(14, 165, 233, 0.07)) !important;
+        border-right: 1px solid #2b323c;
+    }
+
+    .theme-dark .login-orb-left {
+        background-color: rgba(58, 79, 124, 0.12) !important;
+        opacity: 0.45;
+    }
+
+    .theme-dark .login-orb-right {
+        background-color: rgba(44, 61, 99, 0.12) !important;
+        opacity: 0.4;
+    }
+
+    .theme-dark .login-toggle {
+        background: #161b22 !important;
+        border-color: #2b323c !important;
+        color: #e7ebf2 !important;
+    }
+
+    .theme-dark .login-input {
+        background-color: #1d232b !important;
+        border-color: #2b323c !important;
+        color: #e7ebf2 !important;
+    }
+
+    /* Edge and Chrome draw their own reveal/clear icon inside password boxes; ours replaces it. */
+    .login-input::-ms-reveal,
+    .login-input::-ms-clear {
+        display: none;
+    }
+
+    .theme-dark .login-peek {
+        color: #94a3b8 !important;
+    }
+
+    .theme-dark .login-peek:hover {
+        color: #e7ebf2 !important;
+    }
+
+    .theme-dark .login-input::placeholder {
+        color: #94a3b8 !important;
+    }
+
+    .theme-dark #conversation-thread:hover,
+    .theme-dark #admin-conversation-thread:hover {
+        scrollbar-color: #38414d #12161c;
+    }
+
+    .theme-dark #conversation-thread,
+    .theme-dark #admin-conversation-thread {
+        background: linear-gradient(180deg, #171b21 0%, #101215 100%) !important;
+    }
+
+    .theme-dark #conversation-thread:hover::-webkit-scrollbar-thumb,
+    .theme-dark #admin-conversation-thread:hover::-webkit-scrollbar-thumb {
+        background: #38414d;
+    }
+
+    .theme-dark #conversation-thread:hover::-webkit-scrollbar-track,
+    .theme-dark #admin-conversation-thread:hover::-webkit-scrollbar-track {
+        background: #12161c;
+    }
+
+    .theme-dark header.sticky {
+        background-color: rgba(16, 18, 21, 0.94) !important;
+        border-color: var(--dm-border) !important;
+    }
+
+    .theme-dark aside {
+        background-color: #141920 !important;
+        border-color: var(--dm-border) !important;
+    }
+
+    .theme-dark aside .border-\[\#2c3d63\],
+    .theme-dark aside .border-\[\#2a3b60\] {
+        border-color: var(--dm-border) !important;
+    }
+
+    .theme-dark .bg-white,
+    .theme-dark .panel,
+    .theme-dark .card,
+    .theme-dark .stat-card {
+        background-color: var(--dm-surface) !important;
+        border-color: var(--dm-border) !important;
+        color: var(--dm-ink) !important;
+    }
+
+    .theme-dark .bg-slate-50,
+    .theme-dark .bg-slate-100,
+    .theme-dark .bg-gray-100 {
+        background-color: var(--dm-surface-soft) !important;
+    }
+
+    /* The chosen "Rows per page" size (and any active toggle) is bg-slate-200 with text-slate-800. Dark mode lightens
+       that text, so the background has to go dark with it; left alone it was light on light (1.07 to 1) and the
+       number vanished. One step lighter than the soft surface, so it still reads as selected. */
+    .theme-dark .bg-slate-200 {
+        background-color: var(--dm-border) !important;
+    }
+
+    /* The hover version of those is a separate class and was left bright white on the dark surface
+       (a list row lit up like a white bar when the mouse went over it). Same hover shade as the dropdown options. */
+    .theme-dark .hover\:bg-slate-50:hover,
+    .theme-dark .hover\:bg-slate-100:hover {
+        background-color: #222b38 !important;
+    }
+
+    .theme-dark .js-header-notification:hover {
+        background-color: #202833 !important;
+    }
+
+    .theme-dark .js-header-notification.is-viewed {
+        background-color: #1c2430 !important;
+    }
+
+    .theme-dark .js-header-notification.is-viewed:hover {
+        background-color: #243041 !important;
+    }
+
+    .theme-dark .notification-viewed-pill {
+        background-color: #2a3442 !important;
+        color: #c6d2e4 !important;
+    }
+
+    .theme-dark .notification-dismiss-btn:hover {
+        background-color: #2a3442 !important;
+        color: #dbe4f3 !important;
+    }
+
+    .theme-dark .app-success-alert {
+        background-color: #1a2730 !important;
+        border-color: #2e4a5a !important;
+        color: #b8d2df !important;
+    }
+
+    .theme-dark .dashboard-ticket-link:hover {
+        background-color: #1a2029 !important;
+    }
+
+    .theme-dark .dashboard-summary-link:hover {
+        background-color: #1b2431 !important;
+        box-shadow: inset 0 0 0 1px rgba(125, 157, 199, 0.2);
+    }
+
+    .theme-dark .app-pagination-track,
+    .theme-dark .app-pagination-page,
+    .theme-dark .app-pagination-arrow,
+    .theme-dark .app-pagination-mobile {
+        background-color: var(--dm-surface) !important;
+        border-color: var(--dm-border) !important;
+        color: var(--dm-muted) !important;
+    }
+
+    .theme-dark .app-pagination-page:hover,
+    .theme-dark .app-pagination-page:focus-visible,
+    .theme-dark .app-pagination-arrow:hover,
+    .theme-dark .app-pagination-arrow:focus-visible,
+    .theme-dark .app-pagination-mobile:hover,
+    .theme-dark .app-pagination-mobile:focus-visible {
+        background-color: #202833 !important;
+        color: var(--dm-ink) !important;
+        box-shadow: inset 0 0 0 1px rgba(96, 128, 170, 0.2);
+    }
+
+    .theme-dark .app-pagination-page--current {
+        background-color: #1e2a44 !important;
+        border-color: #3a4f7c !important;
+        color: #c9d4e8 !important;
+        box-shadow: inset 0 0 0 1px rgba(159, 176, 208, 0.22);
+    }
+
+    .theme-dark .app-pagination-page--ellipsis,
+    .theme-dark .app-pagination-arrow--disabled,
+    .theme-dark .app-pagination-mobile--disabled {
+        background-color: var(--dm-surface-soft) !important;
+        color: #708090 !important;
+        box-shadow: none;
+    }
+
+    .theme-dark .pie-track {
+        stroke: #334155 !important;
+    }
+
+    .theme-dark .pie-center-label {
+        fill: #9fb0c7 !important;
+    }
+
+    .theme-dark .pie-center-value {
+        fill: #e8eef9 !important;
+    }
+
+    .theme-dark .pie-legend-row {
+        background-color: #1a2432 !important;
+        box-shadow: inset 0 0 0 1px rgba(62, 85, 116, 0.36);
+    }
+
+    .theme-dark .pie-legend-row:hover {
+        background-color: #202c3d !important;
+        box-shadow: inset 0 0 0 1px rgba(96, 128, 170, 0.45);
+    }
+
+    .theme-dark .pie-legend-text {
+        color: #c8d5e8 !important;
+    }
+
+    .theme-dark .pie-legend-value {
+        color: #e8eef9 !important;
+    }
+
+    .theme-dark .admin-ticket-row:hover {
+        background-color: #1d2633 !important;
+    }
+
+    .theme-dark .bg-hoshishi-blue-50 {
+        background-color: #141c2e !important;
+    }
+
+    .theme-dark .bg-hoshishi-blue-100 {
+        background-color: #1c2740 !important;
+    }
+
+    .theme-dark .border-slate-100,
+    .theme-dark .border-slate-200,
+    .theme-dark .border-slate-300,
+    .theme-dark .border-gray-200,
+    .theme-dark .border-gray-300 {
+        border-color: var(--dm-border) !important;
+    }
+
+    /* The lines between list rows (divide-y) are not borders of the list itself, so the rule above misses them
+       and they stayed bright white on the dark surface. */
+    .theme-dark .divide-slate-100 > :not(:last-child),
+    .theme-dark .divide-slate-200 > :not(:last-child) {
+        border-color: var(--dm-border) !important;
+    }
+
+    .theme-dark .border-hoshishi-blue-200 {
+        border-color: #34466e !important;
+    }
+
+    /* Status badges, KPI cards, and icon accents use the light Tailwind palette
+       directly (bg-red-50, text-emerald-700, etc.) with no dark-mode equivalent,
+       so they show up as bright pastel boxes against the dark surface. Remap
+       each to Tailwind's own darker/lighter shades of the same hue so the
+       color-coding (success, warning, danger, info) still reads correctly. */
+    .theme-dark .bg-red-50 { @apply bg-red-950!; }
+    .theme-dark .bg-red-100 { @apply bg-red-900!; }
+    .theme-dark .bg-green-100 { @apply bg-green-900!; }
+    .theme-dark .bg-blue-50 { @apply bg-blue-950!; }
+    .theme-dark .bg-blue-100 { @apply bg-blue-900!; }
+    .theme-dark .bg-amber-50 { @apply bg-amber-950!; }
+    .theme-dark .bg-amber-100 { @apply bg-amber-900!; }
+    .theme-dark .bg-emerald-50 { @apply bg-emerald-950!; }
+    .theme-dark .bg-emerald-100 { @apply bg-emerald-900!; }
+    .theme-dark .bg-sky-50 { @apply bg-sky-950!; }
+    .theme-dark .bg-sky-100 { @apply bg-sky-900!; }
+    .theme-dark .bg-indigo-50 { @apply bg-indigo-950!; }
+    .theme-dark .bg-indigo-100 { @apply bg-indigo-900!; }
+    .theme-dark .bg-violet-50 { @apply bg-violet-950!; }
+    .theme-dark .bg-violet-100 { @apply bg-violet-900!; }
+    .theme-dark .bg-cyan-100 { @apply bg-cyan-900!; }
+    .theme-dark .bg-rose-50 { @apply bg-rose-950!; }
+    .theme-dark .bg-rose-100 { @apply bg-rose-900!; }
+    .theme-dark .bg-orange-50 { @apply bg-orange-950!; }
+    .theme-dark .bg-orange-100 { @apply bg-orange-900!; }
+
+    .theme-dark .text-red-600,
+    .theme-dark .text-red-700,
+    .theme-dark .text-red-800,
+    .theme-dark .text-red-900 { @apply text-red-300!; }
+
+    .theme-dark .text-green-800 { @apply text-green-300!; }
+
+    .theme-dark .text-blue-600,
+    .theme-dark .text-blue-800,
+    .theme-dark .text-blue-900 { @apply text-blue-300!; }
+
+    /* Links use the brand navy (the hoshishi-blue scale is navy now). Dark navy on the dark surface is too dim;
+       this lighter navy is ~11:1. Applies to every page, including the login page's Terms / Privacy / Consent links. */
+    .theme-dark .text-hoshishi-blue-700,
+    .theme-dark .text-hoshishi-blue-800,
+    .theme-dark .text-hoshishi-blue-900 { @apply text-[#c9d4e8]!; }
+
+    .theme-dark .text-hoshishi-blue-600 { @apply text-[#9fb0d0]!; }
+
+    /* Brand navy on the dark surface is too dim; this lighter navy is ~7:1 (signed-in layout only). */
+    .theme-dark body.app-authenticated .text-hoshishi-primary { color: #9fb0d0 !important; }
+
+    .theme-dark .text-amber-600,
+    .theme-dark .text-amber-700,
+    .theme-dark .text-amber-800,
+    .theme-dark .text-amber-900 { @apply text-amber-300!; }
+
+    .theme-dark .text-emerald-600,
+    .theme-dark .text-emerald-700,
+    .theme-dark .text-emerald-800,
+    .theme-dark .text-emerald-900 { @apply text-emerald-300!; }
+
+    .theme-dark .text-sky-600,
+    .theme-dark .text-sky-700,
+    .theme-dark .text-sky-800 { @apply text-sky-300!; }
+
+    .theme-dark .text-indigo-600,
+    .theme-dark .text-indigo-700,
+    .theme-dark .text-indigo-800,
+    .theme-dark .text-indigo-900 { @apply text-indigo-300!; }
+
+    .theme-dark .border-red-200,
+    .theme-dark .border-red-300 { @apply border-red-800!; }
+
+    .theme-dark .border-amber-200,
+    .theme-dark .border-amber-300 { @apply border-amber-800!; }
+
+    .theme-dark .border-emerald-200,
+    .theme-dark .border-emerald-300 { @apply border-emerald-800!; }
+
+    .theme-dark .border-sky-200,
+    .theme-dark .border-sky-300 { @apply border-sky-800!; }
+
+    .theme-dark .border-rose-200,
+    .theme-dark .border-rose-300 { @apply border-rose-800!; }
+
+    .theme-dark .border-orange-200,
+    .theme-dark .border-orange-300 { @apply border-orange-800!; }
+
+    .theme-dark .text-violet-600,
+    .theme-dark .text-violet-700,
+    .theme-dark .text-violet-800,
+    .theme-dark .text-violet-900 { @apply text-violet-300!; }
+
+    .theme-dark .text-rose-600,
+    .theme-dark .text-rose-700,
+    .theme-dark .text-rose-800,
+    .theme-dark .text-rose-900 { @apply text-rose-300!; }
+
+    .theme-dark .text-orange-600,
+    .theme-dark .text-orange-700,
+    .theme-dark .text-orange-800,
+    .theme-dark .text-orange-900 { @apply text-orange-300!; }
+
+    .theme-dark .text-sky-900 { @apply text-sky-200!; }
+
+    .theme-dark .text-cyan-700,
+    .theme-dark .text-cyan-800 { @apply text-cyan-300!; }
+
+    /* Keyboard focus ring on buttons: light gold on the dark surface, with a dark gap instead of a white one. */
+    .theme-dark .btn-primary:focus-visible,
+    .theme-dark .btn-secondary:focus-visible,
+    .theme-dark .btn-danger:focus-visible,
+    .theme-dark .btn-success:focus-visible,
+    .theme-dark .btn-warning:focus-visible {
+        --tw-ring-color: #e0a050 !important;
+        --tw-ring-offset-color: #171b21 !important;
+    }
+
+    /* Ticket-type toggle (Client Ticket / Staff Ticket): the checked state is a
+       hardcoded peer-checked:bg-white with no dark-mode equivalent. */
+    .theme-dark .peer:checked ~ .peer-checked\:bg-white {
+        background-color: var(--dm-surface-soft) !important;
+        color: var(--dm-ink) !important;
+    }
+
+    .theme-dark .text-slate-900 {
+        color: var(--dm-ink) !important;
+    }
+
+    .theme-dark .text-slate-800,
+    .theme-dark .text-gray-800 {
+        color: #d9e0ea !important;
+    }
+
+    .theme-dark .text-slate-700,
+    .theme-dark .text-slate-600,
+    .theme-dark .text-slate-500,
+    .theme-dark .text-slate-400 {
+        color: var(--dm-muted) !important;
+    }
+
+    .theme-dark .app-select-toggle,
+    .theme-dark .app-select-menu,
+    .theme-dark .search-history-panel {
+        background-color: var(--dm-surface-soft) !important;
+        border-color: var(--dm-border) !important;
+        color: var(--dm-ink) !important;
+    }
+
+    .theme-dark .app-select-toggle:hover,
+    .theme-dark .app-select-option:hover,
+    .theme-dark .app-select-option:focus-visible,
+    .theme-dark .search-history-item:hover,
+    .theme-dark .search-history-item:focus-visible {
+        background-color: #222b38 !important;
+    }
+
+    .theme-dark .app-select-option,
+    .theme-dark .search-history-item,
+    .theme-dark .search-history-head,
+    .theme-dark .search-history-empty {
+        color: var(--dm-muted) !important;
+    }
+
+    .theme-dark .app-select-option.is-active {
+        background-color: #1e2a44 !important;
+        color: #c9d4e8 !important;
+    }
+
+    .theme-dark .search-history-clear:hover,
+    .theme-dark .search-history-remove:hover {
+        background-color: #2a3442 !important;
+        color: #dbe4f3 !important;
+    }
+
+    .theme-dark .form-input,
+    .theme-dark input:not([type='checkbox']):not([type='radio']),
+    .theme-dark select,
+    .theme-dark textarea {
+        background-color: var(--dm-surface-soft) !important;
+        background-image: none !important;
+        color: var(--dm-ink) !important;
+        border-color: var(--dm-border) !important;
+        box-shadow: none !important;
+    }
+
+    /* Until the script swaps in the styled dropdown, a native select reads like it in dark mode too: the same text
+       colour, and the chevron that the reset above takes away (skipped where the page draws its own arrow icon). */
+    .theme-dark select:not(.app-native-select-hidden):not([multiple]):not([size]):not([data-native-select]):not(:has(+ svg.pointer-events-none)) {
+        color: var(--dm-ink) !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239aa4b2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3e%3c/svg%3e") !important;
+    }
+
+    .theme-dark .form-input::placeholder,
+    .theme-dark input:not([type='checkbox']):not([type='radio'])::placeholder,
+    .theme-dark textarea::placeholder {
+        color: #90a0b5 !important;
+        opacity: 1;
+    }
+
+    .theme-dark .form-input:disabled,
+    .theme-dark .form-input[readonly],
+    .theme-dark input:not([type='checkbox']):not([type='radio']):disabled,
+    .theme-dark input:not([type='checkbox']):not([type='radio'])[readonly],
+    .theme-dark select:disabled,
+    .theme-dark textarea:disabled,
+    .theme-dark textarea[readonly] {
+        background-color: #1b222c !important;
+        background-image: none !important;
+        border-color: #3a4656 !important;
+        color: #acb8c9 !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+        opacity: 1 !important;
+    }
+
+    .theme-dark .form-label {
+        color: #b7c4d8 !important;
+    }
+
+    .theme-dark .form-input[type="file"]::file-selector-button {
+        background-color: #2c3d63 !important;
+        color: #ffffff !important;
+        border: 1px solid #2c3d63 !important;
+    }
+
+    .theme-dark .form-input[type="file"]::file-selector-button:hover {
+        background-color: #3a4f7c !important;
+        border-color: #3a4f7c !important;
+    }
+
+    .theme-dark .btn-secondary {
+        background-color: var(--dm-surface-soft) !important;
+        color: var(--dm-ink) !important;
+        border-color: var(--dm-border) !important;
+    }
+
+    .theme-dark .btn-primary {
+        background-color: #2c3d63 !important;
+    }
+
+    .theme-dark .ticket-checkbox {
+        background-color: #1b2430 !important;
+        border-color: #8fa3be !important;
+        box-shadow:
+            0 0 0 1px rgba(15, 23, 42, 0.58),
+            inset 0 0 0 1px rgba(0, 0, 0, 0.28) !important;
+    }
+
+    .theme-dark .ticket-checkbox:hover {
+        border-color: #abc0da !important;
+    }
+
+    .theme-dark .ticket-checkbox:checked {
+        background-color: #4f6694 !important;
+        border-color: #4f6694 !important;
+    }
+
+    .theme-dark .ticket-checkbox:checked::after {
+        border-color: #ffffff;
+    }
+
+    .theme-dark .app-modal-overlay {
+        background-color: rgba(8, 12, 20, 0.44) !important;
+        background-image: radial-gradient(circle at top, rgba(44, 61, 99, 0.1), transparent 58%);
+        backdrop-filter: blur(1.5px) saturate(112%);
+    }
+
+    .theme-dark .assigned-tech-btn--assigned {
+        background-color: #1f2c49 !important;
+        color: #c9d4e8 !important;
+    }
+
+    .theme-dark .assigned-tech-btn--assigned:hover {
+        background-color: #2c3d63 !important;
+        color: #dbe4f3 !important;
+    }
+
+    .theme-dark .assigned-tech-btn--unassigned {
+        background-color: #3b3020 !important;
+        color: #f4cf84 !important;
+    }
+
+    .theme-dark .assigned-tech-btn--unassigned:hover {
+        background-color: #4a3c28 !important;
+        color: #f7d99f !important;
+    }
+
+    .theme-dark .client-ticket-row:hover {
+        background-color: #1f2833 !important;
+    }
+
+    .theme-dark .app-nav-link:hover {
+        background-color: rgba(148, 163, 184, 0.12) !important;
+    }
+
+    .theme-dark .app-menu-link:hover {
+        background-color: #1f2833 !important;
+    }
+
+    .theme-dark .shadow-sm,
+    .theme-dark .shadow,
+    .theme-dark .shadow-lg,
+    .theme-dark .shadow-xl {
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45) !important;
+    }
+
+    .theme-dark .chat-meta-badge {
+        background-color: #222b38 !important;
+        border: 1px solid #384456;
+        color: #b9c6d9 !important;
+    }
+
+    .theme-dark .chat-meta-badge--deleted {
+        background-color: #3a252f !important;
+        border-color: #654354;
+        color: #ffd7e0 !important;
+    }
+
+    .theme-dark .js-chat-bubble.chat-bubble-deleted {
+        background-color: #1b222c !important;
+        border-color: #384456 !important;
+    }
+
+    .theme-dark .js-chat-bubble.chat-bubble-deleted .js-message-text {
+        color: #b6c2d2 !important;
+    }
+
+    .theme-dark * {
+        scrollbar-color: var(--dm-thumb) var(--dm-track);
+    }
+
+    .theme-dark ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    .theme-dark ::-webkit-scrollbar-track {
+        background: var(--dm-track);
+    }
+
+    .theme-dark ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--dm-thumb), #2f3844);
+        border-radius: 9999px;
+        border: 2px solid var(--dm-track);
+    }
+
+    .theme-dark ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, var(--dm-thumb-hover), #3a4654);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+        transition-delay: 0ms !important;
+    }
+
+    .motion-page-enter {
+        animation: none !important;
+    }
+
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none !important;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   Accessibility and phone usability
+   Unlayered on purpose: these must win over the layered component/utility
+   rules above (Tailwind's layers lose to unlayered CSS regardless of specificity).
+   --------------------------------------------------------------------------- */
+
+/* Keyboard users can jump past the sidebar and header to the page content. */
+.skip-link {
+    position: absolute;
+    left: 0.75rem;
+    top: -4rem;
+    z-index: 100;
+    border-radius: 0.5rem;
+    background: #1a2640;
+    padding: 0.6rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #ffffff;
+    text-decoration: none;
+    transition: top 0.15s ease-out;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+    top: 0.75rem;
+    outline: 2px solid #e0a050;
+    outline-offset: 2px;
+}
+
+/* The custom dropdowns show where the keyboard is (the old 20% ring was invisible on white). */
+.app-select-toggle:focus-visible {
+    outline: 2px solid #2c3d63;
+    outline-offset: 2px;
+}
+
+.theme-dark .app-select-toggle:focus-visible {
+    outline-color: #e0a050;
+}
+
+/* A closed dropdown menu must not be reachable with Tab: hide it from focus, not just from sight.
+   The fade-out finishes first; opening shows it at once so the first option can take focus. */
+.app-select-menu,
+.search-history-panel {
+    visibility: hidden;
+    transition:
+        opacity var(--motion-duration-fast) var(--motion-ease-standard),
+        transform var(--motion-duration-fast) var(--motion-ease-standard),
+        visibility 0s linear var(--motion-duration-fast);
+}
+
+.app-select.is-open .app-select-menu,
+.search-history-panel.is-open {
+    visibility: visible;
+    transition:
+        opacity var(--motion-duration-fast) var(--motion-ease-standard),
+        transform var(--motion-duration-fast) var(--motion-ease-standard),
+        visibility 0s;
+}
+
+/* The phone menu covers the page: do not let the page scroll behind it. */
+@media (max-width: 1023.98px) {
+    body.app-drawer-open {
+        overflow: hidden;
+    }
+}
+
+/* iPhone Safari zooms into any field with text smaller than 16px and often stays zoomed. */
+@media (max-width: 767.98px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="submit"]):not([type="button"]),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* Touch screens: checkboxes and radios at the 24px minimum target size (WCAG 2.5.8). */
+@media (pointer: coarse) {
+    input[type="checkbox"]:not(.ticket-checkbox):not(.sr-only),
+    input[type="radio"]:not(.sr-only) {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+
+    button,
+    [role="button"],
+    .app-menu-link {
+        min-height: 24px;
+    }
+}
+
+/* Phone held sideways: the header and its search row would take over a third of the screen. */
+@media (max-height: 500px) and (orientation: landscape) {
+    .app-header-row {
+        height: 3.25rem;
+    }
+
+    /* The phone search row is the header row's next sibling (hidden from xl up already). */
+    .app-header-row ~ .xl\:hidden {
+        display: none;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   Tappable star rating (see components/ui/star-rating). Unlayered so it wins over Tailwind's layers.
+   --------------------------------------------------------------------------- */
+.star-rating {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+}
+
+.star-rating__stars {
+    display: flex;
+    flex-direction: row-reverse; /* markup order is 5..1, so the stars read 1..5 left to right */
+    justify-content: flex-end;
+    gap: 0.25rem;
+}
+
+.star-rating__stars label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    cursor: pointer;
+    color: #cbd5e1;
+    border-radius: 0.75rem;
+}
+
+.star-rating__stars svg {
+    width: 2rem;
+    height: 2rem;
+    fill: currentColor;
+}
+
+/* Fill the chosen star and every lower one, and preview the same on hover. */
+.star-rating__stars input:checked ~ label,
+.star-rating__stars label:hover,
+.star-rating__stars label:hover ~ label {
+    color: #f59e0b;
+}
+
+.star-rating__stars input:focus-visible + label {
+    outline: 2px solid #2c3d63;
+    outline-offset: 2px;
+}
+
+.star-rating[aria-invalid="true"] .star-rating__stars label {
+    outline: 1px solid #fca5a5;
+}
+
+.theme-dark .star-rating__stars label {
+    color: #475569;
+}
+
+.theme-dark .star-rating__stars input:checked ~ label,
+.theme-dark .star-rating__stars label:hover,
+.theme-dark .star-rating__stars label:hover ~ label {
+    color: #fbbf24;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .star-rating__stars label {
+        transition: color 0.12s ease-out, transform 0.12s ease-out;
+    }
+
+    .star-rating__stars label:active {
+        transform: scale(0.92);
+    }
+}
+
+/* On a refresh or back/forward the page is already familiar, so it simply appears: no fade-and-slide-in that
+   makes the content look like it is jumping into place. The class is set by public/js/theme-initializer.js and
+   only when the visit was not a normal link navigation. Unlayered so it beats the animation utilities. */
+html.no-enter-motion .motion-page-enter,
+html.no-enter-motion .stagger-fade > *,
+html.no-enter-motion .app-table-body > tr {
+    animation: none;
+}
+
+/* Until the script swaps in the styled dropdown (.app-select-toggle), a native select takes the same box -
+   height, corners, padding, clipped text - so the field does not change size or shift its text when the swap
+   happens. Unlayered so it also wins over the px-3/h-10 utilities some selects carry. */
+select:not(.app-native-select-hidden):not([multiple]):not([size]):not([data-native-select]) {
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0.75rem;
+    padding-right: 2.25rem;
+    background-position: right 0.75rem center;
+    background-size: 1rem 1rem;
+    background-repeat: no-repeat;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* The chevron of that native select, drawn like the dropdown's own caret (slate-500, 2px stroke), except where the
+   page already draws an arrow icon next to the select. Dark mode supplies its own in the dark section above. */
+select:not(.app-native-select-hidden):not([multiple]):not([size]):not([data-native-select]):not(:has(+ svg.pointer-events-none)) {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3e%3c/svg%3e");
+}
+
+/* A multi-select shows as a tall list box until the script replaces it with the one-line dropdown. Draw it as that
+   one-line box from the start (options hidden) so the form below it does not jump up when the swap happens. */
+select[multiple][data-enhanced-multiselect]:not(.app-native-select-hidden) {
+    height: 2.5rem;
+    overflow: hidden;
+}
+
+select[multiple][data-enhanced-multiselect]:not(.app-native-select-hidden) option {
+    display: none;
+}

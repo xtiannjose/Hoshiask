@@ -55,6 +55,7 @@ class UiConsistencyGuardTest extends TestCase
             'client/tickets/partials/show-resolve-modal.blade.php',
             'client/tickets/partials/show-attachment-modal.blade.php',
             'client/tickets/partials/show-delete-reply-modal.blade.php',
+            'components/ui/delete-confirm-modal.blade.php',
             'legal/modal.blade.php',
         ];
 

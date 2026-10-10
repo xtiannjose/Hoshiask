@@ -96,7 +96,10 @@ class KnowledgeBasePopupTest extends TestCase
         $response->assertSee('data-kb-article="kb-article-'.$article->id.'"', false);
         $response->assertSee('after:absolute after:inset-0', false);
         $response->assertSee('relative z-10 flex shrink-0 items-center gap-1', false);
-        $response->assertSee('data-confirm="Delete this article? This cannot be undone."', false);
+        // Delete is a trash icon that opens the shared confirmation dialog; nothing is sent from the row itself.
+        $response->assertSee('data-delete-action="'.route('admin.knowledge-base.destroy', $article).'"', false);
+        $response->assertSee('aria-label="Delete Article: ', false);
+        $response->assertSee('id="delete-confirm-modal"', false);
         // Managers get the author line, a Draft marker where it applies, and an Edit button in the popup.
         $response->assertSee('By Admin');
         $response->assertSee('Edit Article');

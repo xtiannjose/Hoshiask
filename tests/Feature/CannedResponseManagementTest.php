@@ -36,6 +36,20 @@ class CannedResponseManagementTest extends TestCase
         $this->assertDatabaseMissing('canned_responses', ['id' => $cannedResponse->id]);
     }
 
+    public function test_deleting_a_canned_response_asks_for_confirmation_in_the_shared_dialog(): void
+    {
+        $admin = $this->createUser('Canned Admin', 'canned-admin@example.com', User::ROLE_ADMIN);
+        $response = CannedResponse::create(['title' => 'Greeting', 'body' => 'Hello.', 'created_by_user_id' => $admin->id]);
+
+        $html = $this->actingAs($admin)->get(route('admin.canned-responses.index'))->assertOk()->getContent();
+
+        // A trash icon opens the dialog; the row itself holds no form that could delete without asking.
+        $this->assertStringContainsString('data-delete-action="'.route('admin.canned-responses.destroy', $response).'"', $html);
+        $this->assertStringContainsString('aria-label="Delete Canned Response: Greeting"', $html);
+        $this->assertStringContainsString('id="delete-confirm-modal"', $html);
+        $this->assertSame(1, substr_count($html, 'name="_method" value="DELETE"'));
+    }
+
     public function test_technician_cannot_manage_canned_responses_but_can_list_them(): void
     {
         $technician = $this->createAssignedSupportUser('Canned Technician', 'canned-technician@example.com');

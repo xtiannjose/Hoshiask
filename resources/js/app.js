@@ -1,4 +1,5 @@
 import Alpine from '@alpinejs/csp';
+import { registerDeleteConfirm } from './lib/delete-confirm';
 import { registerEnhancedSelects } from './lib/enhanced-selects';
 import { registerFormBehaviors } from './lib/form-behaviors';
 import { registerLocationSuggestions } from './lib/location-suggestions';
@@ -17,6 +18,7 @@ Alpine.start();
 
 registerFormBehaviors();
 registerModalKit();
+registerDeleteConfirm();
 registerEnhancedSelects();
 registerUploadGuard();
 registerRatingForms();

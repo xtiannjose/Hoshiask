@@ -2,7 +2,7 @@
 
 Where the work to improve Helpdesk with Claude Code stands, what was decided, and what comes next. Claude reads this at the start of a session (`CLAUDE.md` points here) and updates it when a step finishes, so the plan survives a new device or a new conversation.
 
-Last updated: 2026-10-10 (second deep check of the whole app; the first was the audit by QA, security and senior developer reviewers).
+Last updated: 2026-10-10 (second deep check of the whole app, then a rewrite of the docs; the first check was the audit by QA, security and senior developer reviewers).
 
 **Waiting on the maintainer:** the step-by-step list in [pending-actions.md](pending-actions.md) (change the shadow password, install ClamAV, deploy `main`). Read it before suggesting anything else.
 
@@ -63,6 +63,21 @@ Looked at and left alone (decisions for the maintainer, not defects):
 - The `php -l` step in CI repeats what Pint and the tests already catch.
 - PHPStan stays at level 5: level 7 only adds missing generics and return types, no defects.
 - Not run: the workflow YAML on GitHub (it parses; it needs a push to run).
+
+## Docs rewrite (2026-10-10)
+
+Every document in `docs/`, `README.md` and `CONTRIBUTING.md` was rewritten against the code so that a new reader can follow it, and `docs/structure.md` is new (request flow, roles, folders, scheduled jobs, where to change what). They are committed on `fix/deep-check-cleanup`, one commit per topic, and not pushed yet; the maintainer decides when to push.
+
+Mistakes found in the old text and fixed:
+
+- The deploy steps did not follow the order the deploy scripts use.
+- The guide said clients choose a severity (they do not; staff set it) and that saved views are for some staff only (every staff member has them).
+- `HELPDESK_QUEUE_WORKER_RUNNING` was described as a flag to set; leave it blank and the status check looks for a running `queue:work` (`.env.example` now says so).
+- Setup did not say that the seeders need `STAFF_DEFAULT_PASSWORD`, `CLIENT_DEFAULT_PASSWORD` and `SHADOW_PASSWORD`, and offered `db:seed` as a way to reset accounts (it also adds 8 sample tickets).
+- Security, backup and glossary text said an admin or a new account gets temporary passwords; only the shadow account issues them, when it resets a password.
+- Some terms did not follow `GLOSSARY.md` (ITD staff, technical user, priority, open ticket, staff ticket).
+
+The staff guide gained a "who can do what" table and sections on signing in, the ticket list, bulk actions, merging, user accounts and departments. Its PDF was rebuilt (`php artisan helpdesk:build-workflow-pdf`).
 
 ## Decisions already made
 

@@ -300,13 +300,13 @@ Clients are never emailed about their own actions, internal notes, assignment ch
 
 ### Canned responses
 
-Staff can insert saved reply templates when replying. Super users, admins and the shadow account write and manage them (Canned Responses in the menu). The whole feature can be switched off with `HELPDESK_CANNED_REPLIES_ENABLED=false`: the menu link, the management page and the picker in the reply form disappear, and nothing in the database is touched.
+Staff can insert saved reply templates when replying. Super users, admins and the shadow account write and manage them (Canned Responses in the menu). The red trash icon on a row deletes it, after a confirmation pop-up. The whole feature can be switched off with `HELPDESK_CANNED_REPLIES_ENABLED=false`: the menu link, the management page and the picker in the reply form disappear, and nothing in the database is touched.
 
 ### Knowledge base
 
 A self-service library of FAQs, policies and guides, separate from the ticket list, so people can find an answer without filing a ticket.
 
-- Super users, admins and the shadow account write and manage articles (Knowledge Base in the menu): a title, a category (`FAQ`, `Policy` or `Guide`) and the content. An article is either a draft or published.
+- Super users, admins and the shadow account write and manage articles (Knowledge Base in the menu): a title, a category (`FAQ`, `Policy` or `Guide`) and the content. An article is either a draft or published. The red trash icon on a row deletes it, after a confirmation pop-up.
 - Technicians can read published articles but not write them.
 - Clients have their own Knowledge Base page where they can search and read published articles. They never see drafts.
 - An article is not linked to a ticket category: it is a general library.
@@ -365,7 +365,7 @@ Super users, admins and the shadow account open **Users**. There are two lists: 
 
 ### Departments
 
-Admins and the shadow account manage departments (Admin → Departments): a name and a logo (`png`, `jpg`, `jpeg`, `webp`, `bmp` or `gif`, up to 2 MB). A name must be unique, ignoring capital letters. Departments cannot be deleted. The department of a client is the field office of their tickets.
+Admins and the shadow account manage departments (Admin → Departments): a name and a logo (`png`, `jpg`, `jpeg`, `webp`, `bmp` or `gif`, up to 2 MB). A name must be unique, ignoring capital letters. A department can be deleted with the red trash icon, after a confirmation pop-up, only when no account and no ticket uses it and it is not the support department. Otherwise the icon is greyed out and its tooltip says why; to retire a department that is in use, rename it. Deleting removes its logo and is written to the audit trail. The department of a client is the field office of their tickets.
 
 ### Hidden from clients
 

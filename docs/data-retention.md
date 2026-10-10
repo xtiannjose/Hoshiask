@@ -10,7 +10,7 @@ The privacy notice says personal details are not kept forever (`LEGAL_RETENTION_
 
 **It is switched off.** Nothing is removed until `HELPDESK_RETENTION_ENABLED=true`, because removal cannot be undone (except from a backup). To turn it on:
 
-1. Run `php artisan helpdesk:enforce-retention --dry-run` and read the list. With the default three years nothing is old enough yet (the earliest tickets date from 2025), so the list is empty until 2028. `--years=1` lets you rehearse with a shorter period.
+1. Run `php artisan helpdesk:enforce-retention --dry-run` and read the list. While your oldest closed ticket is younger than the period (three years by default), the list is empty. `--years=1` lets you rehearse with a shorter period.
 2. Set `HELPDESK_RETENTION_ENABLED=true` and `HELPDESK_RETENTION_YEARS`, then `php artisan config:clear`.
 3. Keep the wording of `LEGAL_RETENTION_PERIOD` in step with `HELPDESK_RETENTION_YEARS`: the notice must say what the system does.
 

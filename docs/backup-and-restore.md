@@ -10,7 +10,7 @@ Every night at 02:40 the server runs `php artisan helpdesk:backup`. It makes **o
 - every uploaded file: ticket and reply attachments, and department logos;
 - a list of everything inside with a fingerprint (SHA-256) of each part, so damage can be detected.
 
-The file is **encrypted** with a key that only you keep. Right after making it, the server opens it again and checks every part. Every Sunday at 04:20 it checks the newest backup again (`helpdesk:backup-verify`). Backups older than 14 days (`HELPDESK_BACKUP_RETENTION_DAYS`) are removed.
+The file is **encrypted** with a key that only you keep. Right after making it, the server opens it again and checks every part. Every Sunday at 04:20 it checks the newest backup again (`helpdesk:backup-verify`). Backups older than 14 days (`HELPDESK_BACKUP_RETENTION_DAYS`) are removed from the server, but the newest three are always kept, so a run of failed nights can never leave you with none.
 
 **One backup file plus the key is enough to rebuild all the data.** You also need the `.env` settings (database password, mail password, `APP_KEY`), so keep a copy of `.env` in your password manager as well.
 
@@ -130,7 +130,7 @@ You need: the newest backup file (from the second copy), the backup key, and the
 
 Then delete `/tmp/restore` and `helpdesk.tar`: they are not encrypted.
 
-**About `APP_KEY`:** use the old one from `.env`. The only data that depends on it are pending one-time temporary passwords for new accounts (credential handoffs). With a different `APP_KEY` those cannot be read and must be issued again, and everyone has to sign in again; nothing else is lost. Backups do not depend on `APP_KEY` at all.
+**About `APP_KEY`:** use the old one from `.env`. The only data that depends on it are pending one-time temporary passwords (credential handoffs that the shadow account issued but has not revealed yet). With a different `APP_KEY` those cannot be read and must be issued again, and everyone has to sign in again; nothing else is lost. Backups do not depend on `APP_KEY` at all.
 
 ## Quarterly rehearsal (30 minutes)
 

@@ -35,6 +35,7 @@ class TicketsAutoCloseResolved extends Command
         $tickets = Ticket::query()
             ->where('status', 'resolved')
             ->where('resolved_at', '<=', now()->subDays($closeAfterDays))
+            ->with('user:id,name,email,role,is_active')
             ->get()
             ->filter(fn (Ticket $ticket) => $this->isReadyToClose($ticket, $alerts));
 

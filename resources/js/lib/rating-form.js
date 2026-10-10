@@ -1,7 +1,7 @@
 // A comment is optional for a good rating, but asked for when the client gives 1 or 2 stars, so the
 // team learns what went wrong. The server enforces the same rule; this only makes it visible early.
 
-export const LOW_RATING_MAX = 2;
+const LOW_RATING_MAX = 2;
 
 export const commentRequiredForRating = (value) => {
     const rating = Number.parseInt(String(value), 10);

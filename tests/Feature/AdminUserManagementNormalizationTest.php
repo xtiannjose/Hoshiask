@@ -229,6 +229,118 @@ class AdminUserManagementNormalizationTest extends TestCase
         ]);
     }
 
+    public function test_an_email_that_differs_only_in_letter_case_is_refused_when_creating_a_user(): void
+    {
+        $superAdmin = User::create([
+            'name' => 'Email Case Admin',
+            'email' => 'email-case-admin@example.com',
+            'phone' => '09100000040',
+            'department' => 'Hoshishi',
+            'role' => User::ROLE_ADMIN,
+            'password' => Hash::make('password123'),
+            'is_active' => true,
+        ]);
+        User::create([
+            'name' => 'Existing Client',
+            'email' => 'Ana.Cruz@Example.com',
+            'phone' => '09100000041',
+            'department' => 'Hoshishi',
+            'role' => User::ROLE_CLIENT,
+            'password' => Hash::make('password123'),
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($superAdmin)->post(route('admin.users.store'), [
+            'name' => 'Second Ana',
+            'email' => 'ana.cruz@example.com',
+            'phone' => '09229990001',
+            'department' => 'Orbit',
+            'role' => User::ROLE_CLIENT,
+            'password' => 'purple-giraffe-lamp',
+            'password_confirmation' => 'purple-giraffe-lamp',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertSame(1, User::query()->whereRaw('LOWER(email) = ?', ['ana.cruz@example.com'])->count());
+    }
+
+    public function test_an_email_that_differs_only_in_letter_case_is_refused_when_editing_a_user(): void
+    {
+        $superAdmin = User::create([
+            'name' => 'Email Case Editor',
+            'email' => 'email-case-editor@example.com',
+            'phone' => '09100000042',
+            'department' => 'Hoshishi',
+            'role' => User::ROLE_ADMIN,
+            'password' => Hash::make('password123'),
+            'is_active' => true,
+        ]);
+        User::create([
+            'name' => 'Taken Email Client',
+            'email' => 'Taken.Client@Example.com',
+            'phone' => '09100000043',
+            'department' => 'Hoshishi',
+            'role' => User::ROLE_CLIENT,
+            'password' => Hash::make('password123'),
+            'is_active' => true,
+        ]);
+        $client = User::create([
+            'name' => 'Editing Client',
+            'email' => 'editing.client@example.com',
+            'phone' => '09100000044',
+            'department' => 'Hoshishi',
+            'role' => User::ROLE_CLIENT,
+            'password' => Hash::make('password123'),
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($superAdmin)->put(route('admin.users.update', $client), [
+            'name' => 'Editing Client',
+            'email' => 'TAKEN.CLIENT@example.com',
+            'phone' => '09100000044',
+            'department' => 'Hoshishi',
+            'role' => User::ROLE_CLIENT,
+            'is_active' => true,
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertSame('editing.client@example.com', $client->fresh()->email);
+    }
+
+    public function test_a_user_may_change_the_letter_case_of_their_own_email(): void
+    {
+        $superAdmin = User::create([
+            'name' => 'Own Email Case Admin',
+            'email' => 'own-email-case-admin@example.com',
+            'phone' => '09100000045',
+            'department' => 'Hoshishi',
+            'role' => User::ROLE_ADMIN,
+            'password' => Hash::make('password123'),
+            'is_active' => true,
+        ]);
+        $client = User::create([
+            'name' => 'Own Case Client',
+            'email' => 'own.case.client@example.com',
+            'phone' => '09100000046',
+            'department' => 'Hoshishi',
+            'role' => User::ROLE_CLIENT,
+            'password' => Hash::make('password123'),
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($superAdmin)->put(route('admin.users.update', $client), [
+            'name' => 'Own Case Client',
+            'email' => 'Own.Case.Client@example.com',
+            'phone' => '09100000046',
+            'department' => 'Hoshishi',
+            'role' => User::ROLE_CLIENT,
+            'is_active' => true,
+        ]);
+
+        $response->assertSessionDoesntHaveErrors('email');
+        $this->assertSame('Own.Case.Client@example.com', $client->fresh()->email);
+    }
+
     public function test_super_user_cannot_edit_technical_account(): void
     {
         $superUser = User::create([

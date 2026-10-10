@@ -10,4 +10,5 @@
 
 - [ ] `composer qa` and `npm run qa` pass (add `npm run qa:full` for UI changes)
 - [ ] New settings are in `.env.example` and `docs/configuration.md`
-- [ ] Docs updated where behaviour changed
+- [ ] Docs updated where behaviour changed (and the guide's PDF rebuilt if `docs/ticket-system-workflow.md` changed)
+- [ ] Permission is checked on the server, and security-relevant actions are in the audit trail

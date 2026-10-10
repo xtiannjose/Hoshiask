@@ -1,5 +1,13 @@
 import { bootPage } from './shared/boot-page';
 import { normalizeLeadingUppercase } from '../lib/html-utils';
+import {
+    describeAccountMatches,
+    describeListedAccounts,
+    fetchRequesterAccounts,
+    mergeSearchResults,
+} from './shared/requester-account-search';
+
+const SEARCH_DELAY_MS = 250;
 
 const initAdminTicketCreatePage = () => {
     const pageRoot = document.querySelector('[data-admin-ticket-create-page]');
@@ -7,9 +15,12 @@ const initAdminTicketCreatePage = () => {
 
     const form = document.getElementById('admin-ticket-create-form');
     const requesterSelect = pageRoot.querySelector('[data-client-account-select]');
+    const requesterSearchInput = pageRoot.querySelector('[data-requester-search]');
+    const requesterSearchUrl = String(pageRoot.dataset.requesterSearchUrl || '').trim();
     const ticketTypeInputs = Array.from(pageRoot.querySelectorAll('[data-ticket-type-input]'))
         .filter((input) => input instanceof HTMLInputElement);
     const requesterAccountsElement = pageRoot.querySelector('[data-requester-accounts]');
+    const requesterAccountTotalsElement = pageRoot.querySelector('[data-requester-account-totals]');
     const requesterAccountLabel = pageRoot.querySelector('[data-requester-account-label]');
     const requesterAccountHelp = pageRoot.querySelector('[data-requester-account-help]');
     const requesterSnapshotNote = pageRoot.querySelector('[data-requester-snapshot-note]');
@@ -33,6 +44,19 @@ const initAdminTicketCreatePage = () => {
             accountOptions = [];
         }
     }
+
+    // The page lists only the first accounts of each kind; the search box asks the server for the rest.
+    const initialAccountOptions = [...accountOptions];
+    let accountTotals = { client: 0, support: 0 };
+    if (requesterAccountTotalsElement instanceof HTMLScriptElement) {
+        try {
+            accountTotals = { ...accountTotals, ...JSON.parse(requesterAccountTotalsElement.textContent || '{}') };
+        } catch {
+            // Without totals the page simply does not mention that the list is partial.
+        }
+    }
+    let searchTimerId = 0;
+    let searchController = null;
 
     const fields = [
         document.getElementById('province'),
@@ -69,9 +93,13 @@ const initAdminTicketCreatePage = () => {
         }
 
         if (requesterAccountHelp) {
-            requesterAccountHelp.textContent = isInternal
+            const group = isInternal ? 'support' : 'client';
+            const listed = initialAccountOptions.filter((option) => option.group === group).length;
+
+            requesterAccountHelp.textContent = (isInternal
                 ? 'Staff tickets show only active staff requester accounts.'
-                : 'Client tickets show only active client requester accounts.';
+                : 'Client tickets show only active client requester accounts.')
+                + describeListedAccounts({ shown: listed, total: Number(accountTotals[group]) || 0 });
         }
 
         if (requesterSnapshotNote) {
@@ -107,7 +135,7 @@ const initAdminTicketCreatePage = () => {
         }
     };
 
-    const rebuildRequesterOptions = ({ forceSelection = false } = {}) => {
+    const rebuildRequesterOptions = ({ forceSelection = false, autoSelect = true } = {}) => {
         if (!(requesterSelect instanceof HTMLSelectElement)) return;
 
         const isInternal = activeRequesterGroup() === 'support';
@@ -126,7 +154,8 @@ const initAdminTicketCreatePage = () => {
                 : '';
         }
 
-        if (nextValue === '' && availableOptions.length === 1) {
+        // A search that finds one account must not choose it: the person has not picked it yet.
+        if (autoSelect && nextValue === '' && availableOptions.length === 1) {
             nextValue = availableOptions[0].value;
         }
 
@@ -176,6 +205,96 @@ const initAdminTicketCreatePage = () => {
         });
     };
 
+    const resetRequesterSearch = () => {
+        window.clearTimeout(searchTimerId);
+        if (searchController) {
+            searchController.abort();
+            searchController = null;
+        }
+        accountOptions = [...initialAccountOptions];
+        if (requesterSearchInput instanceof HTMLInputElement) {
+            requesterSearchInput.value = '';
+        }
+    };
+
+    const runRequesterSearch = async () => {
+        if (!(requesterSearchInput instanceof HTMLInputElement) || requesterSearchUrl === '') return;
+
+        const group = activeRequesterGroup();
+        const query = requesterSearchInput.value.trim();
+        const selectedValue = requesterSelect instanceof HTMLSelectElement
+            ? String(requesterSelect.value || '').trim()
+            : '';
+
+        if (searchController) {
+            searchController.abort();
+            searchController = null;
+        }
+
+        if (query === '') {
+            // Back to the accounts listed with the page.
+            accountOptions = mergeSearchResults(
+                accountOptions,
+                group,
+                initialAccountOptions.filter((option) => option.group === group),
+                selectedValue,
+            );
+            rebuildRequesterOptions({ autoSelect: false });
+            updateRequesterCopy();
+            return;
+        }
+
+        const controller = new AbortController();
+        searchController = controller;
+        if (requesterAccountHelp) {
+            requesterAccountHelp.textContent = describeAccountMatches({ searching: true });
+        }
+
+        try {
+            const { accounts, total } = await fetchRequesterAccounts({
+                url: requesterSearchUrl,
+                group,
+                query,
+                signal: controller.signal,
+            });
+
+            // The person kept typing or switched the ticket type while this answer was on its way.
+            if (controller.signal.aborted) return;
+
+            accountOptions = mergeSearchResults(accountOptions, group, accounts, selectedValue);
+            rebuildRequesterOptions({ autoSelect: false });
+            if (requesterAccountHelp) {
+                requesterAccountHelp.textContent = describeAccountMatches({ shown: accounts.length, total });
+            }
+        } catch {
+            if (controller.signal.aborted) return;
+
+            if (requesterAccountHelp) {
+                requesterAccountHelp.textContent = 'The account search is unavailable right now. Pick from the list, or try again.';
+            }
+        } finally {
+            if (searchController === controller) {
+                searchController = null;
+            }
+        }
+    };
+
+    if (requesterSearchInput instanceof HTMLInputElement) {
+        requesterSearchInput.addEventListener('input', () => {
+            window.clearTimeout(searchTimerId);
+            searchTimerId = window.setTimeout(runRequesterSearch, SEARCH_DELAY_MS);
+        });
+
+        // Enter would otherwise send the whole ticket form.
+        requesterSearchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                window.clearTimeout(searchTimerId);
+                runRequesterSearch();
+            }
+        });
+    }
+
     fields.forEach((field) => {
         field.addEventListener('blur', () => {
             normalizeField(field);
@@ -196,6 +315,7 @@ const initAdminTicketCreatePage = () => {
     if (ticketTypeInputs.length > 0) {
         ticketTypeInputs.forEach((input) => {
             input.addEventListener('change', () => {
+                resetRequesterSearch();
                 rebuildRequesterOptions({ forceSelection: true });
                 updateRequesterCopy();
                 updateAssignmentVisibility();

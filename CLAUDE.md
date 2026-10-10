@@ -9,8 +9,9 @@ Helpdesk: Laravel 13 / PHP 8.3 ticketing system with a client portal (`/client`)
 ```bash
 composer qa && npm run qa     # the full gate CI runs; add `npm run qa:full` (Playwright) when UI behaviour changes
 php artisan test --filter=ClientTicketReopenTest      # one class, or a test_ method name
+php artisan test --parallel                           # whole suite across CPU cores, about 70 s instead of 165 s
 npx vitest run resources/js/lib/upload-guard.test.js
-npx playwright test tests/e2e/admin-smoke.spec.js     # starts `php artisan serve` itself
+npx playwright test tests/e2e/admin-smoke.spec.js     # starts `php artisan serve` itself; give it a database of its own first (docs/testing.md)
 vendor/bin/pint                                       # fix style
 php artisan helpdesk:ops-status                       # runtime health and advisories
 ```
@@ -46,11 +47,12 @@ PHPUnit runs on in-memory SQLite; CI also runs the suite on PostgreSQL 16, so ev
 - Risky features ship switched off behind a config flag, with a `--dry-run` where it applies and an ops-status advisory (see retention clean-up, upload scanning).
 - Commit messages and PR titles are plain-English sentences about behaviour ("Do not create two tickets when the same form is sent twice"), without Conventional Commit prefixes.
 - Branches: `feature/...`, `fix/...`, `docs/...`. PR body: `## Summary` (before / now) and `## Evidence` (tests run, counts, measurements).
-- After editing `docs/ticket-system-workflow.md` (the staff/client guide), regenerate its PDF with `php artisan helpdesk:build-workflow-pdf`.
+- A change in behaviour updates the matching document in the same pull request. After editing `docs/ticket-system-workflow.md` (the staff/client guide), regenerate its PDF with `php artisan helpdesk:build-workflow-pdf`.
+- Files use LF line endings (`.gitattributes`). Write them with the Edit or Write tool: a Windows text-mode script writes CRLF, and `vendor/bin/pint --test` then fails.
 
 ## Docs map
 
-`README.md` is the front page; `docs/README.md` indexes everything else (setup, configuration, operations, testing, security, retention, import). Human contribution rules: `CONTRIBUTING.md`.
+`README.md` is the front page; `docs/README.md` indexes everything else (setup, configuration, operations, testing, security, retention, import). `docs/structure.md` is the map of the code: request flow, roles, folders, scheduled jobs, where to change what. Human contribution rules: `CONTRIBUTING.md`.
 
 ## Agent skills
 

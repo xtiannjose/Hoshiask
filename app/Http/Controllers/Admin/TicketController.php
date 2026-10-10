@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\Admin\TicketAssignmentAutomationService;
 use App\Services\Admin\TicketAssignmentService;
 use App\Services\Admin\TicketIndexService;
+use App\Services\Admin\UserDirectoryService;
 use App\Services\SystemLogService;
 use App\Services\TicketAcknowledgmentService;
 use App\Services\TicketEmailAlertService;
@@ -44,6 +45,7 @@ class TicketController extends Controller
         private TicketAssignmentService $ticketAssignments,
         private TicketEmailAlertService $emailAlerts,
         private TicketAssignmentAutomationService $ticketAssignmentAutomation,
+        private UserDirectoryService $userDirectory,
     ) {}
 
     public function index(Request $request)
@@ -175,18 +177,12 @@ class TicketController extends Controller
         $categories = Category::active()
             ->orderBy('name')
             ->get(['id', 'name']);
-        $clientAccounts = User::query()
-            ->where('role', User::ROLE_CLIENT)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->limit(500)
-            ->get(['id', 'name', 'email', 'phone', 'department']);
-        $supportAccounts = User::query()
-            ->whereIn('role', User::TICKET_ASSIGNABLE_ROLES)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->limit(500)
-            ->get(['id', 'name', 'email', 'phone', 'department', 'role']);
+        // The picker lists the first accounts by name and searches the rest on the server (see
+        // TicketRequesterAccountController). The account chosen before a validation error, and the signed-in staff
+        // member, are always listed so they can be selected again.
+        $chosenAccountId = (int) old('user_id');
+        $clientAccounts = $this->userDirectory->requesterAccounts('client', alsoIncludeIds: [$chosenAccountId]);
+        $supportAccounts = $this->userDirectory->requesterAccounts('support', alsoIncludeIds: [$chosenAccountId, (int) auth()->id()]);
         $assignmentAssignees = $this->ticketIndex->activeAssignableAgents();
         $canSetManualDates = auth()->user()->canSetManualTicketDates();
 
@@ -379,14 +375,14 @@ class TicketController extends Controller
             ->with('success', 'Ticket created successfully.');
     }
 
-    public function show(Ticket $ticket)
+    public function show(Request $request, Ticket $ticket)
     {
         $this->authorizeTicketAccess($ticket);
         $this->recordReadOnlyView($ticket);
 
         TicketUserState::markSeenAndDismiss($ticket, (int) auth()->id(), $ticket->updated_at ?? now());
 
-        $this->loadTicketWithVisibleReplies($ticket);
+        $hiddenReplyCount = $this->loadTicketWithVisibleReplies($ticket, all: $request->boolean('all_messages'));
         $ticket->loadMissing(['assignedUser', 'assignedUsers']);
         $replyFeedCursor = $this->replyFeedCursorForReplies($ticket->replies);
         $assignees = $this->ticketIndex->activeAssignableAgents();
@@ -395,7 +391,7 @@ class TicketController extends Controller
             ->where('user_id', (int) auth()->id())
             ->first();
 
-        return view('admin.tickets.show', compact('ticket', 'assignees', 'currentUserState', 'replyFeedCursor'));
+        return view('admin.tickets.show', compact('ticket', 'assignees', 'currentUserState', 'replyFeedCursor', 'hiddenReplyCount'));
     }
 
     /**

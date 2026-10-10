@@ -97,13 +97,13 @@
                                         <p class="mt-0.5 text-xs text-slate-500">By {{ optional($response->createdBy)->name ?? 'Unknown' }} &middot; {{ $response->created_at->format('M j, Y') }}</p>
                                         <p class="mt-2 line-clamp-2 text-sm text-slate-700">{{ $response->body }}</p>
                                     </div>
-                                    <div class="flex shrink-0 items-center gap-1 opacity-0 transition group-hover:opacity-100">
+                                    <div class="flex shrink-0 items-center gap-1 opacity-0 transition focus-within:opacity-100 group-hover:opacity-100">
                                         <button type="button" @click="editing = true" class="rounded-lg px-2.5 py-1 text-xs font-medium text-hoshishi-blue-700 hover:bg-hoshishi-blue-50">Edit</button>
-                                        <form action="{{ route('admin.canned-responses.destroy', $response) }}" method="POST" data-submit-feedback>
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="rounded-lg px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50">Delete</button>
-                                        </form>
+                                        <x-ui.delete-button
+                                            :action="route('admin.canned-responses.destroy', $response)"
+                                            title="Delete Canned Response"
+                                            :name="$response->title"
+                                            note="Staff can no longer insert it into replies." />
                                     </div>
                                 </div>
                             </div>
@@ -130,4 +130,6 @@
         </div>
     </div>
 </div>
+
+<x-ui.delete-confirm-modal />
 @endsection

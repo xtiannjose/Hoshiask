@@ -2,9 +2,11 @@
 
 Where the work to improve Helpdesk with Claude Code stands, what was decided, and what comes next. Claude reads this at the start of a session (`CLAUDE.md` points here) and updates it when a step finishes, so the plan survives a new device or a new conversation.
 
-Last updated: 2026-10-10 (whole-app audit by QA, security and senior developer reviewers).
+Last updated: 2026-10-10 (second deep check of the whole app, then a rewrite of the docs; the first check was the audit by QA, security and senior developer reviewers).
 
-**Waiting on the maintainer:** the step-by-step list in [pending-actions.md](pending-actions.md) (change the shadow password, install ClamAV, merge and deploy the open pull requests). Read it before suggesting anything else.
+**Waiting on the maintainer:** the step-by-step list in [pending-actions.md](pending-actions.md) (change the shadow password, install ClamAV, deploy `main`). Read it before suggesting anything else.
+
+**Issue and pull request numbers.** The numbers below (#190 to #246) belong to the repository's history before it was reset to a single "Initial commit" on 2026-10-10. The tracker on GitHub now starts again at #1 and has no open issues, so those numbers do not resolve there. The changes themselves are all in `main`: the deep check of 2026-10-10 found each of them in the code (the 10-file cap, the double-submit guard, `TicketSla`, `helpdesk:unlock-login`, the PDF preview, the 10-minute alert lock, the blank-`SESSION_SECURE_COOKIE` rule, `ThrottlePerLimit` and the two index migrations).
 
 ## The plan
 
@@ -19,7 +21,7 @@ Last updated: 2026-10-10 (whole-app audit by QA, security and senior developer r
 
 ## Next steps, in order
 
-1. **Merge the open pull requests** (the maintainer merges; none depends on another):
+1. **Deploy `main`** (the maintainer deploys; see [pending-actions.md](pending-actions.md) section 3). Everything that was in the pull requests #218, #230, #234 to #236 and #238 to #246 is already in `main`:
    - #218 documentation split: short `README.md`, `docs/README.md` index, `CONTRIBUTING.md`, `SECURITY.md`, issue and PR templates.
    - #230 tests cannot touch a real database; test timezone pinned; alert job lock is 10 minutes (closes #226).
    - #234 two missing indexes (closes #231).
@@ -35,6 +37,47 @@ Last updated: 2026-10-10 (whole-app audit by QA, security and senior developer r
 6. **#202 popups**: only if the maintainer asks for it; see Decisions. #202 can be closed once that is decided.
 7. **New work** goes through the full loop: idea → `/grill-with-docs` → `/to-spec` → `/to-tickets` → `/triage` → fix → `/code-review` → PR.
 8. **Phase 5 habits**: run `/retro` at the end of a working session, and `/handoff` before a conversation gets too long.
+
+## Second deep check (2026-10-10)
+
+Read in full: sign-in, middleware, policies, the status workflow, assignment, merge, replies and attachments, exports, the backup archive, retention, the alert and auto-close jobs, the dashboard, deploy and CI. Swept the whole tree for raw SQL, unescaped output, `innerHTML`, unused code, config against `.env.example` and the docs, and docs against the files they name. Ran every gate (`composer qa`, `npm run qa`), the browser tests (18 of 18, on a database of their own), the whole PHPUnit suite on PostgreSQL 17 (1078 passed, 1 skipped on purpose), PHPStan at level 7, and `route:cache`, `view:cache`, `config:cache`, `event:cache`.
+
+Fixed on branch `fix/deep-check-cleanup` (one commit per topic, not pushed yet), each with a test that fails without the fix:
+
+- Two accounts could share an email that differed only in letter case, while sign-in compares in lower case (`App\Rules\UniqueUserEmail`).
+- The audit trail wrote "Downloaded attachment" for a file that was missing or whose preview was refused. Every inline image or PDF preview also wrote its own row, so a ticket with ten images added ten rows every time it was opened; a preview is now written once an hour per person and file, and a real download is always written (decision by the maintainer, recorded in `docs/security.md`).
+- The ticket page kept asking a failing or throttled reply feed every 5 seconds; it now backs off like an idle one.
+- A ticket with more than 200 replies silently dropped the oldest from the page and counted only the 200 shown. The page now says how many are hidden, shows the real count, and "Show all messages" (`?all_messages=1`) loads them all.
+- The new-ticket form listed only the first 500 clients and had no search, so the 501st client could not be picked. It now lists the first 50 and has a search box that asks the server (`GET /admin/tickets/requester-accounts`; name, email, username, phone or department).
+- The login screenshots in `tests/e2e/accessibility-visual.spec.js-snapshots` still showed the old iOne brand; they are regenerated.
+
+Cleaned: auto-close loaded each client with its own query; the unused `laravel/sail` dependency (and `symfony/yaml` with it), `Ticket::slaElapsedMinutes` and an unneeded export; CI runs with a read-only token and replaces a superseded pull request run; ten environment variables were missing from `docs/configuration.md`. Added `brianium/paratest`, so `php artisan test --parallel` runs the suite in about 70 seconds instead of 165.
+
+Browser tests: Playwright used to reuse whatever answered on port 8000, which on this machine was another project's dev server. It now starts its own unless `PLAYWRIGHT_REUSE_SERVER=1`. Two specs clicked buttons before the page's script had attached its handlers and failed now and then under load; `app.js` now sets `data-page-scripts-ready` on `<html>` and the specs wait for it. `docs/testing.md` has the recipe for running them on a database of their own.
+
+Looked at and left alone (decisions for the maintainer, not defects):
+
+- The ticket search still scans the table (#232).
+- The import tests write their fixture files into the real `storage/app/private/imports` and leave them there (the folder is git-ignored). A test with the same file name would overwrite a real import file; point them at a temporary folder when convenient.
+- `database/schema/pgsql-schema.sql` is 14 migrations behind. That is harmless (the rest run after the dump loads); regenerate it with `php artisan schema:dump` on a PostgreSQL database when convenient.
+- The `php -l` step in CI repeats what Pint and the tests already catch.
+- PHPStan stays at level 5: level 7 only adds missing generics and return types, no defects.
+- Not run: the workflow YAML on GitHub (it parses; it needs a push to run).
+
+## Docs rewrite (2026-10-10)
+
+Every document in `docs/`, `README.md` and `CONTRIBUTING.md` was rewritten against the code so that a new reader can follow it, and `docs/structure.md` is new (request flow, roles, folders, scheduled jobs, where to change what). They are committed on `fix/deep-check-cleanup`, one commit per topic, and not pushed yet; the maintainer decides when to push.
+
+Mistakes found in the old text and fixed:
+
+- The deploy steps did not follow the order the deploy scripts use.
+- The guide said clients choose a severity (they do not; staff set it) and that saved views are for some staff only (every staff member has them).
+- `HELPDESK_QUEUE_WORKER_RUNNING` was described as a flag to set; leave it blank and the status check looks for a running `queue:work` (`.env.example` now says so).
+- Setup did not say that the seeders need `STAFF_DEFAULT_PASSWORD`, `CLIENT_DEFAULT_PASSWORD` and `SHADOW_PASSWORD`, and offered `db:seed` as a way to reset accounts (it also adds 8 sample tickets).
+- Security, backup and glossary text said an admin or a new account gets temporary passwords; only the shadow account issues them, when it resets a password.
+- Some terms did not follow `GLOSSARY.md` (ITD staff, technical user, priority, open ticket, staff ticket).
+
+The staff guide gained a "who can do what" table and sections on signing in, the ticket list, bulk actions, merging, user accounts and departments. Its PDF was rebuilt (`php artisan helpdesk:build-workflow-pdf`).
 
 ## Decisions already made
 
@@ -94,6 +137,6 @@ Do the steps in order.
    ```
    This setup uses these skills: from `mattpocock/skills`, everything in the engineering set (triage, to-spec, to-tickets, implement, grill-with-docs, improve-codebase-architecture, domain-modeling, writing-for-agents, pr, handoff, retro, wayfinder, git-guardrails-claude-code and the rest); `design-taste-frontend`; `find-skills`; and `apple-design`. The account skills (docs, pdf, xlsx and others) sync by themselves when you sign in.
 5. **Start Claude inside the project folder**: `claude` (on Windows PowerShell, `claude.cmd`, or run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once). Starting inside the folder loads `CLAUDE.md`, this plan, and both hooks in `.claude/`.
-6. **Check it works.** Ask Claude: "Read docs/agents/plan.md and tell me where we are." Then run `composer qa` (about 2.5 minutes; there is no parallel test runner) and `npm run qa`.
+6. **Check it works.** Ask Claude: "Read docs/agents/plan.md and tell me where we are." Then run `composer qa` (about 3 minutes, serial; `php artisan test --parallel` runs just the tests in about 70 seconds) and `npm run qa`.
 
 The git guardrail in `.claude/hooks/` protects this repo only. To protect every project on the new device as well, copy `block-dangerous-git.mjs` to `~/.claude/hooks/` and add the same `PreToolUse` entry to `~/.claude/settings.json`.

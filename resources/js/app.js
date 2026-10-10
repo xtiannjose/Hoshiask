@@ -1,4 +1,5 @@
 import Alpine from '@alpinejs/csp';
+import { registerDeleteConfirm } from './lib/delete-confirm';
 import { registerEnhancedSelects } from './lib/enhanced-selects';
 import { registerFormBehaviors } from './lib/form-behaviors';
 import { registerLocationSuggestions } from './lib/location-suggestions';
@@ -17,6 +18,7 @@ Alpine.start();
 
 registerFormBehaviors();
 registerModalKit();
+registerDeleteConfirm();
 registerEnhancedSelects();
 registerUploadGuard();
 registerRatingForms();
@@ -95,13 +97,18 @@ const pageModules = [
 ];
 
 const loadPageModules = () => {
-    pageModules.forEach(({ selector, loader }) => {
-        if (!document.querySelector(selector)) {
-            return;
-        }
+    const loading = pageModules
+        .filter(({ selector }) => document.querySelector(selector))
+        .map(({ loader }) => loader());
 
-        void loader();
-    });
+    // The page's own script attaches its button and link handlers a moment after the page paints. This marks the
+    // moment it is done (a page initializer runs on the next timer tick after its module loads), so the browser tests
+    // do not click too early.
+    void Promise.allSettled(loading)
+        .then(() => new Promise((resolve) => window.setTimeout(resolve, 0)))
+        .then(() => {
+            document.documentElement.dataset.pageScriptsReady = 'true';
+        });
 };
 
 if (document.readyState === 'loading') {

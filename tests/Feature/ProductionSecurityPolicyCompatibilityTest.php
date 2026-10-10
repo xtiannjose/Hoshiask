@@ -128,7 +128,7 @@ class ProductionSecurityPolicyCompatibilityTest extends TestCase
         $this->assertStringContainsString('@source inline("h-[{4..100}%]")', (string) file_get_contents(resource_path('css/app.css')));
     }
 
-    public function test_deleting_a_knowledge_article_asks_for_confirmation_through_a_data_attribute(): void
+    public function test_deleting_a_knowledge_article_asks_for_confirmation_in_the_shared_dialog_without_inline_handlers(): void
     {
         $admin = $this->createUser('Admin', 'admin-policy-kb@example.com', User::ROLE_ADMIN);
         KnowledgeArticle::create([
@@ -142,7 +142,9 @@ class ProductionSecurityPolicyCompatibilityTest extends TestCase
 
         $this->actingAs($admin)->get(route('admin.knowledge-base.index'))
             ->assertOk()
-            ->assertSee('data-confirm="Delete this article? This cannot be undone."', false)
-            ->assertDontSee('onsubmit=', false);
+            ->assertSee('data-delete-confirm', false)
+            ->assertSee('id="delete-confirm-modal"', false)
+            ->assertDontSee('onsubmit=', false)
+            ->assertDontSee('onclick=', false);
     }
 }

@@ -1,7 +1,4 @@
-import { registerConfirmForms } from './confirm-forms';
 export const registerFormBehaviors = () => {
-    registerConfirmForms();
-
     document.querySelectorAll('form[data-checkbox-confirm-form]').forEach((form) => {
         const checkbox = form.querySelector('[data-checkbox-confirm]');
         const submitter = form.querySelector('[data-checkbox-confirm-submit]');

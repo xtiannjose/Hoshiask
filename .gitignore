@@ -36,6 +36,7 @@
 .env
 .env.backup
 .env.production
+.env.e2e
 .phpunit.result.cache
 /database/*.sqlite
 /resolvedb

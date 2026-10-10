@@ -5,6 +5,7 @@ namespace App\Http\Requests\Admin\Users;
 use App\Models\User;
 use App\Rules\NotACommonPassword;
 use App\Rules\PhoneNumber;
+use App\Rules\UniqueUserEmail;
 use App\Services\Admin\ManagedUserAccessService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -61,7 +62,7 @@ class UpdateUserRequest extends FormRequest
             'email' => [
                 'nullable',
                 'email',
-                Rule::unique('users', 'email')->ignore($targetUser->id),
+                new UniqueUserEmail($targetUser->id),
                 function (string $attribute, mixed $value, \Closure $fail) use ($canManageTarget): void {
                     if ($canManageTarget && User::emailUsesReservedSystemDomain((string) $value)) {
                         $fail('Email addresses ending in @system.local are reserved for system archive accounts.');

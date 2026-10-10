@@ -328,4 +328,40 @@ class AccountSettingsDepartmentAccessTest extends TestCase
         $this->assertNull($secondSuperAdmin->fresh()->email);
         $this->assertNull($firstSuperAdmin->fresh()->email);
     }
+
+    public function test_an_email_that_differs_only_in_letter_case_from_another_account_is_refused(): void
+    {
+        User::create([
+            'name' => 'Other Admin',
+            'username' => 'other.admin',
+            'email' => 'Other.Admin@Example.com',
+            'phone' => '09111118888',
+            'department' => 'Hoshishi',
+            'role' => User::ROLE_ADMIN,
+            'password' => Hash::make('password123'),
+            'is_active' => true,
+        ]);
+        $admin = User::create([
+            'name' => 'Case Clash Admin',
+            'username' => 'case.clash.admin',
+            'email' => 'case-clash-admin@example.com',
+            'phone' => '09111119999',
+            'department' => 'Hoshishi',
+            'role' => User::ROLE_ADMIN,
+            'password' => Hash::make('password123'),
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($admin)->put(route('account.settings.update'), [
+            'username' => 'case.clash.admin',
+            'name' => 'Case Clash Admin',
+            'email' => 'other.admin@example.com',
+            'phone' => '09111119999',
+            'department' => 'Hoshishi',
+            'current_password' => 'password123',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertSame('case-clash-admin@example.com', $admin->fresh()->email);
+    }
 }

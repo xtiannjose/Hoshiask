@@ -27,16 +27,16 @@ class TicketConversationController extends Controller
         private SystemLogService $systemLogs,
     ) {}
 
-    public function show(Ticket $ticket)
+    public function show(Request $request, Ticket $ticket)
     {
         $this->authorizeOwnedTicket($ticket);
 
         TicketUserState::markSeenAndDismiss($ticket, (int) auth()->id(), $ticket->updated_at ?? now());
 
-        $this->loadTicketWithVisibleReplies($ticket, includeInternal: false);
+        $hiddenReplyCount = $this->loadTicketWithVisibleReplies($ticket, includeInternal: false, all: $request->boolean('all_messages'));
         $replyFeedCursor = $this->replyFeedCursorForReplies($ticket->replies);
 
-        return view('client.tickets.show', compact('ticket', 'replyFeedCursor'));
+        return view('client.tickets.show', compact('ticket', 'replyFeedCursor', 'hiddenReplyCount'));
     }
 
     public function replies(Ticket $ticket): JsonResponse

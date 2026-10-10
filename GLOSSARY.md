@@ -191,7 +191,7 @@ A plain-English note from the production status check about something quietly sw
 A production status check finding that fails the deploy health check.
 
 **Credential handoff**:
-A temporary password an admin issues for an account, revealed once and then used up.
+A temporary password the shadow account issues for another account, revealed once within 10 minutes and then used up.
 
 **Backup key**:
 The separate key that encrypts backups. Without it a backup cannot be opened, so it is kept off the server.

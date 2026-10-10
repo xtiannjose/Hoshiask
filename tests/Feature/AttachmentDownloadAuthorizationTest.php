@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\Attachment;
 use App\Models\Category;
+use App\Models\SystemLog;
 use App\Models\Ticket;
 use App\Models\TicketReply;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -165,6 +167,101 @@ class AttachmentDownloadAuthorizationTest extends TestCase
             ->assertOk();
     }
 
+    public function test_a_missing_file_is_not_written_to_the_audit_trail_as_downloaded(): void
+    {
+        [, $superUser, $ticket] = $this->seedTicketContext();
+        $reply = TicketReply::create([
+            'ticket_id' => $ticket->id,
+            'user_id' => $superUser->id,
+            'message' => 'Reply whose file has gone missing',
+            'is_internal' => false,
+        ]);
+        $attachment = $this->createReplyAttachment($reply, 'gone.txt', 'gone');
+        Storage::disk('local')->delete($attachment->file_path);
+
+        $this->actingAs($superUser)
+            ->get(route('attachments.download', $attachment))
+            ->assertNotFound();
+
+        $this->assertDatabaseMissing('system_logs', ['event_type' => 'attachment.downloaded']);
+    }
+
+    public function test_a_delivered_download_is_written_to_the_audit_trail(): void
+    {
+        [, $superUser, $ticket] = $this->seedTicketContext();
+        $reply = TicketReply::create([
+            'ticket_id' => $ticket->id,
+            'user_id' => $superUser->id,
+            'message' => 'Reply with a file',
+            'is_internal' => false,
+        ]);
+        $attachment = $this->createReplyAttachment($reply, 'delivered.txt', 'delivered');
+
+        $this->actingAs($superUser)
+            ->get(route('attachments.download', $attachment))
+            ->assertOk();
+
+        $this->assertDatabaseHas('system_logs', [
+            'event_type' => 'attachment.downloaded',
+            'target_id' => $attachment->id,
+        ]);
+    }
+
+    public function test_the_same_preview_is_written_to_the_audit_trail_once_an_hour(): void
+    {
+        [, $superUser, $ticket] = $this->seedTicketContext();
+        $attachment = $this->createReplyAttachment($this->publicReply($ticket, $superUser), 'photo.txt', 'photo');
+
+        foreach (range(1, 3) as $view) {
+            $this->actingAs($superUser)->get($this->previewUrl($attachment))->assertOk();
+        }
+
+        $rows = $this->auditRowsFor($attachment);
+        $this->assertCount(1, $rows);
+        $this->assertTrue($rows->first()->metadata['preview']);
+
+        $this->travel(59)->minutes();
+        $this->actingAs($superUser)->get($this->previewUrl($attachment))->assertOk();
+        $this->assertCount(1, $this->auditRowsFor($attachment), 'Still inside the hour.');
+
+        $this->travel(2)->minutes();
+        $this->actingAs($superUser)->get($this->previewUrl($attachment))->assertOk();
+        $this->assertCount(2, $this->auditRowsFor($attachment), 'An hour has passed, so the next preview is written again.');
+    }
+
+    public function test_each_person_and_each_file_gets_their_own_preview_row(): void
+    {
+        [, $superUser, $ticket] = $this->seedTicketContext();
+        $secondViewer = $this->createSupportUser('Second Viewer', 'second-viewer@example.com', User::ROLE_ADMIN);
+        $reply = $this->publicReply($ticket, $superUser);
+        $first = $this->createReplyAttachment($reply, 'first.txt', 'first');
+        $second = $this->createReplyAttachment($reply, 'second.txt', 'second');
+
+        $this->actingAs($superUser)->get($this->previewUrl($first))->assertOk();
+        $this->actingAs($superUser)->get($this->previewUrl($second))->assertOk();
+        $this->actingAs($secondViewer)->get($this->previewUrl($first))->assertOk();
+
+        $this->assertCount(1, $this->auditRowsFor($first, $superUser));
+        $this->assertCount(1, $this->auditRowsFor($second, $superUser));
+        $this->assertCount(1, $this->auditRowsFor($first, $secondViewer));
+    }
+
+    public function test_a_real_download_is_always_written_and_never_counts_as_the_hourly_preview(): void
+    {
+        [, $superUser, $ticket] = $this->seedTicketContext();
+        $attachment = $this->createReplyAttachment($this->publicReply($ticket, $superUser), 'report.txt', 'report');
+
+        $this->actingAs($superUser)->get(route('attachments.download', $attachment))->assertOk();
+        $this->actingAs($superUser)->get($this->previewUrl($attachment))->assertOk();
+        $this->actingAs($superUser)->get($this->previewUrl($attachment))->assertOk();
+        $this->actingAs($superUser)->get(route('attachments.download', $attachment))->assertOk();
+
+        $this->assertSame(
+            [false, true, false],
+            $this->auditRowsFor($attachment)->map(fn (SystemLog $row): bool => (bool) $row->metadata['preview'])->all()
+        );
+    }
+
     public function test_preview_rejects_unsupported_mime_types(): void
     {
         [, $superUser, $ticket] = $this->seedTicketContext();
@@ -186,6 +283,7 @@ class AttachmentDownloadAuthorizationTest extends TestCase
             ]));
 
         $response->assertStatus(415);
+        $this->assertDatabaseMissing('system_logs', ['event_type' => 'attachment.downloaded']);
     }
 
     public function test_preview_rejects_svg_even_if_legacy_attachment_record_exists(): void
@@ -272,6 +370,36 @@ class AttachmentDownloadAuthorizationTest extends TestCase
             'password' => Hash::make('password123'),
             'is_active' => true,
         ]);
+    }
+
+    private function publicReply(Ticket $ticket, User $author): TicketReply
+    {
+        return TicketReply::create([
+            'ticket_id' => $ticket->id,
+            'user_id' => $author->id,
+            'message' => 'Reply that carries a file',
+            'is_internal' => false,
+        ]);
+    }
+
+    private function previewUrl(Attachment $attachment): string
+    {
+        return route('attachments.download', ['attachment' => $attachment, 'preview' => 1]);
+    }
+
+    /**
+     * The audit trail rows for one file, oldest first, optionally only those written for one person.
+     *
+     * @return Collection<int, SystemLog>
+     */
+    private function auditRowsFor(Attachment $attachment, ?User $actor = null): Collection
+    {
+        return SystemLog::query()
+            ->where('event_type', 'attachment.downloaded')
+            ->where('target_id', $attachment->id)
+            ->when($actor, fn ($query) => $query->where('actor_user_id', $actor->id))
+            ->orderBy('id')
+            ->get();
     }
 
     private function createReplyAttachment(TicketReply $reply, string $filename, string $contents): Attachment

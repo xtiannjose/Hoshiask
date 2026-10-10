@@ -74,6 +74,7 @@
                         <tr>
                             <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Department</th>
                             <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Users</th>
+                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tickets</th>
                             <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Action</th>
                         </tr>
                     </thead>
@@ -92,10 +93,19 @@
                                     </div>
                                 </td>
                                 <td class="px-5 py-4 text-sm text-slate-700">{{ $department->user_count }}</td>
+                                <td class="px-5 py-4 text-sm text-slate-700">{{ $department->ticket_count }}</td>
                                 <td class="px-5 py-4 text-right">
-                                    <a href="{{ route('admin.departments.edit', $department) }}" class="inline-flex items-center rounded-lg px-2.5 py-1 text-sm font-medium text-hoshishi-blue-700 transition hover:bg-hoshishi-blue-50 hover:text-hoshishi-blue-900">
-                                        Edit
-                                    </a>
+                                    <div class="flex items-center justify-end gap-1">
+                                        <a href="{{ route('admin.departments.edit', $department) }}" class="inline-flex items-center rounded-lg px-2.5 py-1 text-sm font-medium text-hoshishi-blue-700 transition hover:bg-hoshishi-blue-50 hover:text-hoshishi-blue-900">
+                                            Edit
+                                        </a>
+                                        <x-ui.delete-button
+                                            :action="route('admin.departments.destroy', $department)"
+                                            title="Delete Department"
+                                            :name="$department->name"
+                                            note="Its logo is removed too. Nothing uses this department."
+                                            :blocked="$department->delete_blocked_reason" />
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -105,4 +115,6 @@
         </div>
     </div>
 </div>
+
+<x-ui.delete-confirm-modal />
 @endsection

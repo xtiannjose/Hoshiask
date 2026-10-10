@@ -5,11 +5,22 @@
                 <h2 class="text-lg font-semibold text-slate-900">Conversation</h2>
                 <p class="mt-1 text-sm text-slate-500">Message thread between you and support.</p>
             </div>
+            @php
+                $hiddenReplyCount = (int) ($hiddenReplyCount ?? 0);
+                $messageTotal = $ticket->replies->where('is_internal', false)->count() + $hiddenReplyCount + 1;
+            @endphp
             <span id="message-count" class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                {{ $ticket->replies->where('is_internal', false)->count() + 1 }} {{ \Illuminate\Support\Str::plural('message', $ticket->replies->where('is_internal', false)->count() + 1) }}
+                {{ $messageTotal }} {{ \Illuminate\Support\Str::plural('message', $messageTotal) }}
             </span>
         </div>
     </div>
+
+    @if($hiddenReplyCount > 0)
+        <div class="border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800 sm:px-6" role="status">
+            The {{ $hiddenReplyCount }} oldest {{ \Illuminate\Support\Str::plural('message', $hiddenReplyCount) }} {{ $hiddenReplyCount === 1 ? 'is' : 'are' }} not shown.
+            <a href="{{ request()->fullUrlWithQuery(['all_messages' => 1]) }}" class="font-semibold underline">Show all messages</a>
+        </div>
+    @endif
 
     <div id="conversation-live-region" class="sr-only" aria-live="polite" role="status"></div>
 

@@ -1,15 +1,31 @@
 # Security notes
 
+To report a problem, see [SECURITY.md](../SECURITY.md). The full server checklist is in [operations.md](operations.md).
+
 ## Production settings
 
-- Do not use shared/default credentials in production.
-- Set strong environment-specific values for `STAFF_DEFAULT_PASSWORD`, `CLIENT_DEFAULT_PASSWORD`, and `SHADOW_PASSWORD`.
-- Set `APP_ENV=production` and `APP_DEBUG=false` in production.
-- Set `APP_URL` to the real HTTPS production URL.
-- Set `SESSION_SECURE_COOKIE=true` in production (HTTPS only).
+- Do not use shared or default credentials in production.
+- Set strong values of your own for `STAFF_DEFAULT_PASSWORD`, `CLIENT_DEFAULT_PASSWORD` and `SHADOW_PASSWORD`.
+- Set `APP_ENV=production` and `APP_DEBUG=false`.
+- Set `APP_URL` to the real HTTPS address and `SESSION_SECURE_COOKIE=true`.
+- Behind a reverse proxy or load balancer, set `TRUSTED_PROXIES`.
 - Set `HELPDESK_HEALTH_DETAIL_TOKEN` before wiring detailed health monitoring.
 - Keep `.env` out of version control.
-- Ensure `storage` and `bootstrap/cache` are writable by the app process.
+- Make sure `storage` and `bootstrap/cache` are writable by the app's user.
+
+## What the app already does
+
+- **Browser protections on every page.** It refuses to be shown inside another site's frame (the one exception is its own PDF and text preview), stops browsers guessing file types, and limits what it sends in the `Referer` header. It switches off the camera, microphone and location. Over HTTPS it tells browsers to use HTTPS only (HSTS). A Content-Security-Policy allows scripts and styles only from the site itself: it is enforced in production and only reported elsewhere. Pages for signed-in people are never cached.
+- **Sign-in.** Eight wrong passwords for one login lock it for 15 minutes for the address that typed them, and the sign-in route allows each address 5 attempts a minute in production. The answer is the same whether or not the account exists, and text typed into the sign-in box is masked in the logs unless it names a real account. A password needs at least 8 characters and must not be a very common one.
+- **Sessions.** Kept in the database, encrypted, hidden from scripts, and sent over HTTPS only in production. They end after 2 hours without activity. Changing a password or a role signs that person out everywhere.
+- **Permissions on the server.** Every page and action checks the role and, for a record, a policy. Hiding a button is never the only check. A client who asks for a ticket, file or notification that is not theirs gets "not found", the same as for one that does not exist, so ticket numbers cannot be guessed.
+- **Input and output.** Everything is validated on the server. A list or array where a form expects text is ignored. Text that people type is escaped when shown. Searches treat `%` and `_` as plain characters. CSV exports neutralise cells that start with `=`, `+`, `-` or `@`, so a spreadsheet cannot run them as formulas.
+- **Rate limits.** Sign-in and nearly every action that changes data has a limit per person and minute, and a busy page cannot use up the allowance of a rare action.
+- **Duplicate submissions.** The same form sent twice (a double click, the back button) creates one ticket or one reply.
+- **Files.** Only these types are accepted: images (`jpg`, `jpeg`, `png`), PDF, Word (`doc`, `docx`), text (`txt`) and Excel (`xls`, `xlsx`), at most 10 files of 10 MB per ticket or reply. They are stored under random names in a private folder that no web address serves, and sent only after a permission check. Only images, PDF and plain text open inline; SVG files are refused.
+- **Audit trail.** Sign-ins and failures, password and role changes, forced sign-outs, exports, file downloads and many ticket actions are written to System Logs, which only the shadow account sees.
+- **Secrets and backups.** A temporary password issued by the shadow account can be shown once, within 10 minutes. Backups are encrypted with their own key (AES-256-GCM).
+- **The code itself.** CI scans for committed secrets, runs `composer audit` and `npm audit`, and Dependabot opens update pull requests every week.
 
 ## Decisions that are not defects
 
@@ -19,6 +35,7 @@ These were reviewed and chosen on purpose (2026-10-10). Reviewers should not fil
 - **No second sign-in step (MFA).** Not needed for now. Staff who tick "stay signed in" are signed out after 60 days; sessions without it end after 2 hours idle.
 - **A backup without an encryption key only warns.** `helpdesk:backup` and `helpdesk:ops-status` say so, but the backup is still written. Backups sit in `storage/app/private/backups`, which no web route serves. Set `HELPDESK_BACKUP_ENCRYPTION_KEY` on any server that holds real data.
 - **Reply edits are not shown in the conversation.** If edit history is added it goes to the shadow account's System Logs only.
+- **Every download of a file is recorded, a preview once an hour.** System Logs gets an `attachment.downloaded` row each time someone downloads a file. A preview (the image or PDF shown inside the ticket page) is recorded once an hour for the same person and file, so a page with ten images does not add ten rows every time it is opened. The row says `preview` in its details.
 
 ## Upload scanning (optional)
 

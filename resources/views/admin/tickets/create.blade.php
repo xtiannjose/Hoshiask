@@ -6,6 +6,7 @@
 <div
     class="mx-auto max-w-[1460px] px-4 sm:px-6 lg:px-8"
     data-admin-ticket-create-page
+    data-requester-search-url="{{ route('admin.tickets.requester-accounts') }}"
     data-current-support-user-id="{{ in_array(auth()->user()?->normalizedRole(), \App\Models\User::TICKET_ASSIGNABLE_ROLES, true) ? (int) auth()->id() : '' }}"
 >
     <div class="mb-8">
@@ -63,28 +64,17 @@
                         ->map(fn ($id) => (string) $id)
                         ->first();
                     $requesterAccounts = [
-                        'client' => $clientAccounts->map(fn ($account) => [
-                            'value' => (string) $account->id,
-                            'label' => $account->name,
-                            'name' => $account->name,
-                            'email' => $account->email,
-                            'phone' => $account->phone,
-                            'group' => 'client',
-                            'role' => null,
-                        ])->values()->all(),
-                        'support' => $supportAccounts->map(fn ($account) => [
-                            'value' => (string) $account->id,
-                            'label' => $account->name,
-                            'name' => $account->name,
-                            'email' => $account->email,
-                            'phone' => $account->phone,
-                            'group' => 'support',
-                            'role' => $account->role,
-                        ])->values()->all(),
+                        'client' => $clientAccounts['accounts'],
+                        'support' => $supportAccounts['accounts'],
+                    ];
+                    $requesterAccountTotals = [
+                        'client' => $clientAccounts['total'],
+                        'support' => $supportAccounts['total'],
                     ];
                     $initialRequesterAccounts = $requesterAccounts[$selectedRequesterGroup];
                 @endphp
                 <script type="application/json" data-requester-accounts>@json($requesterAccounts)</script>
+                <script type="application/json" data-requester-account-totals>@json($requesterAccountTotals)</script>
 
                 <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
                     <div class="xl:col-span-2">
@@ -133,6 +123,16 @@
                         @enderror
 
                         <label for="user_id" class="form-label mt-4" data-requester-account-label>{{ $isStaffTicket ? 'Staff Requester Account' : 'Client Requester Account' }} <span class="text-red-600">*</span></label>
+                        <label for="requester_search" class="sr-only">Search accounts by name, email, department or phone</label>
+                        <input
+                            type="search"
+                            id="requester_search"
+                            class="form-input mb-2"
+                            placeholder="Search by name, email, department or phone"
+                            autocomplete="off"
+                            maxlength="100"
+                            data-requester-search
+                        >
                         <select
                             name="user_id"
                             id="user_id"
@@ -155,7 +155,7 @@
                                 </option>
                             @endforeach
                         </select>
-                        <p class="mt-1 text-sm text-slate-500" data-requester-account-help>
+                        <p class="mt-1 text-sm text-slate-500" aria-live="polite" data-requester-account-help>
                             {{ $isStaffTicket ? 'Staff tickets show only active staff requester accounts.' : 'Client tickets show only active client requester accounts.' }}
                         </p>
                         @error('user_id')

@@ -50,11 +50,11 @@
                     @if(auth()->user()->canManageTickets())
                         <div class="relative z-10 flex shrink-0 items-center gap-1">
                             <a href="{{ route('admin.knowledge-base.edit', $article) }}" class="rounded-lg px-2.5 py-1 text-xs font-medium text-hoshishi-blue-700 hover:bg-hoshishi-blue-50">Edit</a>
-                            <form action="{{ route('admin.knowledge-base.destroy', $article) }}" method="POST" data-submit-feedback data-confirm="Delete this article? This cannot be undone.">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="rounded-lg px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50">Delete</button>
-                            </form>
+                            <x-ui.delete-button
+                                :action="route('admin.knowledge-base.destroy', $article)"
+                                title="Delete Article"
+                                :name="$article->title"
+                                note="Staff and clients can no longer read it." />
                         </div>
                     @endif
                 </div>
@@ -79,4 +79,7 @@
 </div>
 
 <x-knowledge-base.article-modal :articles="$articles" staff :can-edit="auth()->user()->canManageTickets()" />
+@if(auth()->user()->canManageTickets())
+    <x-ui.delete-confirm-modal />
+@endif
 @endsection

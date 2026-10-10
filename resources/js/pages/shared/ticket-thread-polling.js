@@ -63,7 +63,11 @@ export const createReplyPolling = ({
                 credentials: 'same-origin',
             });
 
-            if (!response.ok) return;
+            if (!response.ok) {
+                // A failing or throttled feed backs off like an idle one instead of being asked every 5 seconds.
+                consecutiveIdlePolls += 1;
+                return;
+            }
 
             const data = await response.json();
             if (typeof data.cursor === 'string' && data.cursor !== '') {

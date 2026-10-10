@@ -240,20 +240,32 @@ trait InteractsWithTicketReplies
             ->visibleToViewer($this->currentReplyViewer());
     }
 
-    protected function visibleRepliesRelationForTicket(Ticket $ticket, bool $includeInternal = true): Collection
+    protected function visibleRepliesRelationForTicket(Ticket $ticket, bool $includeInternal = true, bool $all = false): Collection
     {
-        return $this->replyFeedQueryForTicket($ticket, $includeInternal)
-            ->latest('created_at')
-            ->take(self::INITIAL_REPLY_LOAD_LIMIT)
-            ->get()
-            ->sortBy('created_at')
-            ->values();
+        $query = $this->replyFeedQueryForTicket($ticket, $includeInternal)->latest('created_at');
+
+        if (! $all) {
+            $query->take(self::INITIAL_REPLY_LOAD_LIMIT);
+        }
+
+        return $query->get()->sortBy('created_at')->values();
     }
 
-    protected function loadTicketWithVisibleReplies(Ticket $ticket, bool $includeInternal = true): void
+    /**
+     * Loads the ticket page's data. Only the newest replies are rendered unless $all is set; the return value is how
+     * many older visible replies were left out (0 when nothing was), so the page can say so and offer the rest.
+     */
+    protected function loadTicketWithVisibleReplies(Ticket $ticket, bool $includeInternal = true, bool $all = false): int
     {
         $ticket->load(['user', 'createdByUser', 'category', 'assignedUser', 'assignedUsers', 'closedBy', 'attachments']);
-        $ticket->setRelation('replies', $this->visibleRepliesRelationForTicket($ticket, $includeInternal));
+        $replies = $this->visibleRepliesRelationForTicket($ticket, $includeInternal, $all);
+        $ticket->setRelation('replies', $replies);
+
+        if ($all || $replies->count() < self::INITIAL_REPLY_LOAD_LIMIT) {
+            return 0;
+        }
+
+        return max(0, $this->visibleRepliesQueryForTicket($ticket, $includeInternal)->count() - $replies->count());
     }
 
     protected function replyFeedResponseForTicket(Request $request, Ticket $ticket, bool $includeInternal = true): JsonResponse

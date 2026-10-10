@@ -19,6 +19,7 @@ These were reviewed and chosen on purpose (2026-10-10). Reviewers should not fil
 - **No second sign-in step (MFA).** Not needed for now. Staff who tick "stay signed in" are signed out after 60 days; sessions without it end after 2 hours idle.
 - **A backup without an encryption key only warns.** `helpdesk:backup` and `helpdesk:ops-status` say so, but the backup is still written. Backups sit in `storage/app/private/backups`, which no web route serves. Set `HELPDESK_BACKUP_ENCRYPTION_KEY` on any server that holds real data.
 - **Reply edits are not shown in the conversation.** If edit history is added it goes to the shadow account's System Logs only.
+- **Every download of a file is recorded, a preview once an hour.** System Logs gets an `attachment.downloaded` row each time someone downloads a file. A preview (the image or PDF shown inside the ticket page) is recorded once an hour for the same person and file, so a page with ten images does not add ten rows every time it is opened. The row says `preview` in its details.
 
 ## Upload scanning (optional)
 

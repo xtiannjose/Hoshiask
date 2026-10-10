@@ -5,6 +5,7 @@ namespace App\Http\Requests\Admin\Users;
 use App\Models\User;
 use App\Rules\NotACommonPassword;
 use App\Rules\PhoneNumber;
+use App\Rules\UniqueUserEmail;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -28,7 +29,7 @@ class StoreUserRequest extends FormRequest
             'email' => [
                 'nullable',
                 'email',
-                'unique:users,email',
+                new UniqueUserEmail,
                 'max:255',
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     if (User::emailUsesReservedSystemDomain((string) $value)) {

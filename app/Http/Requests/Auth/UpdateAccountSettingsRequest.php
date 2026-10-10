@@ -5,6 +5,7 @@ namespace App\Http\Requests\Auth;
 use App\Models\User;
 use App\Rules\NotACommonPassword;
 use App\Rules\PhoneNumber;
+use App\Rules\UniqueUserEmail;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -52,7 +53,7 @@ class UpdateAccountSettingsRequest extends FormRequest
                 : ['nullable', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
             'email' => $isSuperAdmin
-                ? ['nullable', 'email', Rule::unique('users', 'email')->ignore($user->id)]
+                ? ['nullable', 'email', new UniqueUserEmail($user->id)]
                 : ['nullable'],
             'phone' => ['nullable', 'string', 'max:20', new PhoneNumber],
             'department' => $isSuperAdmin

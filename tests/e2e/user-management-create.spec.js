@@ -75,7 +75,7 @@ test('enhanced select supports keyboard navigation on the create user form', asy
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
 
-    await expect(departmentToggle).toContainText('Glade');
-    await expect(page.locator('#department')).toHaveValue('Glade');
+    await expect(departmentToggle).toContainText('Alder');
+    await expect(page.locator('#department')).toHaveValue('Alder');
 });
 

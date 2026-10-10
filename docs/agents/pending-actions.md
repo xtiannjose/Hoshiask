@@ -17,13 +17,13 @@ Steps:
 5. On the server, open `/opt/helpdesk/.env`. If `SHADOW_PASSWORD=` holds the old password, put the new one there. Otherwise re-running the seeder would reset the shadow account to the old password.
 6. Run `cd /opt/helpdesk && php artisan config:clear`.
 7. Sign out and back in as `shadow`, and unlock System Logs with the new password.
-8. If locked out of `shadow` (pull request #245 must be merged and deployed first): `php artisan helpdesk:unlock-login shadow`.
+8. If locked out of `shadow` (the command exists in `main` and must be deployed first): `php artisan helpdesk:unlock-login shadow`.
 
 Optional and not recommended: erasing the old password from the history means rewriting history with a force push. It breaks every clone and open pull request, and Claude is not allowed to force-push, so the maintainer would run it. Changing the password is enough for a private repository with two collaborators.
 
 ## 2. Install ClamAV on the server (virus scanning)
 
-Why: pull request #239 turns virus scanning on by default in production, but it only works once ClamAV is installed. Until then uploads are allowed as before, and `php artisan helpdesk:ops-status` shows an advisory. ClamAV is free and needs about 1 GB of free memory.
+Why: `main` turns virus scanning on by default in production (earlier pull request #239), but it only works once ClamAV is installed. Until then uploads are allowed as before, and `php artisan helpdesk:ops-status` shows an advisory. ClamAV is free and needs about 1 GB of free memory.
 
 Steps (Ubuntu or Debian):
 
@@ -45,11 +45,11 @@ Steps (Ubuntu or Debian):
 
 If step 9 cannot reach the scanner, wait a few more minutes, or look for the socket with `ls /var/run/clamav/`. Until it works, uploads are still allowed. The longer reference is in [docs/security.md](../security.md).
 
-## 3. Merge the open pull requests, then deploy
+## 3. Deploy `main`
 
-The nine pull requests below pass all checks, including PostgreSQL, and do not conflict with each other, so the order does not matter.
+Every change in the table below is already in `main` (checked in the code on 2026-10-10, after the repository history was reset: the pull request numbers no longer exist on GitHub). They only reach the live site when you deploy.
 
-| Pull request | What it does |
+| Earlier pull request | What it does |
 |---|---|
 | #238 | Closes the web route to private storage, staff "stay signed in" lasts 60 days, typed search text is kept out of export logs, decisions written into the docs |
 | #239 | At most 10 attachments per ticket or reply, virus scanning on by default in production |
@@ -61,7 +61,7 @@ The nine pull requests below pass all checks, including PostgreSQL, and do not c
 | #245 | A stranger cannot lock the real admin out; new command `php artisan helpdesk:unlock-login` |
 | #246 | Route protection and client journey tests; fixes the shared rate-limit counter and the "mark as resolved" button that needed a comment at any rating; the PostgreSQL job fails if it is not really on PostgreSQL |
 
-Merging does not put anything on the server. Deploy as usual ([docs/operations.md](../operations.md)); the deploy runs the migration for the two new database indexes.
+Deploy as usual ([docs/operations.md](../operations.md)); the deploy runs the migration for the new database indexes.
 
 After deploying:
 

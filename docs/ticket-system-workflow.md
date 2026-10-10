@@ -261,11 +261,13 @@ How it works:
 
 - Attachments are optional when creating a new ticket. (Before 2026-09-30 at least one file was required.)
 - Each file can be up to `10 MB`.
+- Staff who log a ticket for a client (Tickets → Create Ticket) choose the requester account from a list that shows the first 50 accounts by name. The search box above the list finds any other account by name, username, email, phone or department, and the line under the list says how many accounts match.
 
 ### Replies
 
 - Replies can contain a message, an attachment, or both.
 - This allows users to send screenshots, documents, or follow-up proof even if the text message is short.
+- A ticket page shows the newest 200 messages. When a conversation is longer, a notice above the thread says how many of the oldest messages are not shown, and **Show all messages** opens the whole thread.
 
 ### Editing and deleting replies
 

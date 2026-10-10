@@ -99,7 +99,7 @@ return [
     ],
     'features' => [
         // Toggle off to instantly hide/disable canned replies without touching code;
-        // see docs/ticket-system-workflow.md for the full list of files to delete if
+        // see docs/structure.md for the full list of files to delete if
         // removing the feature entirely.
         'canned_replies' => (bool) env('HELPDESK_CANNED_REPLIES_ENABLED', true),
     ],

@@ -4,12 +4,47 @@ namespace Tests\Feature;
 
 use App\Models\Ticket;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 use Tests\Traits\CreatesTestData;
 
 class TicketsAutoCloseResolvedCommandTest extends TestCase
 {
     use CreatesTestData, RefreshDatabase;
+
+    public function test_it_handles_every_ticket_when_there_is_more_than_one_page_of_them(): void
+    {
+        Mail::fake();
+        $category = $this->createCategory();
+        $client = $this->createClient('Backlog Client', 'backlog-client@example.com');
+
+        // 201 of each is one more than the 200 the command reads at a time. The first group was resolved 8 days ago
+        // and already warned (they close); the second was resolved 6 days ago, announced, and not yet warned.
+        $stale = [];
+        for ($i = 0; $i < 201; $i++) {
+            $stale[] = $this->createTicket($client, $category, [
+                'status' => 'resolved',
+                'resolved_at' => now()->subDays(8),
+                'client_notified_resolved_at' => now()->subDays(8),
+                'client_notified_auto_close_warning_at' => now()->subDays(2),
+            ])->id;
+        }
+        $toWarn = [];
+        for ($i = 0; $i < 201; $i++) {
+            $toWarn[] = $this->createTicket($client, $category, [
+                'status' => 'resolved',
+                'resolved_at' => now()->subDays(6),
+                'client_notified_resolved_at' => now()->subDays(6),
+            ])->id;
+        }
+
+        $this->artisan('tickets:auto-close-resolved')
+            ->expectsOutputToContain('Auto-closed 201 resolved ticket(s) inactive for 7+ days. Warned 201 client(s)')
+            ->assertSuccessful();
+
+        $this->assertSame(201, Ticket::query()->whereIn('id', $stale)->where('status', 'closed')->count());
+        $this->assertSame(201, Ticket::query()->whereIn('id', $toWarn)->where('status', 'resolved')->whereNotNull('client_notified_auto_close_warning_at')->count());
+    }
 
     public function test_it_closes_resolved_tickets_inactive_for_seven_or_more_days(): void
     {

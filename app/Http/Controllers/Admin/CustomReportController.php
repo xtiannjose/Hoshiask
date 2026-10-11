@@ -79,7 +79,9 @@ class CustomReportController extends Controller
                 }
             } else {
                 fputcsv($handle, ['Ticket #', 'Subject', 'Status', 'Severity', 'Category', 'Office', 'Assignee', 'Created At', 'Resolved At', 'Root Cause', 'Cancellation Reason']);
-                (clone $query)->chunk(200, function ($tickets) use ($handle): void {
+                // By id (keyset paging) rather than OFFSET: every page costs the same however far down it is. The
+                // order is the one chunk() used before, id ascending, since this query has no order of its own.
+                (clone $query)->chunkById(200, function ($tickets) use ($handle): void {
                     foreach ($tickets as $ticket) {
                         /** @var Ticket $ticket */
                         fputcsv($handle, [

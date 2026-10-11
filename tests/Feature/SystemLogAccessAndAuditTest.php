@@ -153,6 +153,36 @@ class SystemLogAccessAndAuditTest extends TestCase
         $this->assertSame($rowsAcrossMultipleChunks, $matchedRows);
     }
 
+    public function test_audit_trail_export_lists_the_newest_entry_first_across_more_than_one_page(): void
+    {
+        $shadow = User::create([
+            'name' => 'Ordered Export Shadow',
+            'email' => 'ordered-export-shadow@example.com',
+            'phone' => '09123450097',
+            'department' => 'Hoshishi',
+            'role' => User::ROLE_SHADOW,
+            'password' => Hash::make('ShadowPass123!'),
+            'is_active' => true,
+        ]);
+
+        for ($i = 0; $i < 205; $i++) {
+            SystemLog::create([
+                'category' => 'ticket',
+                'event_type' => 'ticket.status.updated',
+                'description' => "Order test row {$i}",
+                'metadata' => [],
+                'occurred_at' => now()->subMinutes(300 - $i),
+            ]);
+        }
+
+        $this->actingAs($shadow)->post(route('admin.system-logs.unlock.store'), ['password' => 'ShadowPass123!']);
+
+        $csv = $this->actingAs($shadow)->get(route('admin.system-logs.export'))->assertOk()->streamedContent();
+
+        preg_match_all('/Order test row (\d+)/', $csv, $found);
+        $this->assertSame(range(204, 0), array_map('intval', $found[1]));
+    }
+
     public function test_non_shadow_users_cannot_access_system_logs(): void
     {
         $admin = User::create([

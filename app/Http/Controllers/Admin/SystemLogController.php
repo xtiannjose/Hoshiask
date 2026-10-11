@@ -125,7 +125,9 @@ class SystemLogController extends Controller
         return $this->streamCsvDownload($filename, function ($handle) use ($request): void {
             fputcsv($handle, ['Time', 'Actor', 'Actor Email', 'Category', 'Event', 'Description', 'IP Address', 'Metadata']);
 
-            $this->filteredLogsQuery($request)->chunk(200, function ($logs) use ($handle): void {
+            // Newest first by id (keyset paging, so a page deep in a big log costs no more than the first one).
+            // The page lists are ordered by time, then id; rows are written in time order, so this is the same order.
+            $this->filteredLogsQuery($request)->reorder()->chunkByIdDesc(200, function ($logs) use ($handle): void {
                 foreach ($logs as $log) {
                     fputcsv($handle, [
                         optional($log->occurred_at)->format('Y-m-d H:i:s'),

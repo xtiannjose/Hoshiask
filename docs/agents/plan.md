@@ -48,7 +48,7 @@ Browser tests: Playwright used to reuse whatever answered on port 8000, which on
 Looked at and left alone (decisions for the maintainer, not defects):
 
 - The ticket search scanned the table (#232) and the import tests wrote into the real import folder. Both are fixed; see the third deep check below.
-- `database/schema/pgsql-schema.sql` was 14 migrations behind. That was harmless (the rest run after the dump loads). It was regenerated on 2026-10-11 from a scratch PostgreSQL database, and a second empty database loads it with nothing left to migrate.
+- `database/schema/pgsql-schema.sql` is many migrations behind. That is harmless: the later migrations run after it loads. **Do not regenerate it** (`php artisan schema:dump`) while starter data is inserted by migrations: the dump holds tables only and records every migration as run, so `seed_default_departments_when_empty` is skipped and a fresh PostgreSQL database has no departments (tried on 2026-10-11: 36 tests failed on PostgreSQL, so the old file was put back). Regenerate it only after the starter departments and categories move into a seeder.
 - The `php -l` step in CI repeats what Pint and the tests already catch.
 - PHPStan stays at level 5: level 7 only adds missing generics and return types, no defects.
 - Not run: the workflow YAML on GitHub (it parses; it needs a push to run).

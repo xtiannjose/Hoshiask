@@ -46,7 +46,10 @@ class HelpdeskOperationsStatusService
             $warnings[] = 'Database connectivity check failed.';
         }
 
-        if ($queueWorkerRequired && $queueWorkerRunning !== true) {
+        // A caller that did not look at the process list (the public /health) cannot know; "unknown" is not a
+        // warning there, or every monitor without the token would see "degraded" for ever.
+        $workerProblem = $queueWorkerRunning === false || ($queueWorkerRunning === null && $includeProcessCheck);
+        if ($queueWorkerRequired && $workerProblem) {
             $warnings[] = sprintf(
                 'Queue connection "%s" requires a running queue worker for queued mail and jobs.',
                 $queueConnection

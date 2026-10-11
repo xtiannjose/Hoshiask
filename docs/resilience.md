@@ -45,7 +45,7 @@ The status check on the server cannot tell you the server is down. An outside mo
 
 What the answer means, and the catch:
 
-- Without a token, `/health` skips the "is a queue worker running" check, so in production it normally says `"status":"degraded"` with HTTP `200`. That is expected. Do not alert on the word `degraded` from the public address.
+- Without a token, `/health` does not look at the process list, so it cannot see whether a queue worker runs and says nothing about it: the public answer is `ok` while the database and PHP are fine. A stopped worker only shows with the token.
 - With the token (`HELPDESK_HEALTH_DETAIL_TOKEN`, sent as `Authorization: Bearer ...` or `X-Health-Token: ...`), `status` is `ok` only when the worker runs and nothing else needs fixing, and the answer lists the checks, warnings and advisories. A monitor that can send a header, or a small cron job on another machine, should alert when `status` is not `ok`:
 
   ```bash

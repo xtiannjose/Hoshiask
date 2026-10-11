@@ -78,7 +78,9 @@ Read the whole app again as a senior developer, a QA tester and a security analy
 - **The Online Users page no longer scrolls sideways on a phone** (positioned scroll boxes, plus a test that keeps all of them so).
 - **The bulk severity form no longer offers "Severity not set"**, which the server always refused.
 - **Removed:** `HasFactory` on 12 models (no factories exist), the `fakerphp/faker` package, `Ticket::slaResolutionMinutes()`, the `ilike` switch in the ticket filter.
-- **Tests and CI:** the import tests use a temporary folder; the client journey spec waits for the page script before clicking Reopen; GitHub Actions are pinned to commits.
+- **Tests and CI:** the import tests use a temporary folder; the client journey spec waits for the page script before clicking Reopen; GitHub Actions are pinned to commits, and a weekly `audit.yml` runs `composer audit` and `npm audit`.
+
+Pull request #4 holds all of it; every CI job passed (secret-scan, verify, postgres, e2e, CodeQL).
 
 Checked and clean: `composer audit` and `npm audit`; no unused PHP methods, config keys, routes or JS files; axe (WCAG 2 A and AA, light and dark) on 60 page loads for every role, and no sideways scrolling at 375 px (except the Online Users page, fixed); the monthly and custom report PDFs and the alert emails render correctly; the ClamAV protocol matches clamd's INSTREAM (a real daemon was not available); the full suite passes on SQLite (1109 tests) and on PostgreSQL 17 (1108 passed, 1 skipped on purpose).
 

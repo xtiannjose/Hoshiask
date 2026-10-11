@@ -75,7 +75,7 @@ Development: `php artisan schedule:work`.
 |---|---|---|
 | Every 5 minutes | `tickets:send-alert-emails` | Reminders to staff, merged reply emails to clients, and a heartbeat for the status check. |
 | Daily 02:40 | `helpdesk:backup` | The encrypted backup of the database and every uploaded file. |
-| Daily 03:10 | `helpdesk:cleanup-runtime` | Removes old backups, exports, import files, System Logs entries and used-up password handoffs. |
+| Daily 03:10 | `helpdesk:cleanup-runtime` | Removes old backups, exports, import files, System Logs entries, used-up password handoffs and expired rows of the database cache. |
 | Daily 03:40 | `tickets:auto-close-resolved` | Warns clients, then closes tickets that stayed Resolved for 7 days. |
 | Daily 03:55 | `helpdesk:enforce-retention` | Removes personal details from old tickets. Does nothing until you switch it on. |
 | Sunday 04:20 | `helpdesk:backup-verify` | Checks the newest backup again. |
@@ -136,7 +136,7 @@ php artisan helpdesk:ops-status --json                # for scripts
 It reports the PHP version, whether the database answers, the queue (connection, whether a worker is needed and running, pending and failed jobs), the mailer, and the app version.
 
 - **Warnings** are things that need fixing now. They fail a deploy and roll it back: PHP too old, no database, no queue worker, pending or failed jobs, and in production `APP_DEBUG` on, `APP_URL` pointing at localhost, `SESSION_SECURE_COOKIE` off, or no `HELPDESK_HEALTH_DETAIL_TOKEN`.
-- **Advisories** (production only) are settings that leave the site up but quietly switch something off. They never fail a deploy. Examples: `MAIL_MAILER=log` (no email leaves the server), the placeholder `MAIL_FROM_ADDRESS`, `LOG_STACK=single` (one log file that is never rotated), `APP_TIMEZONE=UTC`, a scheduler that has not run for 15 minutes, no backup yet or an old one, a backup that is not encrypted, no recent backup check, backups that exist only on this server, retention clean-up switched off while tickets are past the period, and virus scanning that is off or cannot reach ClamAV.
+- **Advisories** (production only) are settings that leave the site up but quietly switch something off. They never fail a deploy. Examples: `MAIL_MAILER=log` (no email leaves the server), the placeholder `MAIL_FROM_ADDRESS`, `LOG_STACK=single` (one log file that is never rotated), `APP_TIMEZONE=UTC`, a scheduler that has not run for 15 minutes, no backup yet or an old one, a backup that is not encrypted, no recent backup check, backups that exist only on this server, retention clean-up switched off while tickets are past the period, virus scanning that is off or cannot reach ClamAV, `TRUSTED_PROXIES=*` (any sender may claim to be a proxy), and the example contact addresses still in the privacy notice (`LEGAL_DPO_EMAIL`, `LEGAL_SUPPORT_EMAIL`).
 
 For monitoring tools there is a lightweight address:
 

@@ -295,6 +295,14 @@ class QaReportsListsWordingTest extends TestCase
         $this->assertSame('In Progress', $ticket->activity_label);
     }
 
+    public function test_a_cancelled_ticket_is_not_called_unread_and_has_no_open_ticket_dot(): void
+    {
+        $ticket = new Ticket(['status' => 'cancelled']);
+
+        $this->assertSame('Cancelled', $ticket->activity_label);
+        $this->assertNotSame((new Ticket(['status' => 'open']))->activity_dot_class, $ticket->activity_dot_class);
+    }
+
     public function test_a_password_confirmation_mismatch_uses_plain_wording(): void
     {
         $tech = $this->createAssignedSupportUser('Confirm Tech', 'confirm-tech@example.com', ['must_change_password' => true]);

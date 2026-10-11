@@ -2,7 +2,7 @@
 
 Where the work to improve Helpdesk with Claude Code stands, what was decided, and what comes next. Claude reads this at the start of a session (`CLAUDE.md` points here) and updates it when a step finishes, so the plan survives a new device or a new conversation.
 
-Last updated: 2026-10-10 (second deep check of the whole app, then a rewrite of the docs; the first check was the audit by QA, security and senior developer reviewers).
+Last updated: 2026-10-11 (third deep check of the whole app, with measurements on PostgreSQL; before it, the second deep check and a rewrite of the docs, and the first check, the audit by QA, security and senior developer reviewers).
 
 **Waiting on the maintainer:** the step-by-step list in [pending-actions.md](pending-actions.md) (change the shadow password, install ClamAV, deploy `main`). Read it before suggesting anything else.
 
@@ -57,12 +57,51 @@ Browser tests: Playwright used to reuse whatever answered on port 8000, which on
 
 Looked at and left alone (decisions for the maintainer, not defects):
 
-- The ticket search still scans the table (#232).
-- The import tests write their fixture files into the real `storage/app/private/imports` and leave them there (the folder is git-ignored). A test with the same file name would overwrite a real import file; point them at a temporary folder when convenient.
+- The ticket search scanned the table (#232) and the import tests wrote into the real import folder. Both are fixed; see the third deep check below.
 - `database/schema/pgsql-schema.sql` is 14 migrations behind. That is harmless (the rest run after the dump loads); regenerate it with `php artisan schema:dump` on a PostgreSQL database when convenient.
 - The `php -l` step in CI repeats what Pint and the tests already catch.
 - PHPStan stays at level 5: level 7 only adds missing generics and return types, no defects.
 - Not run: the workflow YAML on GitHub (it parses; it needs a push to run).
+
+## Third deep check (2026-10-11)
+
+Read the whole app again as a senior developer, a QA tester and a security analyst, then measured it on PostgreSQL 17 with 60,000 tickets in a scratch database (`helpdesk_audit_test`, dropped afterwards). Fixed on branch `fix/third-deep-check`, one commit per topic, each with a test that fails without the fix (the search rewrite keeps what is found, so its tests are guards):
+
+- **Reminder emails ignore imported tickets.** After an import the first scheduler run mailed every open legacy ticket (technicians once, super users twice per ticket).
+- **A technician added later no longer gets every new ticket.** The rotating counter now compares shares over the last 30 days (`HELPDESK_ASSIGNMENT_ROTATION_WINDOW_DAYS`), not all tickets ever.
+- **A cancelled ticket shows "Cancelled"**, not "Unread" with the open-ticket dot.
+- **The Resolution Time bands read raw rows in chunks.** The all-time Reports page took 6.7 s and 174 MB more memory at 60,000 tickets; it now takes 1.8 s with flat memory (`TicketSla::minutesToCompletion` is the one rule for "done").
+- **The staff ticket search uses its indexes.** One set of ids per column joined with UNION, plus two new trigram indexes (description, department). 13.0 s to 0.3 s for a rare word and 10.1 s to 1.3 s for a common one, same results.
+- **The nightly clean-up removes expired database cache rows**, and the Reports cache key is hashed (a long `month` value could pass the 255-character key column).
+- **A bulk status change checks the cancel and revert rules on the locked ticket.**
+- **Two new advisories:** `TRUSTED_PROXIES=*`, and the example `LEGAL_DPO_EMAIL` / `LEGAL_SUPPORT_EMAIL` still in the privacy notice.
+- **The Online Users page no longer scrolls sideways on a phone** (positioned scroll boxes, plus a test that keeps all of them so).
+- **The bulk severity form no longer offers "Severity not set"**, which the server always refused.
+- **Removed:** `HasFactory` on 12 models (no factories exist), the `fakerphp/faker` package, `Ticket::slaResolutionMinutes()`, the `ilike` switch in the ticket filter.
+- **Tests and CI:** the import tests use a temporary folder; the client journey spec waits for the page script before clicking Reopen; GitHub Actions are pinned to commits, and a weekly `audit.yml` runs `composer audit` and `npm audit`.
+
+Pull request #4 holds all of it; every CI job passed (secret-scan, verify, postgres, e2e, CodeQL).
+
+Checked and clean: `composer audit` and `npm audit`; no unused PHP methods, config keys, routes or JS files; axe (WCAG 2 A and AA, light and dark) on 60 page loads for every role, and no sideways scrolling at 375 px (except the Online Users page, fixed); the monthly and custom report PDFs and the alert emails render correctly; the ClamAV protocol matches clamd's INSTREAM (a real daemon was not available); the full suite passes on SQLite (1109 tests) and on PostgreSQL 17 (1108 passed, 1 skipped on purpose).
+
+Measured and left alone: the first scheduler run on 60,000 open tickets sent 18,000 alert emails (18,000 queries, 31 s) and the first auto-close of 5,400 resolved tickets took 48 s (32,000 queries). Both are one-off backlog runs; the nightly run handles only the day's tickets.
+
+### Needs the maintainer's decision
+
+1. **Pending (waiting on the client) tickets.** The row badge says "Awaiting client" and never "Breached", but the SLA Breached tab, the Needs Attention count and the technician SLA reminders still include them. Recommended: leave Pending out of all three, as the badge does.
+2. **The deploy health check fails on any pending or failed job** (`docs/operations.md`, "Status and health checks") and rolls the deploy back, `migrate:rollback` included. One bounced email in `failed_jobs` blocks every later deploy. Recommended: make the two queue counts advisories, or warn only above a large number.
+3. **The deploy script keeps the site in maintenance while it audits and builds** (`scripts/deploy-helpdesk-remote.sh`), a new advisory fails the deploy in the middle, and reading the migration batch needs `php artisan tinker` (so `laravel/tinker` cannot move to `require-dev`). Recommended: audit and build before `php artisan down`, or build in CI; read the batch with a small command.
+4. **The sign-in limit is 5 a minute per address in production and counts successful sign-ins.** Several people behind one office address can lock each other out at the start of the day. The per-login lockout (8 tries) already guards guessing. Recommended: about 30 a minute.
+5. **Upload scanning fails open** (`HELPDESK_UPLOAD_SCAN_ON_ERROR=allow`), and `.doc` and `.xls` (macro-capable) are accepted. Recommended: `block` once ClamAV works, and consider dropping the two legacy formats.
+6. **The bulk status form starts on "Open"**, so Apply without choosing reopens every selected ticket. Recommended: a "Choose a status" placeholder.
+7. **The SLA clock runs 24 hours a day** and does not pause on Pending, so a ticket filed on Friday at 5 pm is "breached" by 9 pm and alerts fire overnight. Business hours would also change the report numbers (`docs/report-metrics.md`).
+8. **Pending tickets never close or get a follow-up.** Only Resolved tickets auto-close. Possible: a client reminder after N days and a close or cancel after M.
+9. **Rotating assignment ignores availability** (leave, off hours) and open workload. Confirm the 30-day window.
+10. **Imported open tickets get no reminders at all.** Confirm that is wanted (the alternative is one reminder when a ticket is first worked).
+11. **Security posture to revisit (all recorded decisions):** staff passwords may be 8 characters (12 for staff?), no second factor for admin and shadow, client accounts can share one fixed password, backups are not encrypted unless a key is set, and `.env.example` ships `DB_PASSWORD=postgres`.
+12. **Legal text (needs the organisation's DPO):** the privacy notice does not say that backups keep removed data for `HELPDESK_BACKUP_RETENTION_DAYS`, nor the right to complain to the National Privacy Commission, and System Logs are kept 365 days.
+13. **Resilience:** sessions, cache, queue and data share one database (Redis for cache and queue is the first step), one maintainer, no stated recovery time or restore drill, and no external uptime monitor on `/health`.
+14. **Not worth doing without a reason:** export paging by id (it would change the CSV order), chunking the auto-close job (a backlog only after a long outage), and 24 dark-theme colour rules that nothing uses.
 
 ## Docs rewrite (2026-10-10)
 
@@ -89,7 +128,7 @@ Do not re-ask these.
 - Laravel Boost: declined for now.
 - Clients cannot change their own password; accounts are issued and shared inside the client's team (see `docs/security.md`, "Decisions that are not defects"). No MFA for now. Staff "stay signed in" lasts 60 days. An unencrypted backup only warns (#222).
 - Merged duplicate tickets count as Closed tickets in reports, as they do today (#228, `docs/report-metrics.md`).
-- Ticket search stays as it is for now. It scans the table, which is expected to be fine at 10,000 tickets but has not been measured; measure it on real data and revisit if search feels slow (#232).
+- Ticket search was measured on 2026-10-11 (PostgreSQL 17, 60,000 tickets: 13 s for a rare word, about 2 s at 10,000 tickets) and rewritten to use its trigram indexes (#232). See the third deep check below.
 - The private disk is not served over the web (`serve` is off), so backups and attachments are only reachable through the app.
 - Popups stay JavaScript for now (reviewed 2026-10-10, see the comment on #202). `popover="auto"` cannot delete `exclusive-popups.js` because recent searches and the styled dropdowns are not button-triggered, and the header and message menus would need CSS anchor positioning plus a fallback.
 - The date fields use the browser's own `datetime-local` format (#209). Close that PR to keep flatpickr.

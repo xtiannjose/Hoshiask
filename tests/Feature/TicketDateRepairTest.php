@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Tests\Support\ImportFiles;
 use Tests\TestCase;
 use Tests\Traits\CreatesTestData;
 
@@ -26,7 +27,7 @@ class TicketDateRepairTest extends TestCase
         $requester = $this->createClient('Placeholder Client', 'placeholder-dates@example.com');
         Category::create(['name' => 'Other', 'description' => 'General', 'color' => '#6B7280', 'is_active' => true]);
 
-        $importPath = storage_path('app/private/imports/legacy-dates.csv');
+        $importPath = ImportFiles::path('legacy-dates.csv');
         File::ensureDirectoryExists(dirname($importPath));
         File::put($importPath, implode(PHP_EOL, [
             'subject,description,created_at,resolved_at,closed_at,category,priority,status',

@@ -208,6 +208,14 @@ class TicketStatusWorkflowService
                 ->lockForUpdate()
                 ->get()
                 ->each(function (Ticket $ticket) use ($newStatus, $closeReason): void {
+                    // The caller checked these rules on the tickets as it loaded them. Someone may have changed a
+                    // ticket since (a client reopened or cancelled it), so the locked row decides.
+                    $gateError = $this->reopenClosedStatusGateErrorForTicket($ticket, $newStatus)
+                        ?? $this->cancelTicketGateErrorForTicket($ticket, $newStatus);
+                    if ($gateError !== null) {
+                        throw ValidationException::withMessages(['status' => $gateError]);
+                    }
+
                     $previousStatus = (string) $ticket->status;
                     $previousAssignedIds = $ticket->assigned_user_ids;
                     $newAssignedIds = $this->ticketAssignments->determineReviewerAssigneeIds($newStatus, $previousAssignedIds);

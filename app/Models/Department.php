@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Models\Concerns\GeneratesUniqueSlug;
 use App\Services\SupportBrandingService;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -13,7 +12,6 @@ use Illuminate\Support\Str;
 class Department extends Model
 {
     use GeneratesUniqueSlug;
-    use HasFactory;
 
     private const MANAGED_LOGO_PREFIXES = [
         'storage/department-logos/',

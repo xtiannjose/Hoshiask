@@ -448,7 +448,9 @@ class TicketEmailAlertService
     {
         $cutoff = now()->subMinutes(SlaSettings::assignmentReminderMinutes());
 
+        // Imported tickets are old records: reminding about them would mail every open one on the first run.
         $query = Ticket::query()
+            ->where('is_imported', false)
             ->whereIn('status', Ticket::OPEN_STATUSES)
             ->whereNotNull('assigned_at')
             ->where('assigned_at', '<=', $cutoff)
@@ -506,6 +508,7 @@ class TicketEmailAlertService
         $thresholdLabel = $this->formatMinutes($thresholdMinutes);
 
         $query = Ticket::query()
+            ->where('is_imported', false)
             ->whereIn('status', Ticket::OPEN_STATUSES)
             ->where('created_at', '<=', now()->subMinutes($thresholdMinutes))
             ->whereNull($notifiedColumn);

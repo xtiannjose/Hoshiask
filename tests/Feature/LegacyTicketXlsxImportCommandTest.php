@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
+use Tests\Support\ImportFiles;
 use Tests\TestCase;
 use ZipArchive;
 
@@ -57,7 +58,7 @@ class LegacyTicketXlsxImportCommandTest extends TestCase
             'is_active' => true,
         ]);
 
-        $importPath = storage_path('app/private/imports/legacy-tracker.xlsx');
+        $importPath = ImportFiles::path('legacy-tracker.xlsx');
         File::ensureDirectoryExists(dirname($importPath));
         $this->writeTrackerWorkbook($importPath, [
             'ticket_number' => 'TK-U3GFYDVS',
@@ -122,7 +123,7 @@ class LegacyTicketXlsxImportCommandTest extends TestCase
             'is_active' => true,
         ]);
 
-        $importPath = storage_path('app/private/imports/legacy-tracker-dup.xlsx');
+        $importPath = ImportFiles::path('legacy-tracker-dup.xlsx');
         File::ensureDirectoryExists(dirname($importPath));
         $this->writeTrackerWorkbook($importPath, [
             'ticket_number' => 'TK-U3GFYDVS',
@@ -180,7 +181,7 @@ class LegacyTicketXlsxImportCommandTest extends TestCase
             'updated_at' => Carbon::parse('2026-03-17 08:00:00', 'Asia/Manila')->utc(),
         ]);
 
-        $importPath = storage_path('app/private/imports/legacy-tracker-update.xlsx');
+        $importPath = ImportFiles::path('legacy-tracker-update.xlsx');
         File::ensureDirectoryExists(dirname($importPath));
         $this->writeTrackerWorkbook($importPath, [
             'ticket_number' => 'TK-U3GFYDVS',

@@ -99,6 +99,9 @@ class TicketAssignmentAutomationService
         $actualCounts = Ticket::query()
             ->where('category_id', $ticket->category_id)
             ->whereIn('assigned_to', $technicianIds)
+            // Recent assignments only: over all time a technician added later would get every new ticket until
+            // the lifetime shares matched.
+            ->whereRaw('COALESCE(assigned_at, created_at) >= ?', [now()->subDays((int) config('helpdesk.assignment.rotation_window_days', 30))])
             ->selectRaw('assigned_to, COUNT(*) as aggregate')
             ->groupBy('assigned_to')
             ->pluck('aggregate', 'assigned_to');

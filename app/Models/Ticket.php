@@ -10,7 +10,6 @@ use App\Support\TicketSla;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -59,8 +58,6 @@ use Illuminate\Support\Str;
  */
 class Ticket extends Model
 {
-    use HasFactory;
-
     public const PRIORITIES = [
         TicketPriority::Severity1->value,
         TicketPriority::Severity2->value,
@@ -127,6 +124,9 @@ class Ticket extends Model
         TicketStatus::Open->value,
         TicketStatus::Pending->value,
     ];
+
+    /** An active ticket this old shows under "Needs Attention" (the tab and the dashboard count). */
+    public const NEEDS_ATTENTION_AFTER_HOURS = 16;
 
     /** A Resolved ticket is closed automatically once the client has been silent this long. */
     public const AUTO_CLOSE_RESOLVED_AFTER_DAYS = 7;
@@ -716,7 +716,7 @@ class Ticket extends Model
 
         return match ($status) {
             TicketStatus::Pending, TicketStatus::InProgress => $status->dotClass(),
-            TicketStatus::Resolved, TicketStatus::Closed => TicketStatus::Closed->dotClass(),
+            TicketStatus::Resolved, TicketStatus::Closed, TicketStatus::Cancelled => TicketStatus::Closed->dotClass(),
             default => TicketStatus::Open->dotClass(),
         };
     }
@@ -727,6 +727,7 @@ class Ticket extends Model
             'pending' => 'Awaiting customer response',
             'in_progress' => 'In Progress',
             'resolved', 'closed' => 'Read',
+            'cancelled' => 'Cancelled',
             default => 'Unread',
         };
     }
@@ -769,15 +770,6 @@ class Ticket extends Model
     public function hasBreachedResolutionTarget(?CarbonInterface $asOf = null): bool
     {
         return $this->sla()->hasBreachedResolutionTarget($asOf);
-    }
-
-    /**
-     * Minutes to resolution/closure, or null while the ticket is still open. Shared by the live SLA badge and the
-     * batch SLA reports, so both agree on what "resolved" means.
-     */
-    public function slaResolutionMinutes(): ?int
-    {
-        return $this->sla()->resolutionMinutes();
     }
 
     public static function resolutionTargetMinutes(): int

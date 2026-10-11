@@ -133,6 +133,7 @@ These are used by `php artisan db:seed` and by account management. The seeder re
 | `HELPDESK_SLA_RESOLUTION_UNDER_ONE_HOUR_MINUTES` | `60` | The first band limit of the Resolution Time chart on the Reports page. |
 | `HELPDESK_SLA_RESOLUTION_UNDER_FOUR_HOURS_MINUTES` | `240` | The second band limit of that chart. |
 | `HELPDESK_SLA_RESOLUTION_UNDER_TWENTY_FOUR_HOURS_MINUTES` | `1440` | The third band limit of that chart. |
+| `HELPDESK_ASSIGNMENT_ROTATION_WINDOW_DAYS` | `30` | The "rotating counter" assignment compares each technician's share of a category over this many days. |
 | `HELPDESK_CANNED_REPLIES_ENABLED` | `true` | `false` hides canned responses everywhere without touching the database. |
 
 ## Emails to clients

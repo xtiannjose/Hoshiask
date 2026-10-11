@@ -83,6 +83,42 @@ class TicketAssignmentAutomationServiceTest extends TestCase
         $this->assertSame($underservedTechnician->id, $newTicket->fresh()->assigned_to);
     }
 
+    public function test_rotating_counter_does_not_send_everything_to_a_technician_added_later(): void
+    {
+        TicketAssignmentSetting::current()->update([
+            'distribution_method' => TicketAssignmentSetting::METHOD_ROTATING_COUNTER,
+        ]);
+
+        $client = $this->createClient();
+        $first = $this->createAssignedSupportUser('First Technician', 'first-technician@example.com');
+        $second = $this->createAssignedSupportUser('Second Technician', 'second-technician@example.com');
+        $newcomer = $this->createAssignedSupportUser('New Technician', 'new-technician@example.com');
+        $category = $this->createCategory('Window Category');
+
+        foreach ([$first, $second, $newcomer] as $technician) {
+            TicketAssignmentRule::create(['category_id' => $category->id, 'user_id' => $technician->id, 'weight' => 1]);
+        }
+
+        // Months of history shared by the first two. Counted over all time, the newcomer would be "owed" all of it.
+        foreach ([$first, $second] as $technician) {
+            for ($i = 0; $i < 20; $i++) {
+                $this->createTicket($client, $category, [
+                    'assigned_to' => $technician->id,
+                    'assigned_at' => now()->subDays(90),
+                ]);
+            }
+        }
+
+        $picked = [];
+        for ($i = 0; $i < 3; $i++) {
+            $ticket = $this->createTicket($client, $category, ['assigned_to' => null]);
+            app(TicketAssignmentAutomationService::class)->autoAssignIfUnassigned($ticket);
+            $picked[] = $ticket->fresh()->assigned_to;
+        }
+
+        $this->assertEqualsCanonicalizing([$first->id, $second->id, $newcomer->id], $picked);
+    }
+
     public function test_it_ignores_rules_pointing_at_deactivated_technicians(): void
     {
         $client = $this->createClient();

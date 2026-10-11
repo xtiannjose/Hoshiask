@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Tests\Support\ImportFiles;
 use Tests\TestCase;
 
 class LegacyTicketCsvImportEdgeCasesTest extends TestCase
@@ -180,7 +181,7 @@ class LegacyTicketCsvImportEdgeCasesTest extends TestCase
      */
     private function writeImportCsv(string $filename, array $lines): void
     {
-        $importPath = storage_path('app/private/imports/'.$filename);
+        $importPath = ImportFiles::path($filename);
         File::ensureDirectoryExists(dirname($importPath));
         File::put($importPath, implode(PHP_EOL, [...$lines, '']));
     }

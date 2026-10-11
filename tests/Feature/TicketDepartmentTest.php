@@ -14,6 +14,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Tests\Support\ImportFiles;
 use Tests\TestCase;
 use Tests\Traits\CreatesTestData;
 
@@ -214,7 +215,7 @@ class TicketDepartmentTest extends TestCase
         $requester = $this->createClient('Placeholder Client', 'placeholder-client@example.com');
         Category::create(['name' => 'Other', 'description' => 'General', 'color' => '#6B7280', 'is_active' => true]);
 
-        $importPath = storage_path('app/private/imports/legacy-departments.csv');
+        $importPath = ImportFiles::path('legacy-departments.csv');
         File::ensureDirectoryExists(dirname($importPath));
         File::put($importPath, implode(PHP_EOL, [
             'subject,description,created_at,category,priority,status',

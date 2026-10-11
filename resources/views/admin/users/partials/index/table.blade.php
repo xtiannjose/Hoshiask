@@ -123,7 +123,7 @@
         @endforelse
     </div>
 
-    <div class="hidden overflow-x-auto lg:block">
+    <div class="relative hidden overflow-x-auto lg:block">
         <table class="min-w-[980px] w-full divide-y divide-slate-200">
             <thead class="bg-slate-50">
                 <tr>

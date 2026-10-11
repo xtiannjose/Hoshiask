@@ -109,6 +109,8 @@ The workflow `.github/workflows/ci.yml` runs on every push to `main` and every p
 | `postgres` | The PHP tests again, on a real PostgreSQL 16 server. It fails if the suite is not really on PostgreSQL. |
 | `e2e` | The Playwright browser tests on Windows, on a SQLite file seeded with `E2eSmokeSeeder`. |
 
+`.github/workflows/audit.yml` runs `composer audit` and `npm audit` on the locked versions every Monday (and on demand from the Actions tab), because a new advisory can appear in a week with no push.
+
 `.github/workflows/codeql.yml` analyses the JavaScript, but the workflow is **disabled in GitHub**: code scanning on a private repository needs GitHub Advanced Security, and its last run failed for that reason. Enable it from the Actions tab if your plan allows it, or delete the file. CodeQL does not support PHP, so PHP is covered by PHPStan and `composer audit`. GitHub keeps old failed runs: judge the project by the latest run or the badge in the README.
 
 ## Dependency and security checks

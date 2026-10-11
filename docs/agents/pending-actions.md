@@ -61,7 +61,7 @@ Every change in the table below is already in `main` (checked in the code on 202
 | #245 | A stranger cannot lock the real admin out; new command `php artisan helpdesk:unlock-login` |
 | #246 | Route protection and client journey tests; fixes the shared rate-limit counter and the "mark as resolved" button that needed a comment at any rating; the PostgreSQL job fails if it is not really on PostgreSQL |
 
-Deploy as usual ([docs/operations.md](../operations.md)); the deploy runs the migration for the new database indexes.
+Deploy as usual ([docs/operations.md](../operations.md)); the deploy runs the migration for the new database indexes. The branch `fix/third-deep-check` adds one more migration (two search indexes on `tickets`; a few seconds at 10,000 tickets).
 
 After deploying:
 
@@ -71,6 +71,6 @@ After deploying:
 
 ## 4. Still open, only if wanted
 
-- Issue #233: some report and auto-close jobs load a lot at once and PDFs are built while the user waits. Fine at 10,000 tickets; measure before changing.
+- Issue #233: measured on 2026-10-11 with 60,000 tickets. The all-time report and the ticket search were fixed (see the third deep check in [plan.md](plan.md)); the first auto-close and reminder runs after a long outage are slow but one-off, and PDFs are built while the user waits (the detailed custom report takes about 3 s).
 - Issue #229: what is left of the larger list (MFA and client password changes were decided against; see [docs/security.md](../security.md)).
 - Popups (issue #202): not built, reasons are on the issue.

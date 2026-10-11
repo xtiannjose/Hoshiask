@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -21,8 +20,6 @@ use Illuminate\Support\Str;
  */
 class TicketUserState extends Model
 {
-    use HasFactory;
-
     /**
      * Shared version token for every staff member's cached header payload. Bumping it
      * (one write) marks all staff caches stale, instead of deleting one key per staff user.

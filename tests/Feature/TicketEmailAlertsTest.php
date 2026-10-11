@@ -321,6 +321,36 @@ class TicketEmailAlertsTest extends TestCase
         });
     }
 
+    public function test_imported_open_tickets_get_no_reminders(): void
+    {
+        Mail::fake();
+
+        $technical = $this->createUser('Tech Import', 'tech-import@example.com', User::ROLE_TECHNICAL);
+        $this->createUser('Super Import', 'super-import@example.com', User::ROLE_SUPER_USER);
+        $client = $this->createUser('Client Import', 'client-import@example.com', User::ROLE_CLIENT, 'Hoshishi');
+        $category = $this->createCategory();
+
+        // A legacy record that is old, open and assigned, and another that is old, open and unassigned.
+        $assigned = $this->createTicket($client, $category, [
+            'assigned_to' => $technical->id,
+            'assigned_at' => now()->subDays(40),
+            'status' => 'in_progress',
+            'is_imported' => true,
+            'creation_source' => Ticket::CREATION_SOURCE_IMPORTED,
+        ]);
+        $assigned->forceFill(['created_at' => now()->subDays(40)])->save();
+        $unassigned = $this->createTicket($client, $category, [
+            'is_imported' => true,
+            'creation_source' => Ticket::CREATION_SOURCE_IMPORTED,
+        ]);
+        $unassigned->forceFill(['created_at' => now()->subDays(40)])->save();
+
+        $this->artisan('tickets:send-alert-emails')->assertSuccessful();
+
+        $this->assertCount(0, Mail::queued(TicketAlertMail::class));
+        $this->assertNull($assigned->fresh()->technical_user_notified_sla_at);
+    }
+
     public function test_recording_a_sent_reminder_does_not_count_as_ticket_activity(): void
     {
         Mail::fake();

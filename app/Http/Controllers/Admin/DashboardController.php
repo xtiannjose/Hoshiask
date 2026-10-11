@@ -39,7 +39,7 @@ class DashboardController extends Controller
 
         if (! $user->isTechnician()) {
             $stats['attention_tickets'] = (clone $scopedTickets)->whereNotIn('status', Ticket::TERMINAL_STATUSES)
-                ->where('created_at', '<=', now()->subHours(16))
+                ->where('created_at', '<=', now()->subHours(Ticket::NEEDS_ATTENTION_AFTER_HOURS))
                 ->count();
         }
 

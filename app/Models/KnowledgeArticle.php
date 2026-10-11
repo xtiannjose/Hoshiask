@@ -6,14 +6,12 @@ use App\Enums\KnowledgeArticleCategory;
 use App\Models\Concerns\GeneratesUniqueSlug;
 use App\Support\LikePattern;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class KnowledgeArticle extends Model
 {
     use GeneratesUniqueSlug;
-    use HasFactory;
 
     protected $fillable = [
         'created_by_user_id',

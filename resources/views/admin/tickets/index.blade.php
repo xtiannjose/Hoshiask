@@ -531,7 +531,7 @@
                 <div>
                     <label for="bulk-priority-select" class="form-label">Severity</label>
                     <select id="bulk-priority-select" name="priority" class="form-input">
-                        <option value="">Severity not set</option>
+                        <option value="" selected disabled>Choose a severity</option>
                         <option value="severity_1">Severity 1</option>
                         <option value="severity_2">Severity 2</option>
                         <option value="severity_3">Severity 3</option>

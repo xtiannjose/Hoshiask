@@ -267,12 +267,14 @@ The SLA target is how long a ticket should take: **240 minutes** by default (`HE
 - the assigned technicians, 210 minutes after the assignment, if the ticket is still active
 - super users, admins and the shadow account, when an active ticket stays unassigned: once at 120 minutes ("Unchecked Ticket Alert") and once at 180 minutes ("Unassigned SLA Warning"), counted from when the ticket was created
 
+Imported tickets (see [ticket-import.md](ticket-import.md)) never get these reminders: they are old records, and a reminder for every open one would flood the inboxes on the first run after an import.
+
 ### Assignment rules
 
 Admins and the shadow account can set rules per category (Admin → Assignment Rules): a category is linked to one or more technicians with a relative weight (for example "Starlink: Mark 70, Eric 30"). When a ticket arrives without an assignee and its category has rules, the system assigns it:
 
 - **Weighted random:** each new ticket rolls against the weights.
-- **Rotating counter:** the ticket goes to whichever technician is furthest below their target share, based on the category's assignment history.
+- **Rotating counter:** the ticket goes to whichever technician is furthest below their target share, based on the category's assignments in the last 30 days. A technician added later therefore gets a fair share, not every new ticket.
 
 The method is one setting for all rules, changed on the same page. If a category has no rules, or every technician in it is deactivated, the ticket stays unassigned.
 

@@ -10,9 +10,12 @@ class TicketAssignmentSetting extends Model
 
     public const METHOD_ROTATING_COUNTER = 'rotating_counter';
 
+    public const METHOD_LEAST_WORKLOAD = 'least_workload';
+
     public const METHODS = [
         self::METHOD_WEIGHTED_RANDOM,
         self::METHOD_ROTATING_COUNTER,
+        self::METHOD_LEAST_WORKLOAD,
     ];
 
     protected $fillable = [

@@ -123,7 +123,7 @@ Found by the third deep check and left alone at first; the maintainer chose the 
 | **Needs Attention** counted calendar hours with business hours on | The tab and the dashboard count use 16 *working* hours (`BusinessHours::cutoff(960)`) when business hours are on |
 | **Public holidays** were not skipped | `HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES` (comma-separated `YYYY-MM-DD`) counts like a weekend; an entry that is not a date is ignored and `helpdesk:ops-status` names it |
 | **Ticket page showed real time only** | With business hours on, the Resolution Time line reads "2d 18h (3h working)" for staff and client |
-| **Rotating assignment ignored leave** | `users.assignment_paused_until`, set as a "Back on" day on the Assignment Rules page (admin and shadow). Both distribution methods skip someone who is away; it ends by itself; manual assignment is unaffected. Workload balancing was left out on purpose: build it only if overload shows up |
+| **Rotating assignment ignored leave** | `users.assignment_paused_until`, set as a "Back on" day on the Assignment Rules page (admin and shadow). Both distribution methods skip someone who is away; it ends by itself; manual assignment is unaffected. Workload balancing was built afterwards as a third distribution method, "Least workload" (Open and In Progress tickets held, divided by the rule weight) |
 | **The status check could not see a Redis queue** | A worker heartbeat (`RecordQueueWorkerHeartbeat`, written at most every 30 s) and `Queue::size()`: "jobs are waiting and no job has finished for 15 minutes" works for a non-database queue, and the status shows when the last job finished |
 | **24 unused dark-theme colour rules** | Removed from `resources/css/app.css` (23 selectors, 3 whole rules); their classes appear nowhere in the source |
 
@@ -168,7 +168,8 @@ Do not re-ask these.
 - Pending tickets: staff reminder after 3 days, automatic cancel after 14 days with no activity (2026-10-11). The client is not emailed about either.
 - `.doc` and `.xls` uploads are refused (2026-10-11); `.docx` and `.xlsx` stay.
 - SLA business hours exist behind a setting that is off. When on, Needs Attention counts 16 working hours and the closed dates list counts like a weekend (2026-10-11).
-- A technician can be marked away until a day; the assignment rules skip them, and nothing balances by workload (2026-10-11).
+- A technician can be marked away until a day; the assignment rules skip them (2026-10-11). The "Least workload" distribution method balances by Open and In Progress tickets held; weighted random stays the default (2026-10-11).
+- Starter departments and categories live in `StarterDataSeeder`, never in a migration (2026-10-11).
 - Claude may push feature branches and open PRs. Pushes to `main`, force pushes, `reset --hard`, `clean -f`, `branch -D` and discarding all changes are blocked by `.claude/hooks/block-dangerous-git.mjs`. The maintainer merges every PR.
 
 ## Working with the maintainer

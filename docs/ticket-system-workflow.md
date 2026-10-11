@@ -281,6 +281,7 @@ Admins and the shadow account can set rules per category (Admin → Assignment R
 
 - **Weighted random:** each new ticket rolls against the weights.
 - **Rotating counter:** the ticket goes to whichever technician is furthest below their target share, based on the category's assignments in the last 30 days. A technician added later therefore gets a fair share, not every new ticket.
+- **Least workload:** the ticket goes to whoever has the fewest `Open` and `In Progress` tickets for their weight. Their tickets in every category count, whether they are the primary assignee or share the ticket; `Pending`, resolved, closed and imported tickets do not. A weight of 60 carries twice the work of a weight of 30. A tie goes to the bigger weight, then to the lower account id. Choose this when one person ends up buried while others are idle, which the other two methods do not notice.
 
 The method is one setting for all rules, changed on the same page. If a category has no rules, or every technician in it is deactivated or away, the ticket stays unassigned and the super users get the usual unassigned alerts.
 

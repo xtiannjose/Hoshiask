@@ -33,6 +33,13 @@
                     &mdash; always gives the next ticket to whoever is furthest below their target share.
                 </span>
             </label>
+            <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input type="radio" name="distribution_method" value="least_workload" class="h-4 w-4" {{ $distributionMethod === 'least_workload' ? 'checked' : '' }}>
+                <span>
+                    <span class="font-semibold">Least workload</span>
+                    &mdash; gives the next ticket to whoever has the fewest Open and In Progress tickets for their weight.
+                </span>
+            </label>
             <button type="submit" class="btn-secondary py-2" data-loading-text="Saving...">Save</button>
         </form>
     </div>

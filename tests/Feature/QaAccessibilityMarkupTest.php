@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 use Tests\Traits\CreatesTestData;
 
@@ -92,5 +93,22 @@ class QaAccessibilityMarkupTest extends TestCase
 
         $this->assertMatchesRegularExpression('/inline-flex max-w-full whitespace-nowrap[^"]*status|whitespace-nowrap[^"]*rounded-lg[^"]*uppercase/', $html);
         $this->assertStringContainsString('<th class="w-[11%] px-3 py-4 text-center"', $html);
+    }
+
+    public function test_every_scrolling_table_wrapper_contains_its_hidden_text(): void
+    {
+        // Screen-reader-only text is positioned absolutely. Inside a scroll box that is not positioned itself it
+        // escapes the clipping and stretches the whole page sideways on a phone (the Online Users page did).
+        $offenders = [];
+        foreach (File::allFiles(resource_path('views')) as $file) {
+            preg_match_all('/class="([^"]*overflow-x-auto[^"]*)"/', $file->getContents(), $matches);
+            foreach ($matches[1] as $classes) {
+                if (! preg_match('/(^|\s)relative(\s|$)/', $classes)) {
+                    $offenders[] = $file->getRelativePathname().': '.$classes;
+                }
+            }
+        }
+
+        $this->assertSame([], $offenders, 'A class list with overflow-x-auto needs "relative".');
     }
 }

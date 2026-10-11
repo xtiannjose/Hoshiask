@@ -124,7 +124,7 @@
             </table>
             <p class="mt-3 text-sm text-slate-500">Total: {{ $totalCount }} ticket(s)</p>
         @else
-            <div class="overflow-x-auto">
+            <div class="relative overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-200">
                     <thead>
                         <tr>

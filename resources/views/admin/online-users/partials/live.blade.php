@@ -56,7 +56,7 @@
         <p class="text-xs text-slate-500">Updated {{ $refreshedAt->format('g:i:s A') }}</p>
     </div>
 
-    <div class="overflow-x-auto">
+    <div class="relative overflow-x-auto" role="region" aria-label="Online users" tabindex="0">
         <table class="w-full min-w-[960px] divide-y divide-slate-200">
             <thead class="bg-slate-50">
                 <tr>
@@ -159,7 +159,7 @@
                 A login name is locked for {{ intdiv(\App\Support\LoginThrottle::LOCKOUT_SECONDS, 60) }} minutes after {{ \App\Support\LoginThrottle::MAX_ATTEMPTS }} failures.
             </p>
         </div>
-        <div class="overflow-x-auto">
+        <div class="relative overflow-x-auto" role="region" aria-label="Failed sign-ins" tabindex="0">
             <table class="w-full min-w-[720px] divide-y divide-slate-200">
                 <thead class="bg-slate-50">
                     <tr>

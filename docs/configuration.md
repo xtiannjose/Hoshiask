@@ -207,8 +207,8 @@ These fill the Terms, Privacy Notice and Ticket Consent pages. When you change a
 | Setting | Example | What it does |
 |---|---|---|
 | `LEGAL_REQUIRE_ACCEPTANCE` | `true` | `false` turns the acceptance screen off. Do not do this in production. |
-| `LEGAL_TERMS_VERSION`, `LEGAL_PRIVACY_VERSION`, `LEGAL_PLATFORM_CONSENT_VERSION`, `LEGAL_TICKET_CONSENT_VERSION` | `2026-02-25` | The version of each text. |
-| `LEGAL_EFFECTIVE_DATE` | `"February 25, 2026"` | The date shown on the texts. |
+| `LEGAL_TERMS_VERSION`, `LEGAL_PRIVACY_VERSION`, `LEGAL_PLATFORM_CONSENT_VERSION`, `LEGAL_TICKET_CONSENT_VERSION` | `2026-02-25` (privacy notice: `2026-10-11`) | The version of each text. The privacy notice moved to `2026-10-11` when it gained the backup and log retention periods and the National Privacy Commission complaint route. |
+| `LEGAL_EFFECTIVE_DATE` | `"October 11, 2026"` | The date shown on the texts. |
 | `LEGAL_ORGANIZATION_NAME` | `"Hoshishi Corporation"` | The organisation in the texts. |
 | `LEGAL_GOVERNING_LAW` | `"Republic of the Philippines"` | The law the terms refer to. |
 | `LEGAL_DPO_EMAIL`, `LEGAL_SUPPORT_EMAIL` | placeholders | The contacts printed in the texts. Change them. |

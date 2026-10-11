@@ -18,4 +18,4 @@ The privacy notice says personal details are not kept forever (`LEGAL_RETENTION_
 
 Every run writes a `retention.enforced` entry to System Logs (counts and ticket numbers only). A run that fails part way is safe: files are removed first, and a ticket that did not finish is picked up again next time. The production status check (`php artisan helpdesk:ops-status`) tells you when tickets are past the period and the clean-up is switched off, or when it is on but has not removed anything for three days.
 
-Backups keep the removed details for up to `HELPDESK_BACKUP_RETENTION_DAYS` (14) days, so a removed ticket disappears from the oldest backup after that.
+Backups keep the removed details for up to `HELPDESK_BACKUP_RETENTION_DAYS` (14) days, so a removed ticket disappears from the oldest backup after that. The privacy notice says so, and says how long System Logs are kept (`OBSERVABILITY_SYSTEM_LOG_RETENTION_DAYS`, 365 days): both numbers are filled in from these settings, so the notice follows them.

@@ -2,7 +2,7 @@
 
 Where the work to improve Helpdesk with Claude Code stands, what was decided, and what comes next. Claude reads this at the start of a session (`CLAUDE.md` points here) and updates it when a step finishes, so the plan survives a new device or a new conversation.
 
-Last updated: 2026-10-11 (the maintainer's answers to the third deep check are built on `fix/after-third-check-decisions`, plus the follow-up round: Pending auto-cancel, legacy Office files refused, the public `/health` answer, the finding that the PostgreSQL schema file must not be regenerated yet, and the demo-app notes; before that the third deep check of the whole app, with measurements on PostgreSQL; before it, the second deep check and a rewrite of the docs, and the first check, the audit by QA, security and senior developer reviewers).
+Last updated: 2026-10-11 (the maintainer's answers to the third deep check are built on `fix/after-third-check-decisions`, plus the follow-up rounds: the small gaps (Needs Attention in working hours, closed dates, working time on the ticket page, technician availability, a queue heartbeat, unused dark-theme rules), Pending auto-cancel, legacy Office files refused, the public `/health` answer, the finding that the PostgreSQL schema file must not be regenerated yet, and the demo-app notes; before that the third deep check of the whole app, with measurements on PostgreSQL; before it, the second deep check and a rewrite of the docs, and the first check, the audit by QA, security and senior developer reviewers).
 
 **Waiting on the maintainer:** nothing right now. There is no live server (stated 2026-10-11), so everything in [pending-actions.md](pending-actions.md) that needs one (change the shadow password, install ClamAV, deploy `main`, the server settings, monitor and restore rehearsal that follow the decisions of 2026-10-11) is deferred until a server exists. Do not list server steps as pending; keep working on code, tests and docs. Merging the pull requests is still the maintainer's.
 
@@ -24,7 +24,7 @@ Last updated: 2026-10-11 (the maintainer's answers to the third deep check are b
 1. **Merge the open pull requests** (the maintainer merges): #4 (the third deep check) first, then #5 (the decisions that followed it).
 2. **Nothing needs a server right now.** There is no live server (stated 2026-10-11), so every server step is deferred in [pending-actions.md](pending-actions.md) and is not reported as pending. They become live work when a server exists.
 3. **Before real people and real data go in**, revisit the gaps left open on purpose while this is a demo app: [docs/security.md](../security.md), "Left open on purpose while this is a demo app" (password length, no MFA, shared client password, unencrypted backups, example database password, upload scanning that fails open).
-4. **Small gaps that have a plan but no decision** (see "Small gaps" below): business-hours extras, rotating assignment and availability, queue visibility with Redis, and three items not worth doing without a reason.
+4. **Nothing is waiting for a decision.** The small gaps are built or recorded as left on purpose (see "Small gaps" below).
 5. **New work** goes through the full loop: idea, `/grill-with-docs`, `/to-spec`, `/to-tickets`, `/triage`, fix, `/code-review`, PR.
 6. **Phase 5 habits**: run `/retro` at the end of a working session, and `/handoff` before a conversation gets too long.
 
@@ -113,18 +113,23 @@ Branch `fix/after-third-check-decisions` (on top of `fix/third-deep-check`), one
 | 12 | Yes | The privacy notice states backup and log retention and the National Privacy Commission route; version `2026-10-11` (the data protection officer should read it) |
 | 13 | Yes | [resilience.md](../resilience.md): failure table, recovery targets and restore log, outside monitor, Redis steps, second maintainer checklist. The server-side parts are in [pending-actions.md](pending-actions.md) section 4 |
 
-## Small gaps (plans, nothing built)
+## Small gaps (2026-10-11)
 
-Each of these was left alone on purpose. The plan and the best fix for each were given to the maintainer on 2026-10-11 and wait for a yes.
+Found by the third deep check and left alone at first; the maintainer chose the best fix for A to E and asked for the unused dark-theme rules to go. Built on `fix/after-third-check-decisions`.
 
-| Gap | Best fix | Cost |
-|---|---|---|
-| **Needs Attention** counts calendar hours, not working hours, even with business hours on | Use `BusinessHours::cutoff(960)` (16 working hours) for the tab and the dashboard count when the setting is on | One line in two places and a test |
-| **Public holidays** are not skipped by the business-hours clock | A list of closed dates in config (`HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES`, comma-separated `YYYY-MM-DD`); `BusinessHours` treats them as non-working days | A small calendar lookup in `BusinessHours`; the maintainer keeps the list yearly |
-| **Ticket page shows real time**, the list badge shows working time | Show working time next to the real time ("2d 1h, 3h working") only when the setting is on | Both sidebar partials and one test |
-| **Rotating assignment ignores leave and workload** | A per-technician "available for assignment" switch the rotation skips, set by staff leads; leave workload balancing out | One column, one checkbox, one condition in the rotation |
-| **The status check cannot see a Redis queue** | A worker heartbeat: a `JobProcessed` listener stamps the time of the last finished job in the cache; "jobs are waiting and none finished for 15 minutes" then works for every queue driver (waiting count from `Queue::size()`) | A listener, one change in the status service and a test; only needed when Redis is adopted |
-| **Not worth doing without a reason:** export paging by id, chunking auto-close, 24 unused dark-theme colour rules | Leave them | None |
+| Gap | What was done |
+|---|---|
+| **Needs Attention** counted calendar hours with business hours on | The tab and the dashboard count use 16 *working* hours (`BusinessHours::cutoff(960)`) when business hours are on |
+| **Public holidays** were not skipped | `HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES` (comma-separated `YYYY-MM-DD`) counts like a weekend; an entry that is not a date is ignored and `helpdesk:ops-status` names it |
+| **Ticket page showed real time only** | With business hours on, the Resolution Time line reads "2d 18h (3h working)" for staff and client |
+| **Rotating assignment ignored leave** | `users.assignment_paused_until`, set as a "Back on" day on the Assignment Rules page (admin and shadow). Both distribution methods skip someone who is away; it ends by itself; manual assignment is unaffected. Workload balancing was left out on purpose: build it only if overload shows up |
+| **The status check could not see a Redis queue** | A worker heartbeat (`RecordQueueWorkerHeartbeat`, written at most every 30 s) and `Queue::size()`: "jobs are waiting and no job has finished for 15 minutes" works for a non-database queue, and the status shows when the last job finished |
+| **24 unused dark-theme colour rules** | Removed from `resources/css/app.css` (23 selectors, 3 whole rules); their classes appear nowhere in the source |
+
+Not worth doing without a reason, and left as they are:
+
+- **Export paging by id.** The custom report and System Logs CSV exports read pages of 200 rows with OFFSET, in the report's own order. Paging by id (`chunkById`) is faster on very large tables but forces id order, which would change the row order people are used to; it only matters beyond about 100,000 rows. Revisit when an export takes more than about 30 seconds.
+- **Chunking auto-close.** `tickets:auto-close-resolved` loads every Resolved ticket older than 7 days at once. It only hurts after a long outage (5,400 tickets took 48 s, one-off). If a backlog like that is expected, `chunkById(200)` is a five-line change.
 
 ## Docs rewrite (2026-10-10)
 
@@ -159,7 +164,8 @@ Do not re-ask these.
 - This is a demo app with no live server (2026-10-11). Password length, MFA, the shared client password, unencrypted backups, the example database password and the upload scanner that fails open stay as they are, recorded in `docs/security.md`, until real data is planned. Server steps are deferred, not pending.
 - Pending tickets: staff reminder after 3 days, automatic cancel after 14 days with no activity (2026-10-11). The client is not emailed about either.
 - `.doc` and `.xls` uploads are refused (2026-10-11); `.docx` and `.xlsx` stay.
-- SLA business hours exist behind a setting that is off. Needs Attention stays on the calendar clock, and public holidays are not skipped, until the maintainer asks.
+- SLA business hours exist behind a setting that is off. When on, Needs Attention counts 16 working hours and the closed dates list counts like a weekend (2026-10-11).
+- A technician can be marked away until a day; the assignment rules skip them, and nothing balances by workload (2026-10-11).
 - Claude may push feature branches and open PRs. Pushes to `main`, force pushes, `reset --hard`, `clean -f`, `branch -D` and discarding all changes are blocked by `.claude/hooks/block-dangerous-git.mjs`. The maintainer merges every PR.
 
 ## Working with the maintainer

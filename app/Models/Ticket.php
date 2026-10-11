@@ -716,7 +716,7 @@ class Ticket extends Model
 
         return match ($status) {
             TicketStatus::Pending, TicketStatus::InProgress => $status->dotClass(),
-            TicketStatus::Resolved, TicketStatus::Closed => TicketStatus::Closed->dotClass(),
+            TicketStatus::Resolved, TicketStatus::Closed, TicketStatus::Cancelled => TicketStatus::Closed->dotClass(),
             default => TicketStatus::Open->dotClass(),
         };
     }
@@ -727,6 +727,7 @@ class Ticket extends Model
             'pending' => 'Awaiting customer response',
             'in_progress' => 'In Progress',
             'resolved', 'closed' => 'Read',
+            'cancelled' => 'Cancelled',
             default => 'Unread',
         };
     }

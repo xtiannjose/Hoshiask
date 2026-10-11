@@ -44,6 +44,7 @@ That wording matches the current report calculation and avoids confusing it with
 - Source area: `App\Http\Controllers\Admin\ReportController` via `App\Services\Admin\Reports\SlaReportService`
 - Scope: completed tickets created inside the selected reports scope (`selected month`, or `detail filter` when applied), **excluding cancelled tickets** (they are not measured against SLA targets)
 - Completion uses `resolved_at`, with `closed_at` as a fallback when `resolved_at` is missing; the time counted is from `created_at` to completion.
+- The time is counted in minutes round the clock, unless `HELPDESK_SLA_BUSINESS_HOURS_ENABLED=true` (added 2026-10-11, off by default). Then only the working days and hours count (`App\Support\BusinessHours`), so the bands read in working time and a month reported before and after switching the setting on is not comparable. Public holidays are not skipped.
 - Bands (each limit is configurable with the `HELPDESK_SLA_RESOLUTION_*` settings):
   - `Under 1 Hour`: `< 1 hour`
   - `Under 4 Hours`: `>= 1 hour` and `< 4 hours`

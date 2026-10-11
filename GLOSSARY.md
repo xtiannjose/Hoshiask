@@ -152,6 +152,9 @@ _Avoid_: KB post, help page
 **SLA target**:
 The time a ticket should take to be completed: 4 hours by default. SLA reminders and the SLA Breached tab measure against it.
 
+**Business hours** (SLA clock):
+The working days and hours that SLA minutes count when `HELPDESK_SLA_BUSINESS_HOURS_ENABLED` is on. Nights and weekends do not use up the SLA target. Public holidays are not skipped. Off by default, when SLA minutes run around the clock.
+
 **SLA breach**:
 An active ticket, or a ticket completed late, that passed the resolution target.
 

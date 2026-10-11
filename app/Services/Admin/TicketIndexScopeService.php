@@ -4,6 +4,7 @@ namespace App\Services\Admin;
 
 use App\Models\Ticket;
 use App\Models\User;
+use App\Support\BusinessHours;
 use Illuminate\Database\Eloquent\Builder;
 
 class TicketIndexScopeService
@@ -76,7 +77,7 @@ class TicketIndexScopeService
         if ($activeTab === 'breached') {
             $targetMinutes = Ticket::resolutionTargetMinutes();
             $query->whereIn('status', Ticket::SLA_CLOCK_STATUSES)
-                ->where('created_at', '<=', now()->subMinutes($targetMinutes));
+                ->where('created_at', '<=', BusinessHours::cutoff($targetMinutes));
 
             return;
         }

@@ -7,6 +7,7 @@ use App\Mail\TicketAlertMail;
 use App\Models\Ticket;
 use App\Models\TicketReply;
 use App\Models\User;
+use App\Support\BusinessHours;
 use App\Support\SlaSettings;
 use App\Support\TicketEmailThread;
 use Illuminate\Database\Eloquent\Model;
@@ -566,7 +567,7 @@ class TicketEmailAlertService
 
     private function sendAssignedTechnicalSlaReminders(): int
     {
-        $cutoff = now()->subMinutes(SlaSettings::assignmentReminderMinutes());
+        $cutoff = BusinessHours::cutoff(SlaSettings::assignmentReminderMinutes());
 
         // Imported tickets are old records: reminding about them would mail every open one on the first run.
         $query = Ticket::query()
@@ -630,7 +631,7 @@ class TicketEmailAlertService
         $query = Ticket::query()
             ->where('is_imported', false)
             ->whereIn('status', Ticket::SLA_CLOCK_STATUSES)
-            ->where('created_at', '<=', now()->subMinutes($thresholdMinutes))
+            ->where('created_at', '<=', BusinessHours::cutoff($thresholdMinutes))
             ->whereNull($notifiedColumn);
         $tickets = Ticket::applyUnassignedConstraint($query)
             ->get(['id', 'ticket_number', 'subject', 'priority', 'created_at']);

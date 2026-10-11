@@ -125,6 +125,10 @@ These are used by `php artisan db:seed` and by account management. The seeder re
 | Setting | Example | What it does |
 |---|---|---|
 | `HELPDESK_REPLY_EDIT_WINDOW_MINUTES` | `180` | How long a client can edit or delete their own message. |
+| `HELPDESK_SLA_BUSINESS_HOURS_ENABLED` | `false` | `true` makes every SLA minute count only inside the working days and hours below, in the application time zone (`APP_TIMEZONE`). A ticket logged on Friday evening then starts its target on Monday morning, and no SLA reminder goes out overnight or at the weekend. Off by default: SLA minutes run around the clock. |
+| `HELPDESK_SLA_BUSINESS_HOURS_DAYS` | `1,2,3,4,5` | Working days as ISO weekdays: 1 = Monday to 7 = Sunday. |
+| `HELPDESK_SLA_BUSINESS_HOURS_START` | `08:00` | Opening time (`HH:MM`). |
+| `HELPDESK_SLA_BUSINESS_HOURS_END` | `17:00` | Closing time (`HH:MM`), after the opening time. If the days or times cannot be read the setting is ignored and `helpdesk:ops-status` says so. |
 | `HELPDESK_SLA_RESOLUTION_TARGET_MINUTES` | `240` | The time a ticket should take. The SLA Breached tab and the reminders measure against it. |
 | `HELPDESK_SLA_ASSIGNMENT_REMINDER_MINUTES` | `210` | The assigned technicians are reminded this long after a ticket was assigned to them, if it is still active. |
 | `HELPDESK_SLA_SUPER_USER_NEW_TICKET_NOTIFY` | `true` | Email super users, admins and the shadow account when a new ticket arrives. |

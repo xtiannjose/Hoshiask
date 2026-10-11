@@ -250,7 +250,7 @@ You can attach files when you create a ticket and whenever you reply to it. Atta
 
 Accepted file types
 - Pictures: JPG, JPEG, PNG
-- Documents: PDF, DOC, DOCX (Word), XLS, XLSX (Excel), TXT (plain text)
+- Documents: PDF, DOCX (Word), XLSX (Excel), TXT (plain text). Save an older .doc or .xls file as .docx or .xlsx first.
 
 File size
 Each file can be up to 10 MB. The upload box tells you the exact limit and warns you before you send a file that is too large. If a file is too big, you can:

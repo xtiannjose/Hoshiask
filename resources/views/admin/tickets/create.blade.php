@@ -304,7 +304,7 @@
                         <label for="attachments" class="form-label">Attachments</label>
                         <input type="file" name="attachments[]" id="attachments" multiple
                                class="form-input cursor-pointer @error('attachments.*') border-red-500 @enderror"
-                               accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.txt,.xls,.xlsx"
+                               accept=".jpg,.jpeg,.png,.pdf,.docx,.txt,.xlsx"
                                aria-describedby="attachments-help attachments-guard"
                                data-upload-guard="attachments-guard"
                                data-max-files="{{ \App\Support\UploadLimits::MAX_FILES }}"

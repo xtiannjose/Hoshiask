@@ -22,7 +22,7 @@ class StoreTicketReplyRequest extends FormRequest
             'message' => ['nullable', 'string', 'max:10000', 'required_without:attachments'],
             'reply_to_id' => ['nullable', 'integer', 'exists:ticket_replies,id'],
             'attachments' => ['nullable', 'array', 'min:1', 'max:'.UploadLimits::MAX_FILES, 'required_without:message'],
-            'attachments.*' => ['file', 'max:10240', 'mimes:jpg,jpeg,png,pdf,doc,docx,txt,xls,xlsx', 'mimetypes:image/jpeg,image/png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', new NoMalware],
+            'attachments.*' => ['file', 'max:10240', 'mimes:jpg,jpeg,png,pdf,docx,txt,xlsx', 'mimetypes:image/jpeg,image/png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', new NoMalware],
         ];
     }
 

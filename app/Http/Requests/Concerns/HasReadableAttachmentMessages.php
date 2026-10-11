@@ -17,7 +17,7 @@ trait HasReadableAttachmentMessages
     protected function attachmentMessages(): array
     {
         $limit = UploadLimits::perFileLabel();
-        $acceptedTypes = 'Use JPG, PNG, PDF, DOC, DOCX, XLS, XLSX or TXT.';
+        $acceptedTypes = 'Use JPG, PNG, PDF, DOCX, XLSX or TXT. Save an older .doc or .xls file as .docx or .xlsx first.';
 
         return [
             'attachments.*.max' => ':attribute is too large. Each file can be at most '.$limit.'.',

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\PendingFollowUpMail;
 use App\Mail\TicketAlertMail;
 use App\Models\Ticket;
 use App\Models\TicketReply;
@@ -21,6 +22,9 @@ class TicketEmailAlertService
      * recorded after the fact, e.g. backlog entered from paper: the client is not emailed about it.
      */
     private const AFTER_THE_FACT_HOURS = 24;
+
+    /** Tickets named in one follow-up email; the rest are counted ("and 4 more"). */
+    private const FOLLOW_UP_TICKETS_LISTED = 15;
 
     public function notifyAssignedTechnicalUsersAboutAssignment(Ticket $ticket, ?array $assigneeIds = null): bool
     {
@@ -441,7 +445,123 @@ class TicketEmailAlertService
                 'This ticket has been unassigned for %s and risks breaching the SLA.',
             ),
             'client_reply_digests' => $this->sendClientReplyDigests(),
+            'pending_follow_ups' => $this->sendPendingFollowUps(),
         ];
+    }
+
+    /**
+     * One email per staff member listing the Pending tickets that have had no status change and no reply for
+     * `pending_follow_up_days`: the assignees, or the super users when nobody holds the ticket. The client is not
+     * told. A ticket that stays quiet is listed again after the same number of days.
+     *
+     * @return int Tickets listed in an email that went out.
+     */
+    private function sendPendingFollowUps(): int
+    {
+        $days = max(0, (int) config('helpdesk.pending_follow_up_days', 3));
+        if ($days < 1) {
+            return 0;
+        }
+
+        $cutoff = now()->subDays($days);
+
+        $tickets = Ticket::query()
+            ->where('is_imported', false)
+            ->where('status', 'pending')
+            ->where('updated_at', '<=', $cutoff)
+            ->where(fn ($query) => $query
+                ->whereNull('staff_notified_pending_at')
+                ->orWhere('staff_notified_pending_at', '<=', $cutoff))
+            ->whereNotExists(fn ($query) => $query
+                ->selectRaw('1')
+                ->from('ticket_replies')
+                ->whereColumn('ticket_replies.ticket_id', 'tickets.id')
+                ->whereNull('ticket_replies.deleted_at')
+                ->where('ticket_replies.created_at', '>', $cutoff))
+            ->with('assignedUsers:id,name,email,role,is_active')
+            ->withMax(['replies as last_reply_at' => fn ($query) => $query->whereNull('deleted_at')], 'created_at')
+            ->orderBy('updated_at')
+            ->get();
+
+        if ($tickets->isEmpty()) {
+            return 0;
+        }
+
+        $superUsers = $this->activeSuperUserRecipients();
+        $perRecipient = [];
+
+        foreach ($tickets as $ticket) {
+            $holders = $ticket->assignedUsers
+                ->filter(fn (User $user) => $user->is_active
+                    && ! $user->isClient()
+                    && is_string($user->email)
+                    && trim($user->email) !== '');
+
+            foreach (($holders->isNotEmpty() ? $holders : $superUsers) as $recipient) {
+                $perRecipient[$recipient->id]['user'] = $recipient;
+                $perRecipient[$recipient->id]['tickets'][] = $ticket;
+            }
+        }
+
+        $stamped = [];
+
+        foreach ($perRecipient as $entry) {
+            /** @var User $recipient */
+            $recipient = $entry['user'];
+            /** @var list<Ticket> $waiting */
+            $waiting = $entry['tickets'];
+
+            $rows = array_map(fn (Ticket $ticket) => [
+                'ticket_number' => (string) $ticket->ticket_number,
+                'subject' => (string) $ticket->subject,
+                'waiting' => $this->pendingWaitingLabel($ticket),
+                'url' => route('admin.tickets.show', $ticket),
+            ], array_slice($waiting, 0, self::FOLLOW_UP_TICKETS_LISTED));
+
+            try {
+                Mail::to($recipient->email)->queue(new PendingFollowUpMail(
+                    recipientName: (string) $recipient->name,
+                    tickets: $rows,
+                    total: count($waiting),
+                    days: $days,
+                ));
+            } catch (\Throwable $exception) {
+                Log::warning('Pending follow-up email failed.', [
+                    'recipient_user_id' => $recipient->id,
+                    'recipient_email' => $recipient->email,
+                    'error' => $exception->getMessage(),
+                ]);
+
+                continue;
+            }
+
+            foreach ($waiting as $ticket) {
+                $stamped[$ticket->id] = $ticket;
+            }
+        }
+
+        foreach ($stamped as $ticket) {
+            $this->recordNotifiedAt($ticket, 'staff_notified_pending_at');
+        }
+
+        return count($stamped);
+    }
+
+    /** "5 days with no activity", counted from the later of the last status change and the last reply. */
+    private function pendingWaitingLabel(Ticket $ticket): string
+    {
+        $lastActivity = $ticket->updated_at;
+        $lastReplyAt = $ticket->getAttribute('last_reply_at');
+        if ($lastReplyAt !== null) {
+            $lastReply = Carbon::parse($lastReplyAt);
+            if ($lastActivity === null || $lastReply->gt($lastActivity)) {
+                $lastActivity = $lastReply;
+            }
+        }
+
+        $days = max(1, (int) floor(($lastActivity ?? now())->diffInDays(now(), true)));
+
+        return $days.' '.($days === 1 ? 'day' : 'days').' with no activity';
     }
 
     private function sendAssignedTechnicalSlaReminders(): int

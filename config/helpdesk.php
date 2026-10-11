@@ -68,6 +68,10 @@ return [
     'assignment' => [
         'rotation_window_days' => max(1, (int) env('HELPDESK_ASSIGNMENT_ROTATION_WINDOW_DAYS', 30)),
     ],
+    // A Pending ticket with no activity (status change or reply) for this many days is listed in one reminder email to
+    // its assignees, or to the super users when nobody is assigned, and again every this many days while it stays
+    // quiet. 0 switches the reminder off. The client is not emailed and the ticket is not closed.
+    'pending_follow_up_days' => max(0, (int) env('HELPDESK_PENDING_FOLLOW_UP_DAYS', 3)),
     // Who people should contact when they forget their password (there is no self-service reset).
     // An email address, phone number or name; shown on the sign-in page and in the lockout message.
     'password_help_contact' => env('HELPDESK_PASSWORD_HELP_CONTACT'),

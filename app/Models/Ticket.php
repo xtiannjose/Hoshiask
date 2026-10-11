@@ -40,6 +40,7 @@ use Illuminate\Support\Str;
  * @property Carbon|null $client_notified_resolved_at
  * @property Carbon|null $client_notified_auto_close_warning_at
  * @property Carbon|null $client_notified_closed_at
+ * @property Carbon|null $staff_notified_pending_at
  * @property Carbon|null $anonymized_at
  * @property bool $retention_hold
  * @property-read User $user
@@ -202,6 +203,7 @@ class Ticket extends Model
         'client_notified_resolved_at',
         'client_notified_auto_close_warning_at',
         'client_notified_closed_at',
+        'staff_notified_pending_at',
         'anonymized_at',
         'retention_hold',
     ];
@@ -227,6 +229,7 @@ class Ticket extends Model
             'client_notified_resolved_at' => 'datetime',
             'client_notified_auto_close_warning_at' => 'datetime',
             'client_notified_closed_at' => 'datetime',
+            'staff_notified_pending_at' => 'datetime',
             'anonymized_at' => 'datetime',
             'retention_hold' => 'boolean',
         ];

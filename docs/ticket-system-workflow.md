@@ -267,6 +267,8 @@ The SLA target is how long a ticket should take: **240 minutes** by default (`HE
 - the assigned technicians, 210 minutes after the assignment, if the ticket is still Open or In Progress (a Pending ticket waits on the client)
 - super users, admins and the shadow account, when an active ticket stays unassigned: once at 120 minutes ("Unchecked Ticket Alert") and once at 180 minutes ("Unassigned SLA Warning"), counted from when the ticket was created
 
+A **Pending** ticket gets its own, gentler reminder. When a Pending ticket has had no status change and no reply for 3 days (`HELPDESK_PENDING_FOLLOW_UP_DAYS`, `0` switches it off), its assignees get one email that lists all of their quiet Pending tickets, with a link to each. Nobody assigned: the super users get it. The email asks staff to check whether the ticket is still waiting, contact the client if needed, or resolve or cancel it. The client is not emailed, the ticket is not closed, and a ticket that stays quiet is listed again after another 3 days.
+
 Imported tickets (see [ticket-import.md](ticket-import.md)) never get these reminders: they are old records, and a reminder for every open one would flood the inboxes on the first run after an import.
 
 ### Assignment rules

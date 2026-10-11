@@ -46,8 +46,10 @@ Route::prefix('legal')->name('legal.')->group(function () {
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+// Failed sign-ins are limited in AuthController (per login and per address). This only stops a flood of requests, and
+// does not count successful sign-ins against an office that shares one address.
 Route::post('/login', [AuthController::class, 'login'])
-    ->middleware(app()->environment('production') ? 'throttle:5,1' : 'throttle:100,1')
+    ->middleware('throttle:60,1')
     ->name('login.attempt');
 Route::get('/register', fn () => redirect('/login'))->name('register');
 Route::post('/register', fn () => redirect('/login'))->name('register.store');

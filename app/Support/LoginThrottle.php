@@ -16,6 +16,20 @@ class LoginThrottle
 
     public const LOCKOUT_SECONDS = 900;
 
+    /**
+     * Failed sign-ins one network address may make in a minute, whichever logins it tries. Only failures count: an
+     * office whose staff all sign in at 8 o'clock behind one address must not lock itself out. (The per-login lockout
+     * above stops guessing at one account; this stops one address from trying many accounts.)
+     */
+    public const IP_MAX_FAILURES_PER_MINUTE = 15;
+
+    public const IP_WINDOW_SECONDS = 60;
+
+    public static function ipKey(?string $ipAddress): string
+    {
+        return 'auth:login-ip:'.sha1((string) $ipAddress);
+    }
+
     public static function accountKey(string $loginInput, ?string $ipAddress = null): string
     {
         $normalizedLogin = mb_strtolower(trim($loginInput));

@@ -156,7 +156,7 @@ It answers with the status (`ok`, `degraded` or `failed`) and the time of the ch
 
 ## Sign-in lockout
 
-Eight wrong passwords for one login lock that login for 15 minutes **for the address that typed them**. Someone guessing from another address cannot lock the real person out. The sign-in route also allows each address 5 attempts a minute in production. Behind a proxy, set `TRUSTED_PROXIES`, or every visitor looks like the proxy.
+Eight wrong passwords for one login lock that login for 15 minutes **for the address that typed them**. Someone guessing from another address cannot lock the real person out. One address may also fail 15 sign-ins a minute, with whichever logins it tries; successful sign-ins are not counted, so a whole office behind one address can sign in at once. Behind a proxy, set `TRUSTED_PROXIES`, or every visitor looks like the proxy.
 
 To lift a lock early:
 

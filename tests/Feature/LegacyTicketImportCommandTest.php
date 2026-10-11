@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
+use Tests\Support\ImportFiles;
 use Tests\TestCase;
 
 class LegacyTicketImportCommandTest extends TestCase
@@ -54,7 +55,7 @@ class LegacyTicketImportCommandTest extends TestCase
             'is_active' => true,
         ]);
 
-        $importPath = storage_path('app/private/imports/legacy-created-at.csv');
+        $importPath = ImportFiles::path('legacy-created-at.csv');
         File::ensureDirectoryExists(dirname($importPath));
         File::put($importPath, implode(PHP_EOL, [
             'subject,description,created_at,category,priority,status,name,contact_number,email,province,municipality,assigned_to_email',
@@ -105,7 +106,7 @@ class LegacyTicketImportCommandTest extends TestCase
             'is_active' => true,
         ]);
 
-        $importPath = storage_path('app/private/imports/missing-created-at.csv');
+        $importPath = ImportFiles::path('missing-created-at.csv');
         File::ensureDirectoryExists(dirname($importPath));
         File::put($importPath, implode(PHP_EOL, [
             'subject,description,category',
@@ -162,7 +163,7 @@ class LegacyTicketImportCommandTest extends TestCase
         ]);
         $existingTicket->save();
 
-        $importPath = storage_path('app/private/imports/skip-existing.csv');
+        $importPath = ImportFiles::path('skip-existing.csv');
         File::ensureDirectoryExists(dirname($importPath));
         File::put($importPath, implode(PHP_EOL, [
             'ticket_number,subject,description,created_at,category',
@@ -201,7 +202,7 @@ class LegacyTicketImportCommandTest extends TestCase
             'is_active' => true,
         ]);
 
-        $importPath = storage_path('app/private/imports/duplicate-ticket-number.csv');
+        $importPath = ImportFiles::path('duplicate-ticket-number.csv');
         File::ensureDirectoryExists(dirname($importPath));
         File::put($importPath, implode(PHP_EOL, [
             'ticket_number,subject,description,created_at,category',
@@ -282,7 +283,7 @@ class LegacyTicketImportCommandTest extends TestCase
         ]);
         $ticket->assignedUsers()->sync([$oldTechnical->id]);
 
-        $importPath = storage_path('app/private/imports/reassign-existing.csv');
+        $importPath = ImportFiles::path('reassign-existing.csv');
         File::ensureDirectoryExists(dirname($importPath));
         File::put($importPath, implode(PHP_EOL, [
             'ticket_number,subject,description,created_at,category,assigned_to_email',

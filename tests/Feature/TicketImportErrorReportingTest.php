@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Tests\Support\ImportFiles;
 use Tests\TestCase;
 
 class TicketImportErrorReportingTest extends TestCase
@@ -35,7 +36,7 @@ class TicketImportErrorReportingTest extends TestCase
         Category::create(['name' => 'Other', 'description' => 'Other', 'color' => '#6B7280', 'is_active' => true]);
 
         // Rows 2 and 4 are fine; rows 3 and 5 each have a different problem.
-        $path = storage_path('app/private/imports/'.self::FILE);
+        $path = ImportFiles::path(self::FILE);
         File::ensureDirectoryExists(dirname($path));
         File::put($path, implode(PHP_EOL, [
             'subject,created_at,priority,status',
@@ -49,7 +50,7 @@ class TicketImportErrorReportingTest extends TestCase
 
     protected function tearDown(): void
     {
-        File::delete(storage_path('app/private/imports/'.self::FILE));
+        File::delete(ImportFiles::path(self::FILE));
 
         parent::tearDown();
     }
@@ -97,8 +98,8 @@ class TicketImportErrorReportingTest extends TestCase
 
     public function test_xlsx_files_require_a_default_user_and_unknown_types_are_rejected(): void
     {
-        $workbook = storage_path('app/private/imports/needs-default-user.xlsx');
-        $notes = storage_path('app/private/imports/notes.pdf');
+        $workbook = ImportFiles::path('needs-default-user.xlsx');
+        $notes = ImportFiles::path('notes.pdf');
         File::put($workbook, 'placeholder');
         File::put($notes, 'placeholder');
 

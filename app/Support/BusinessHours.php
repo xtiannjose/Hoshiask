@@ -231,7 +231,7 @@ final class BusinessHours
             'per_week' => $count,
             'is_working' => $isWorking,
             'before' => $before,
-            'closed' => array_values($closed),
+            'closed' => $closed,
             'unreadable' => $unreadable,
         ];
     }

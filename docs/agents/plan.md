@@ -2,9 +2,9 @@
 
 Where the work to improve Helpdesk with Claude Code stands, what was decided, and what comes next. Claude reads this at the start of a session (`CLAUDE.md` points here) and updates it when a step finishes, so the plan survives a new device or a new conversation.
 
-Last updated: 2026-10-11 (third deep check of the whole app, with measurements on PostgreSQL; before it, the second deep check and a rewrite of the docs, and the first check, the audit by QA, security and senior developer reviewers).
+Last updated: 2026-10-11 (the maintainer's answers to the third deep check are built on `fix/after-third-check-decisions`; before that the third deep check of the whole app, with measurements on PostgreSQL; before it, the second deep check and a rewrite of the docs, and the first check, the audit by QA, security and senior developer reviewers).
 
-**Waiting on the maintainer:** the step-by-step list in [pending-actions.md](pending-actions.md) (change the shadow password, install ClamAV, deploy `main`). Read it before suggesting anything else.
+**Waiting on the maintainer:** the step-by-step list in [pending-actions.md](pending-actions.md) (change the shadow password, install ClamAV, deploy `main`, then the settings and rehearsals that follow the decisions of 2026-10-11). Read it before suggesting anything else.
 
 **Issue and pull request numbers.** The numbers below (#190 to #246) belong to the repository's history before it was reset to a single "Initial commit" on 2026-10-10. The tracker on GitHub now starts again at #1 and has no open issues, so those numbers do not resolve there. The changes themselves are all in `main`: the deep check of 2026-10-10 found each of them in the code (the 10-file cap, the double-submit guard, `TicketSla`, `helpdesk:unlock-login`, the PDF preview, the 10-minute alert lock, the blank-`SESSION_SECURE_COOKIE` rule, `ThrottlePerLimit` and the two index migrations).
 
@@ -102,6 +102,26 @@ Measured and left alone: the first scheduler run on 60,000 open tickets sent 18,
 12. **Legal text (needs the organisation's DPO):** the privacy notice does not say that backups keep removed data for `HELPDESK_BACKUP_RETENTION_DAYS`, nor the right to complain to the National Privacy Commission, and System Logs are kept 365 days.
 13. **Resilience:** sessions, cache, queue and data share one database (Redis for cache and queue is the first step), one maintainer, no stated recovery time or restore drill, and no external uptime monitor on `/health`.
 14. **Not worth doing without a reason:** export paging by id (it would change the CSV order), chunking the auto-close job (a backlog only after a long outage), and 24 dark-theme colour rules that nothing uses.
+
+### Answered on 2026-10-11, and what was built
+
+Branch `fix/after-third-check-decisions` (on top of `fix/third-deep-check`), one commit per topic, each with tests:
+
+| # | Answer | What it became |
+|---|---|---|
+| 1 | Yes | Pending tickets are left out of SLA Breached, Needs Attention and the SLA reminders (`Ticket::SLA_CLOCK_STATUSES`) |
+| 2 | Recommended fix | Waiting and failed queue jobs are advisories; a queue that has not moved for 15 minutes is named. A deploy no longer fails or rolls back on them |
+| 3 | Recommended fix | The deploy script audits and builds before `php artisan down`, deploys the exact audited commit, keeps the previous build for rollback, reads the migration batch with `helpdesk:migration-batch`; `laravel/tinker` is a dev dependency |
+| 4 | Count only failures | The sign-in limit is 15 failed sign-ins a minute per address; successful sign-ins no longer count |
+| 5 | Asked for a plain explanation | **Open.** No change: scanning still accepts uploads when the scanner is down (`allow`), and `.doc` and `.xls` are still accepted |
+| 6 | Recommended fix | The bulk status form starts on "Choose a status" |
+| 7 | Business hours | `HELPDESK_SLA_BUSINESS_HOURS_*`, off by default (`App\Support\BusinessHours`); public holidays are not skipped |
+| 8 | Staff, not the client | One reminder email per staff member for Pending tickets quiet for 3 days (`HELPDESK_PENDING_FOLLOW_UP_DAYS`); no client email, no automatic close |
+| 9 | No change | Rotating assignment stays as it is |
+| 10 | Confirmed | Imported tickets get no reminders or emails |
+| 11 | Skipped for now | Security posture items stay recorded decisions |
+| 12 | Yes | The privacy notice states backup and log retention and the National Privacy Commission route; version `2026-10-11` (the data protection officer should read it) |
+| 13 | Yes | [resilience.md](../resilience.md): failure table, recovery targets and restore log, outside monitor, Redis steps, second maintainer checklist. The server-side parts are in [pending-actions.md](pending-actions.md) section 4 |
 
 ## Docs rewrite (2026-10-10)
 

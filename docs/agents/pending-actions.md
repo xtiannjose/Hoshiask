@@ -69,7 +69,16 @@ After deploying:
 2. As a client, upload one Word and one Excel file to a ticket. Old `.doc` and `.xls` files could not be tested here, and the type check might refuse some.
 3. Run `php artisan helpdesk:ops-status` and read the advisories.
 
-## 4. Still open, only if wanted
+## 4. After deploying the decisions of 2026-10-11
+
+Branch `fix/after-third-check-decisions` holds the answers to the third deep check ([plan.md](plan.md)). Deploy it like `main`; it adds two migrations (a column on `tickets`, and nothing else).
+
+1. **Privacy notice.** The text changed (backup and log retention, complaints to the National Privacy Commission) and its version moved to `2026-10-11`. On the server `.env`, set `LEGAL_PRIVACY_VERSION=2026-10-11` and `LEGAL_EFFECTIVE_DATE="October 11, 2026"`, then `php artisan config:clear`. Everyone accepts the new notice at their next sign-in. Have the data protection officer read the new paragraphs first.
+2. **Reminder for quiet Pending tickets** runs on its own (3 days, `HELPDESK_PENDING_FOLLOW_UP_DAYS`; `0` switches it off). Staff, not clients, get the email.
+3. **Business hours SLA** is off. To switch it on, set `HELPDESK_SLA_BUSINESS_HOURS_ENABLED=true` (and `_DAYS`, `_START`, `_END` if the office hours differ), then `php artisan config:clear`. Report numbers for the Resolution Time bands change from that day on ([report-metrics.md](../report-metrics.md)).
+4. **Resilience** ([resilience.md](../resilience.md)): set up the outside monitor on `/health`, fill in the "where it is kept" table with a second person, do one timed restore and write it in the restore log, and confirm or change the two recovery targets.
+
+## 5. Still open, only if wanted
 
 - Issue #233: measured on 2026-10-11 with 60,000 tickets. The all-time report and the ticket search were fixed (see the third deep check in [plan.md](plan.md)); the first auto-close and reminder runs after a long outage are slow but one-off, and PDFs are built while the user waits (the detailed custom report takes about 3 s).
 - Issue #229: what is left of the larger list (MFA and client password changes were decided against; see [docs/security.md](../security.md)).

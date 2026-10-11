@@ -201,6 +201,7 @@ A guesser with many different addresses gets eight tries on each, so strong pass
 - [ ] Mail works: real `MAIL_*` values, and `MAIL_FROM_ADDRESS` is not the placeholder
 - [ ] Backups: `HELPDESK_BACKUP_ENCRYPTION_KEY` is set (and stored outside the server), a second copy or an off-server job exists, `helpdesk:backup` and `helpdesk:backup-verify` have run, and a restore was rehearsed ([backup-and-restore.md](backup-and-restore.md))
 - [ ] Virus scanning works ([security.md](security.md)), or you decided to run without it
+- [ ] An outside monitor watches `/health` and alerts two people, and a second person has done the test in [resilience.md](resilience.md)
 - [ ] `HELPDESK_QUEUE_WORKER_RUNNING` is blank (or the right value if the status check cannot see your worker)
 - [ ] The framework caches are built: `php artisan config:cache && php artisan route:cache && php artisan view:cache`
 - [ ] The shadow account's password was changed from the first one (Account Settings), and `SHADOW_PASSWORD` in `.env` was changed to match, so running its seeder again cannot put the old password back

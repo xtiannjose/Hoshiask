@@ -178,6 +178,20 @@ class BusinessHoursTest extends TestCase
         $this->assertSame(0, $this->between('2026-10-13 08:00', '2026-10-13 17:00'));
     }
 
+    public function test_the_example_environment_file_lists_the_nationwide_holidays_as_readable_dates(): void
+    {
+        $env = (string) file_get_contents(base_path('.env.example'));
+        $this->assertSame(1, preg_match('/^HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES=(.+)$/m', $env, $match));
+
+        config(['helpdesk.sla.business_hours.closed_dates' => trim($match[1])]);
+
+        $this->assertSame([], BusinessHours::unreadableClosedDates());
+        $this->assertCount(18, array_unique(array_map('trim', explode(',', trim($match[1])))));
+        // Holy Week: Wednesday 1 April 16:00 to Monday 6 April 09:00 is one hour on Wednesday and one on Monday,
+        // because Maundy Thursday and Good Friday (2 and 3 April) are closed. Without the list it is 20 hours.
+        $this->assertSame(120, $this->between('2026-04-01 16:00', '2026-04-06 09:00'));
+    }
+
     private function at(string $local): Carbon
     {
         return Carbon::parse($local, self::ZONE);

@@ -112,10 +112,11 @@ Branch `fix/after-third-check-decisions` (on top of `fix/third-deep-check`), one
 | 11 | Left open, this is a demo app | Recorded with the exact change to make before real use in [docs/security.md](../security.md), "Left open on purpose while this is a demo app" |
 | 12 | Yes | The privacy notice states backup and log retention and the National Privacy Commission route; version `2026-10-11` (the data protection officer should read it) |
 | 13 | Yes | [resilience.md](../resilience.md): failure table, recovery targets and restore log, outside monitor, Redis steps, second maintainer checklist. The server-side parts are in [pending-actions.md](pending-actions.md) section 4 |
+| 14 | Do both, and remove the unused dark-theme rules | Done: exports and auto-close page by id, 23 dark-theme selectors removed; see "Small gaps" |
 
 ## Small gaps (2026-10-11)
 
-Found by the third deep check and left alone at first; the maintainer chose the best fix for A to E and asked for the unused dark-theme rules to go. Built on `fix/after-third-check-decisions`.
+Found by the third deep check and left alone at first; the maintainer chose the best fix for every one of them, including the two "not worth doing" items. Built on `fix/after-third-check-decisions`.
 
 | Gap | What was done |
 |---|---|
@@ -126,10 +127,12 @@ Found by the third deep check and left alone at first; the maintainer chose the 
 | **The status check could not see a Redis queue** | A worker heartbeat (`RecordQueueWorkerHeartbeat`, written at most every 30 s) and `Queue::size()`: "jobs are waiting and no job has finished for 15 minutes" works for a non-database queue, and the status shows when the last job finished |
 | **24 unused dark-theme colour rules** | Removed from `resources/css/app.css` (23 selectors, 3 whole rules); their classes appear nowhere in the source |
 
-Not worth doing without a reason, and left as they are:
+Then, at the maintainer's word, the two items first left alone:
 
-- **Export paging by id.** The custom report and System Logs CSV exports read pages of 200 rows with OFFSET, in the report's own order. Paging by id (`chunkById`) is faster on very large tables but forces id order, which would change the row order people are used to; it only matters beyond about 100,000 rows. Revisit when an export takes more than about 30 seconds.
-- **Chunking auto-close.** `tickets:auto-close-resolved` loads every Resolved ticket older than 7 days at once. It only hurts after a long outage (5,400 tickets took 48 s, one-off). If a backlog like that is expected, `chunkById(200)` is a five-line change.
+- **Export paging by id.** The custom report CSV reads 200 rows at a time by id (`chunkById`; the order is still id ascending, which is what `chunk()` used because that query has no order of its own). The System Logs CSV reads by id descending (`reorder()->chunkByIdDesc`), the same order as before because log rows are written in time order. A page deep in a big table now costs the same as the first. Tests export more than one page and check the order.
+- **Chunking auto-close.** `tickets:auto-close-resolved` reads the tickets to warn and the tickets to close 200 at a time by id, so a backlog of thousands after an outage no longer sits in memory at once. A test closes 201 and warns 201.
+
+The closed dates in `.env.example` are the 18 nationwide regular and special non-working holidays of 2026 from the Official Gazette (https://www.officialgazette.gov.ph/nationwide-holidays/2026/). Eid'l Fitr and Eid'l Adha are proclaimed later and are not in it. Replace the list each year; a test keeps every entry a real date.
 
 ## Docs rewrite (2026-10-10)
 

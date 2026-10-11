@@ -136,6 +136,19 @@ class AdminTicketBulkActionSuccessTest extends TestCase
         ]);
     }
 
+    public function test_the_bulk_severity_form_does_not_offer_a_choice_the_server_refuses(): void
+    {
+        [$superUser, , , $ticketOne] = $this->seedBulkActionContext();
+
+        // An empty severity is refused ("Please choose a severity."), so the form must not offer it as a choice.
+        $this->actingAs($superUser)
+            ->post(route('admin.tickets.bulk-action'), ['action' => 'priority', 'selected_ids' => [$ticketOne->id], 'priority' => ''])
+            ->assertSessionHas('error');
+
+        $html = $this->actingAs($superUser)->get(route('admin.tickets.index'))->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/<select id="bulk-priority-select"[^>]*>\s*<option value="" selected disabled>/', $html);
+    }
+
     public function test_super_user_can_bulk_merge_tickets(): void
     {
         [$superUser, , $technical, $ticketOne, $ticketTwo] = $this->seedBulkActionContext();

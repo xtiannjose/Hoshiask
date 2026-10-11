@@ -18,6 +18,7 @@ New here? Read [setup.md](setup.md) to run the app, then [structure.md](structur
 | [report-metrics.md](report-metrics.md) | Authoritative definition of every report number |
 | [adr/](adr/) | Architecture decision records: why field office, retention and backups work as they do |
 | [agents/](agents/) | Working notes for Claude Code: plan and status, issue tracker, triage labels |
+| [agents/tooling.md](agents/tooling.md) | The plugins, skills, servers, hooks and tools Claude Code uses here, how to install them, and the Windows and hook quirks |
 | [agents/pending-actions.md](agents/pending-actions.md) | What only the maintainer can do (server steps and merges), with exact steps |
 
 Files that are not prose: [helpdesk-queue-worker.service.example](helpdesk-queue-worker.service.example) (systemd unit) and [legacy-ticket-import-template.csv](legacy-ticket-import-template.csv).

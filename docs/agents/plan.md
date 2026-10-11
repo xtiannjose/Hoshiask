@@ -2,11 +2,11 @@
 
 Where the work to improve Helpdesk with Claude Code stands, what was decided, and what comes next. Claude reads this at the start of a session (`CLAUDE.md` points here) and updates it when a step finishes, so the plan survives a new device or a new conversation.
 
-Last updated: 2026-10-11 (the maintainer's answers to the third deep check are built on `fix/after-third-check-decisions`, plus the follow-up rounds: the small gaps (Needs Attention in working hours, closed dates, working time on the ticket page, technician availability, a queue heartbeat, unused dark-theme rules), Pending auto-cancel, legacy Office files refused, the public `/health` answer, the finding that the PostgreSQL schema file must not be regenerated yet, and the demo-app notes; before that the third deep check of the whole app, with measurements on PostgreSQL; before it, the second deep check and a rewrite of the docs, and the first check, the audit by QA, security and senior developer reviewers).
+Last updated: 2026-10-11. Pull requests #4 (the third deep check) and #5 (the maintainer's decisions and the small gaps that followed) are merged into `main`, the local database was migrated, and the tooling inventory was added ([tooling.md](tooling.md)). Before that: the second deep check and a rewrite of the docs, and the first check, the audit by QA, security and senior developer reviewers.
 
-**Waiting on the maintainer:** nothing right now. There is no live server (stated 2026-10-11), so everything in [pending-actions.md](pending-actions.md) that needs one (change the shadow password, install ClamAV, deploy `main`, the server settings, monitor and restore rehearsal that follow the decisions of 2026-10-11) is deferred until a server exists. Do not list server steps as pending; keep working on code, tests and docs. Merging the pull requests is still the maintainer's.
+**Waiting on the maintainer:** nothing right now. There is no live server (stated 2026-10-11), so everything in [pending-actions.md](pending-actions.md) that needs one (change the shadow password, install ClamAV, deploy `main`, the server settings, monitor and restore rehearsal that follow the decisions of 2026-10-11) is deferred until a server exists. Do not list server steps as pending; keep working on code, tests and docs. The maintainer merges every pull request.
 
-**Issue and pull request numbers.** The numbers below (#190 to #246) belong to the repository's history before it was reset to a single "Initial commit" on 2026-10-10. The tracker on GitHub now starts again at #1 and has no open issues, so those numbers do not resolve there. The changes themselves are all in `main`: the deep check of 2026-10-10 found each of them in the code (the 10-file cap, the double-submit guard, `TicketSla`, `helpdesk:unlock-login`, the PDF preview, the 10-minute alert lock, the blank-`SESSION_SECURE_COOKIE` rule, `ThrottlePerLimit` and the two index migrations).
+**Issue and pull request numbers.** The numbers below (#190 to #246) belong to the repository's history before it was reset to a single "Initial commit" on 2026-10-10. The tracker on GitHub now starts again at #1 and has no open issues, so those numbers do not resolve there (the real pull requests #1 to #5 are all merged). The changes themselves are all in `main`: the deep check of 2026-10-10 found each of them in the code (the 10-file cap, the double-submit guard, `TicketSla`, `helpdesk:unlock-login`, the PDF preview, the 10-minute alert lock, the blank-`SESSION_SECURE_COOKIE` rule, `ThrottlePerLimit` and the two index migrations).
 
 ## The plan
 
@@ -21,12 +21,11 @@ Last updated: 2026-10-11 (the maintainer's answers to the third deep check are b
 
 ## Next steps, in order
 
-1. **Merge the open pull requests** (the maintainer merges): #4 (the third deep check) first, then #5 (the decisions that followed it).
-2. **Nothing needs a server right now.** There is no live server (stated 2026-10-11), so every server step is deferred in [pending-actions.md](pending-actions.md) and is not reported as pending. They become live work when a server exists.
-3. **Before real people and real data go in**, revisit the gaps left open on purpose while this is a demo app: [docs/security.md](../security.md), "Left open on purpose while this is a demo app" (password length, no MFA, shared client password, unencrypted backups, example database password, upload scanning that fails open).
-4. **Nothing is waiting for a decision.** The small gaps are built or recorded as left on purpose (see "Small gaps" below).
-5. **New work** goes through the full loop: idea, `/grill-with-docs`, `/to-spec`, `/to-tickets`, `/triage`, fix, `/code-review`, PR.
-6. **Phase 5 habits**: run `/retro` at the end of a working session, and `/handoff` before a conversation gets too long.
+1. **Nothing needs a server right now.** There is no live server (stated 2026-10-11), so every server step is deferred in [pending-actions.md](pending-actions.md) and is not reported as pending. They become live work when a server exists.
+2. **Before real people and real data go in**, revisit the gaps left open on purpose while this is a demo app: [docs/security.md](../security.md), "Left open on purpose while this is a demo app" (password length, no MFA, shared client password, unencrypted backups, example database password, upload scanning that fails open).
+3. **Nothing is waiting for a decision.** The small gaps are built or recorded as left on purpose (see "Small gaps" below).
+4. **New work** goes through the full loop: idea, `/grill-with-docs`, `/to-spec`, `/to-tickets`, `/triage`, fix, `/code-review`, PR.
+5. **Phase 5 habits**: run `/retro` at the end of a working session, and `/handoff` before a conversation gets too long.
 
 ## Second deep check (2026-10-10)
 
@@ -70,7 +69,7 @@ Read the whole app again as a senior developer, a QA tester and a security analy
 - **Removed:** `HasFactory` on 12 models (no factories exist), the `fakerphp/faker` package, `Ticket::slaResolutionMinutes()`, the `ilike` switch in the ticket filter.
 - **Tests and CI:** the import tests use a temporary folder; the client journey spec waits for the page script before clicking Reopen; GitHub Actions are pinned to commits, and a weekly `audit.yml` runs `composer audit` and `npm audit`.
 
-Pull request #4 holds all of it; every CI job passed (secret-scan, verify, postgres, e2e, CodeQL).
+Pull request #4 held all of it; every CI job passed (secret-scan, verify, postgres, e2e, CodeQL), and it was merged on 2026-10-11.
 
 Checked and clean: `composer audit` and `npm audit`; no unused PHP methods, config keys, routes or JS files; axe (WCAG 2 A and AA, light and dark) on 60 page loads for every role, and no sideways scrolling at 375 px (except the Online Users page, fixed); the monthly and custom report PDFs and the alert emails render correctly; the ClamAV protocol matches clamd's INSTREAM (a real daemon was not available); the full suite passes on SQLite (1109 tests) and on PostgreSQL 17 (1108 passed, 1 skipped on purpose).
 
@@ -172,6 +171,7 @@ Do not re-ask these.
 - SLA business hours exist behind a setting that is off. When on, Needs Attention counts 16 working hours and the closed dates list counts like a weekend (2026-10-11).
 - A technician can be marked away until a day; the assignment rules skip them (2026-10-11). The "Least workload" distribution method balances by Open and In Progress tickets held; weighted random stays the default (2026-10-11).
 - Starter departments and categories live in `StarterDataSeeder`, never in a migration (2026-10-11).
+- A pull request body has three parts: **Summary**, **Evidence** and **Merge Danger** (one-way or two-way door, and the blast radius), the shape the `pr` skill writes. The same three are in `.github/pull_request_template.md` and `CONTRIBUTING.md`.
 - Claude may push feature branches and open PRs. Pushes to `main`, force pushes, `reset --hard`, `clean -f`, `branch -D` and discarding all changes are blocked by `.claude/hooks/block-dangerous-git.mjs`. The maintainer merges every PR.
 
 ## Working with the maintainer
@@ -214,7 +214,15 @@ Do the steps in order.
    npx skills add emilkowalski/skills -g
    ```
    This setup uses these skills: from `mattpocock/skills`, everything in the engineering set (triage, to-spec, to-tickets, implement, grill-with-docs, improve-codebase-architecture, domain-modeling, writing-for-agents, pr, handoff, retro, wayfinder, git-guardrails-claude-code and the rest); `design-taste-frontend`; `find-skills`; and `apple-design`. The account skills (docs, pdf, xlsx and others) sync by themselves when you sign in.
+
+   For animation work also run `npx motion-ai` yourself in a terminal (it is interactive and cannot run inside Claude Code), which installs the `motion` skill, and add Motion's documentation server for every project:
+
+   ```bash
+   claude mcp add --transport http -s user motion https://mcp.motion.dev
+   ```
+
+   The full inventory (what each plugin, skill, server, hook and tool is for, and the quirks that cost a failed run once) is in [tooling.md](tooling.md).
 5. **Start Claude inside the project folder**: `claude` (on Windows PowerShell, `claude.cmd`, or run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once). Starting inside the folder loads `CLAUDE.md`, this plan, and both hooks in `.claude/`.
-6. **Check it works.** Ask Claude: "Read docs/agents/plan.md and tell me where we are." Then run `composer qa` (about 3 minutes, serial; `php artisan test --parallel` runs just the tests in about 70 seconds) and `npm run qa`.
+6. **Check it works.** Ask Claude: "Read docs/agents/plan.md and tell me where we are." Then run the checks at the end of [tooling.md](tooling.md) (plugins, servers, skills, the git guard), `composer qa` (about 3 minutes, serial; `php artisan test --parallel` runs just the tests in about 70 seconds) and `npm run qa`.
 
 The git guardrail in `.claude/hooks/` protects this repo only. To protect every project on the new device as well, copy `block-dangerous-git.mjs` to `~/.claude/hooks/` and add the same `PreToolUse` entry to `~/.claude/settings.json`.

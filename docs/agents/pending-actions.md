@@ -50,7 +50,7 @@ If step 9 cannot reach the scanner, wait a few more minutes, or look for the soc
 
 ## 3. Deploy `main`
 
-Every change in the table below is already in `main` (checked in the code on 2026-10-10, after the repository history was reset: the pull request numbers no longer exist on GitHub). They only reach the live site when you deploy.
+Every change in the table below is already in `main` (checked in the code on 2026-10-10, after the repository history was reset: the pull request numbers no longer exist on GitHub), together with pull requests #4 and #5 of 2026-10-11 (section 4). They only reach the live site when you deploy.
 
 | Earlier pull request | What it does |
 |---|---|
@@ -74,7 +74,7 @@ After deploying:
 
 ## 4. After deploying the decisions of 2026-10-11
 
-Branch `fix/after-third-check-decisions` holds the answers to the third deep check ([plan.md](plan.md)). Deploy it like `main`; it adds two migrations (a nullable column on `tickets` and one on `users`).
+The answers to the third deep check ([plan.md](plan.md)) were merged into `main` on 2026-10-11 as pull requests #4 and #5. Deploy `main` as usual; the deploy runs their three migrations (search indexes, a nullable column on `tickets`, one on `users`). The maintainer's own database was migrated on 2026-10-11.
 
 1. **Privacy notice.** The text changed (backup and log retention, complaints to the National Privacy Commission) and its version moved to `2026-10-11`. On the server `.env`, set `LEGAL_PRIVACY_VERSION=2026-10-11` and `LEGAL_EFFECTIVE_DATE="October 11, 2026"`, then `php artisan config:clear`. Everyone accepts the new notice at their next sign-in. Have the data protection officer read the new paragraphs first.
 2. **Quiet Pending tickets** are handled on their own: a staff reminder after 3 days (`HELPDESK_PENDING_FOLLOW_UP_DAYS`) and an automatic cancel after 14 days (`HELPDESK_PENDING_AUTO_CANCEL_DAYS`); `0` switches either off. Staff, not clients, get the email. The first run cancels every Pending ticket already older than 14 days with no activity: run `php artisan tickets:auto-cancel-pending --dry-run` first to see which.

@@ -28,29 +28,37 @@ On Windows, from the project folder:
 
 The helper **pushes the branch first**, then runs `scripts/deploy-helpdesk-remote.sh` on the server over SSH. Both scripts only work inside `/opt/helpdesk` and refuse to run when the server's checkout has uncommitted changes, so production is never used as an editing workspace.
 
-The remote script does this, in order:
+The remote script does this, in order. Steps 1 and 2 happen **before** the site goes down, so the site keeps running during the slow part and a failure there changes nothing:
 
-1. Puts the site in maintenance mode (`php artisan down`).
-2. Pulls the branch (`git pull --ff-only`).
-3. Checks PHP against `composer.json`, validates and audits the Composer packages, and installs them without dev tools.
-4. Rebuilds the front end (`npm ci`, `npm run build`, then removes `node_modules`) only when `package*.json`, the Vite, Tailwind or PostCSS configuration, `resources/js`, `resources/css`, `resources/views` or `app/` changed.
-5. Exports the database (`helpdesk:backup-database`), then runs `php artisan migrate --force`.
-6. Clears and rebuilds the caches, runs `helpdesk:cleanup-runtime`, and restarts the queue workers.
-7. Runs `php artisan helpdesk:ops-status --fail-on-warning` up to 5 times, 3 seconds apart.
-8. If the check passes, takes the site out of maintenance mode.
+1. Fetches the branch and audits the new `composer.lock` for known vulnerabilities (`composer audit`, on a copy of the two Composer files).
+2. Builds the front end in a temporary folder (`npm ci`, `npm run build` on an export of the new commit) only when `package*.json`, the Vite, Tailwind or PostCSS configuration, `resources/js`, `resources/css`, `resources/views` or `app/` changed.
+3. Puts the site in maintenance mode (`php artisan down`).
+4. Moves the branch to exactly the commit it audited and built (`git merge --ff-only`), checks PHP against `composer.json`, validates the Composer packages and installs them without dev tools.
+5. Swaps in the new `public/build` (the old one is kept aside for a rollback).
+6. Exports the database (`helpdesk:backup-database`), then runs `php artisan migrate --force`.
+7. Clears and rebuilds the caches, runs `helpdesk:cleanup-runtime`, and restarts the queue workers.
+8. Runs `php artisan helpdesk:ops-status --fail-on-warning` up to 5 times, 3 seconds apart.
+9. If the check passes, takes the site out of maintenance mode.
 
-**If any step fails**, the script undoes the migrations this deploy applied, goes back to the previous commit, rebuilds, and brings the site up again only if the check then passes. Otherwise it leaves the site in maintenance mode for a person to look at.
+**If a step before the site goes down fails** (the audit, the build, a lost connection), the script stops and says nothing on the server was changed.
+
+**If a later step fails**, the script undoes the migrations this deploy applied, goes back to the previous commit and the previous build, and brings the site up again only if the check then passes. Otherwise it leaves the site in maintenance mode for a person to look at.
+
+The script reads the migration batch with `php artisan helpdesk:migration-batch`, so it does not need `laravel/tinker` on the server.
 
 ### By hand
 
 The same steps, in the same order:
 
 ```bash
+git fetch origin main                                # then audit and build before going down:
+composer audit --locked                              # on the new composer.lock
+npm ci && npm run build                              # only when front-end files changed, in a copy of the new commit
 php artisan down
-git pull --ff-only
+git merge --ff-only FETCH_HEAD
 php scripts/check-php-platform.php
 composer install --no-dev --optimize-autoloader
-npm ci && npm run build && rm -rf node_modules       # only when front-end files changed
+# copy the new public/build into place
 php artisan helpdesk:backup-database                 # before migrating
 php artisan migrate --force
 php artisan optimize:clear && php artisan optimize
@@ -164,6 +172,7 @@ A guesser with many different addresses gets eight tries on each, so strong pass
 | `helpdesk:ops-status` | Status check (see above). | After every deploy, and any time. |
 | `helpdesk:backup` | Backup, check, and copy to the second location. | Scheduled. Run by hand before risky work. |
 | `helpdesk:backup-database` | Export only the database. | The deploy script. |
+| `helpdesk:migration-batch` | Print the latest migration batch number. | The deploy script. |
 | `helpdesk:backup-key` | Print a new backup key (not saved anywhere). | Once, and if the key is lost. |
 | `helpdesk:backup-verify` | Check that a backup is complete and usable. | Scheduled weekly. After setting up. |
 | `helpdesk:backup-restore` | Unpack a backup into an empty folder. | Restoring or rehearsing. |

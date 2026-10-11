@@ -5,17 +5,30 @@ set -euo pipefail
 BRANCH="${1:-main}"
 EXPECTED_PATH="/opt/helpdesk"
 PREVIOUS_HEAD=""
+NEW_HEAD=""
 MAINTENANCE_ACTIVE=0
 DEPLOY_SUCCEEDED=0
+# Set just before the first change to the live folder. A failure before that leaves the server as it was.
+LIVE_TREE_TOUCHED=0
 # Latest migration batch before this deploy's `migrate`; empty until that step is reached.
 BATCH_BEFORE_MIGRATE=""
+# A temporary folder for the package audit and the front end build, so neither touches the live site.
+WORK_DIR=""
+PREVIOUS_BUILD_DIR=""
+BUILD_REPLACED=0
 
 log() {
     echo "[deploy $(date '+%Y-%m-%d %H:%M:%S')] $*"
 }
 
+cleanup() {
+    if [[ -n "$WORK_DIR" && -d "$WORK_DIR" ]]; then
+        rm -rf "$WORK_DIR"
+    fi
+}
+
 latest_migration_batch() {
-    php artisan tinker --execute='echo \Illuminate\Support\Facades\Schema::hasTable("migrations") ? (int) \Illuminate\Support\Facades\DB::table("migrations")->max("batch") : 0;' 2>/dev/null \
+    php artisan helpdesk:migration-batch 2>/dev/null \
         | tail -n 1 \
         | tr -dc '0-9'
 }
@@ -28,6 +41,12 @@ rollback_and_exit() {
         log "Deploy itself succeeded, but a post-deploy step failed (exit $exit_code)."
         log "NOT rolling back a working deploy. Check maintenance-mode state and"
         log "run 'php artisan up' manually once verified."
+        exit "$exit_code"
+    fi
+
+    if [[ "$LIVE_TREE_TOUCHED" != "1" ]]; then
+        log "Deploy step failed (exit $exit_code) before anything on the server was changed."
+        log "The site was not put in maintenance mode and is still running the previous version."
         exit "$exit_code"
     fi
 
@@ -59,8 +78,16 @@ rollback_and_exit() {
 
         git checkout "$PREVIOUS_HEAD"
         composer install --no-dev --optimize-autoloader --no-interaction
-        npm ci && npm run build
-        rm -rf node_modules
+        if [[ "$BUILD_REPLACED" == "1" ]]; then
+            # The previous build was kept aside, so putting it back takes a second, not a download.
+            rm -rf public/build
+            if [[ -d "$PREVIOUS_BUILD_DIR" ]]; then
+                cp -a "$PREVIOUS_BUILD_DIR" public/build
+            else
+                npm ci && npm run build
+                rm -rf node_modules
+            fi
+        fi
         php artisan optimize:clear
         php artisan optimize
 
@@ -83,6 +110,7 @@ rollback_and_exit() {
 }
 
 trap rollback_and_exit ERR
+trap cleanup EXIT
 
 if [[ "$(pwd -P)" != "$EXPECTED_PATH" ]]; then
     echo "This deploy script is restricted to $EXPECTED_PATH." >&2
@@ -102,26 +130,24 @@ fi
 
 git fetch origin "$BRANCH"
 PREVIOUS_HEAD="$(git rev-parse HEAD)"
+NEW_HEAD="$(git rev-parse FETCH_HEAD)"
+WORK_DIR="$(mktemp -d)"
 
-MAINTENANCE_SECRET="$(openssl rand -hex 16)"
-php artisan down --retry=60 --secret="$MAINTENANCE_SECRET"
-MAINTENANCE_ACTIVE=1
-log "Maintenance mode on. Bypass secret generated (not logged) -- check the artisan down command's own output on this terminal if you need it."
+# --- Before the site goes down: everything that needs the network or a long build. --------------------------------
+# A failure here leaves the site running on the previous version.
 
-git checkout "$BRANCH"
-git pull --ff-only origin "$BRANCH"
-
-php ./scripts/check-php-platform.php
-composer validate --no-check-publish --no-interaction
-composer install --no-dev --optimize-autoloader --no-interaction
-composer audit --locked --no-interaction
+log "Checking the new packages for known vulnerabilities."
+mkdir -p "$WORK_DIR/audit"
+git show "$NEW_HEAD:composer.json" > "$WORK_DIR/audit/composer.json"
+git show "$NEW_HEAD:composer.lock" > "$WORK_DIR/audit/composer.lock"
+composer --working-dir="$WORK_DIR/audit" audit --locked --no-interaction
 
 FRONTEND_CHANGED=0
 # Tailwind generates CSS from class names found in Blade views and PHP files
 # too, so view/app changes can require a rebuild even when no JS/CSS changed.
 if [[ ! -f public/build/manifest.json ]]; then
     FRONTEND_CHANGED=1
-elif ! git diff --quiet "$PREVIOUS_HEAD" HEAD -- \
+elif ! git diff --quiet "$PREVIOUS_HEAD" "$NEW_HEAD" -- \
     package.json \
     package-lock.json \
     vite.config.js \
@@ -136,13 +162,38 @@ elif ! git diff --quiet "$PREVIOUS_HEAD" HEAD -- \
 fi
 
 if [[ "$FRONTEND_CHANGED" == "1" ]]; then
-    npm ci
-    npm run build
-    # The live app serves the generated assets from public/build, so keep the
-    # deploy host tidy by removing the transient frontend toolchain afterward.
-    rm -rf node_modules
+    log "Building the front end in a work folder; the live site is not touched."
+    mkdir -p "$WORK_DIR/source"
+    git archive "$NEW_HEAD" | tar -x -C "$WORK_DIR/source"
+    (cd "$WORK_DIR/source" && npm ci && npm run build)
 else
     log "Skipping frontend build; no tracked asset inputs changed."
+fi
+
+# --- The site goes down only now, and only for the swap, the migration and the check. ------------------------------
+
+MAINTENANCE_SECRET="$(openssl rand -hex 16)"
+LIVE_TREE_TOUCHED=1
+php artisan down --retry=60 --secret="$MAINTENANCE_SECRET"
+MAINTENANCE_ACTIVE=1
+log "Maintenance mode on. Bypass secret generated (not logged) -- check the artisan down command's own output on this terminal if you need it."
+
+# Exactly the commit that was audited and built above, even if the branch moved since the fetch.
+git checkout "$BRANCH"
+git merge --ff-only "$NEW_HEAD"
+
+php ./scripts/check-php-platform.php
+composer validate --no-check-publish --no-interaction
+composer install --no-dev --optimize-autoloader --no-interaction
+
+if [[ "$FRONTEND_CHANGED" == "1" ]]; then
+    PREVIOUS_BUILD_DIR="$WORK_DIR/previous-build"
+    if [[ -d public/build ]]; then
+        cp -a public/build "$PREVIOUS_BUILD_DIR"
+    fi
+    rm -rf public/build
+    cp -a "$WORK_DIR/source/public/build" public/build
+    BUILD_REPLACED=1
 fi
 
 php artisan helpdesk:backup-database

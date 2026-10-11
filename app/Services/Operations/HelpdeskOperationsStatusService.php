@@ -6,12 +6,16 @@ use App\Events\ProductionAdvisoriesRequested;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 
 class HelpdeskOperationsStatusService
 {
     /** Written by the five-minute scheduled command, so the status check can tell whether cron is running. */
     public const SCHEDULER_HEARTBEAT_CACHE_KEY = 'helpdesk:scheduler:heartbeat';
+
+    /** Written by a queue worker when it finishes a job, whatever the queue driver. */
+    public const QUEUE_HEARTBEAT_CACHE_KEY = 'helpdesk:queue:last-job-finished-at';
 
     /** Three missed runs of the five-minute command. */
     private const SCHEDULER_STALE_AFTER_MINUTES = 15;
@@ -29,7 +33,7 @@ class HelpdeskOperationsStatusService
         $queueWorkerRequired = $queueConnection !== 'sync';
         $queueWorkerRunning = $this->queueWorkerRunningStatus($queueConnection, $includeProcessCheck);
         $databaseReachable = $this->databaseReachable();
-        $pendingJobs = $databaseReachable ? $this->countTableRows('jobs') : null;
+        $pendingJobs = $databaseReachable ? $this->pendingJobCount($queueConnection) : null;
         $failedJobs = $databaseReachable ? $this->countTableRows('failed_jobs') : null;
         $environment = app()->environment();
         $appUrl = (string) config('app.url');
@@ -97,6 +101,9 @@ class HelpdeskOperationsStatusService
             'queue_worker_running' => $queueWorkerRunning,
             'pending_jobs' => $pendingJobs,
             'failed_jobs' => $failedJobs,
+            'queue_last_job_finished_at' => ($lastJobFinishedAt = $this->lastJobFinishedAt()) !== null
+                ? Carbon::now()->setTimestamp($lastJobFinishedAt)->toIso8601String()
+                : null,
             'mail_mailer' => (string) config('mail.default', 'log'),
             'scheduled_alert_command' => 'tickets:send-alert-emails (technical SLA reminders every 5 minutes)',
             'warnings' => $warnings,
@@ -129,6 +136,14 @@ class HelpdeskOperationsStatusService
         $waitedMinutes = is_int($pendingJobs) && $pendingJobs > 0 ? $this->oldestQueuedJobWaitMinutes() : null;
         if ($waitedMinutes !== null && $waitedMinutes >= self::QUEUE_STUCK_AFTER_MINUTES) {
             $advisories[] = sprintf('The oldest of %d queued jobs has waited %d minutes: the queue worker may have stopped. Emails and alerts wait behind it.', $pendingJobs, $waitedMinutes);
+        }
+
+        // A queue that is not the jobs table (Redis) has no "waiting since": use the worker's own heartbeat instead.
+        // No heartbeat yet means no job has finished since the queue was switched, which proves nothing.
+        $lastFinished = $this->queueUsesJobsTable((string) config('queue.default', 'sync')) ? null : $this->lastJobFinishedAt();
+        if ($lastFinished !== null && is_int($pendingJobs) && $pendingJobs > 0
+            && $lastFinished <= now()->subMinutes(self::QUEUE_STUCK_AFTER_MINUTES)->timestamp) {
+            $advisories[] = sprintf('%d queued jobs are waiting and no job has finished for %d minutes: the queue worker may have stopped. Emails and alerts wait behind it.', $pendingJobs, intdiv(now()->timestamp - $lastFinished, 60));
         }
 
         $mailer = (string) config('mail.default', 'log');
@@ -203,6 +218,32 @@ class HelpdeskOperationsStatusService
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    /** Whether waiting jobs are rows of the `jobs` table (the database queue) rather than in another service. */
+    private function queueUsesJobsTable(string $queueConnection): bool
+    {
+        $driver = (string) config('queue.connections.'.$queueConnection.'.driver', $queueConnection);
+
+        return in_array($driver, ['database', 'sync', 'null'], true);
+    }
+
+    private function pendingJobCount(string $queueConnection): ?int
+    {
+        if ($this->queueUsesJobsTable($queueConnection)) {
+            return $this->countTableRows('jobs');
+        }
+
+        $size = rescue(static fn () => Queue::connection($queueConnection)->size(), null, false);
+
+        return is_int($size) ? $size : null;
+    }
+
+    private function lastJobFinishedAt(): ?int
+    {
+        $stamp = rescue(static fn () => Cache::get(self::QUEUE_HEARTBEAT_CACHE_KEY), null, false);
+
+        return is_numeric($stamp) ? (int) $stamp : null;
     }
 
     private function countTableRows(string $table): ?int

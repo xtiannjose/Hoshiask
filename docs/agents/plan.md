@@ -132,6 +132,8 @@ Then, at the maintainer's word, the two items first left alone:
 - **Export paging by id.** The custom report CSV reads 200 rows at a time by id (`chunkById`; the order is still id ascending, which is what `chunk()` used because that query has no order of its own). The System Logs CSV reads by id descending (`reorder()->chunkByIdDesc`), the same order as before because log rows are written in time order. A page deep in a big table now costs the same as the first. Tests export more than one page and check the order.
 - **Chunking auto-close.** `tickets:auto-close-resolved` reads the tickets to warn and the tickets to close 200 at a time by id, so a backlog of thousands after an outage no longer sits in memory at once. A test closes 201 and warns 201.
 
+Found on the way: the knowledge base popup spec failed about one run in five when run in parallel. A `close` event of the first close arrived after the dialog had been opened again and cancelled the new close timer, so Escape left the popup open. `modal-kit.js` now ignores a close event while the dialog is open and does not add `is-open` to a dialog that was closed before the first frame; `modal-kit.test.js` covers both, and the spec passes 72 of 72 repeated runs.
+
 The closed dates in `.env.example` are the 18 nationwide regular and special non-working holidays of 2026 from the Official Gazette (https://www.officialgazette.gov.ph/nationwide-holidays/2026/). Eid'l Fitr and Eid'l Adha are proclaimed later and are not in it. Replace the list each year; a test keeps every entry a real date.
 
 ## Docs rewrite (2026-10-10)

@@ -43,7 +43,8 @@ Steps (Ubuntu or Debian):
    - Add `HELPDESK_CLAMAV_SOCKET=/var/run/clamav/clamd.ctl`.
 8. Reload the settings: `php artisan optimize:clear && php artisan optimize && php artisan queue:restart`.
 9. Test: `php artisan helpdesk:upload-scan-check`. It must end with "Virus scanning works."
-10. Final check: `php artisan helpdesk:ops-status` shows no scanning warning.
+10. Add `HELPDESK_UPLOAD_SCAN_ON_ERROR=block` to `.env` so that a scanner that is down refuses uploads instead of letting them through, then `php artisan optimize`.
+11. Final check: `php artisan helpdesk:ops-status` shows no scanning warning.
 
 If step 9 cannot reach the scanner, wait a few more minutes, or look for the socket with `ls /var/run/clamav/`. Until it works, uploads are still allowed. The longer reference is in [docs/security.md](../security.md).
 
@@ -68,7 +69,7 @@ Deploy as usual ([docs/operations.md](../operations.md)); the deploy runs the mi
 After deploying:
 
 1. Open one PDF attachment on a ticket. The preview must show the file. This was only tested with a text file.
-2. As a client, upload one Word and one Excel file to a ticket. Old `.doc` and `.xls` files could not be tested here, and the type check might refuse some.
+2. As a client, upload one Word (`.docx`) and one Excel (`.xlsx`) file made in Microsoft Office to a ticket. Older `.doc` and `.xls` files are refused on purpose.
 3. Run `php artisan helpdesk:ops-status` and read the advisories.
 
 ## 4. After deploying the decisions of 2026-10-11
@@ -76,7 +77,7 @@ After deploying:
 Branch `fix/after-third-check-decisions` holds the answers to the third deep check ([plan.md](plan.md)). Deploy it like `main`; it adds one migration (a nullable column on `tickets`).
 
 1. **Privacy notice.** The text changed (backup and log retention, complaints to the National Privacy Commission) and its version moved to `2026-10-11`. On the server `.env`, set `LEGAL_PRIVACY_VERSION=2026-10-11` and `LEGAL_EFFECTIVE_DATE="October 11, 2026"`, then `php artisan config:clear`. Everyone accepts the new notice at their next sign-in. Have the data protection officer read the new paragraphs first.
-2. **Reminder for quiet Pending tickets** runs on its own (3 days, `HELPDESK_PENDING_FOLLOW_UP_DAYS`; `0` switches it off). Staff, not clients, get the email.
+2. **Quiet Pending tickets** are handled on their own: a staff reminder after 3 days (`HELPDESK_PENDING_FOLLOW_UP_DAYS`) and an automatic cancel after 14 days (`HELPDESK_PENDING_AUTO_CANCEL_DAYS`); `0` switches either off. Staff, not clients, get the email. The first run cancels every Pending ticket already older than 14 days with no activity: run `php artisan tickets:auto-cancel-pending --dry-run` first to see which.
 3. **Business hours SLA** is off. To switch it on, set `HELPDESK_SLA_BUSINESS_HOURS_ENABLED=true` (and `_DAYS`, `_START`, `_END` if the office hours differ), then `php artisan config:clear`. Report numbers for the Resolution Time bands change from that day on ([report-metrics.md](../report-metrics.md)).
 4. **Resilience** ([resilience.md](../resilience.md)): set up the outside monitor on `/health`, fill in the "where it is kept" table with a second person, do one timed restore and write it in the restore log, and confirm or change the two recovery targets.
 

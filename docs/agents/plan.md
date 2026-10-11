@@ -2,7 +2,7 @@
 
 Where the work to improve Helpdesk with Claude Code stands, what was decided, and what comes next. Claude reads this at the start of a session (`CLAUDE.md` points here) and updates it when a step finishes, so the plan survives a new device or a new conversation.
 
-Last updated: 2026-10-11 (the maintainer's answers to the third deep check are built on `fix/after-third-check-decisions`; before that the third deep check of the whole app, with measurements on PostgreSQL; before it, the second deep check and a rewrite of the docs, and the first check, the audit by QA, security and senior developer reviewers).
+Last updated: 2026-10-11 (the maintainer's answers to the third deep check are built on `fix/after-third-check-decisions`, plus the follow-up round: Pending auto-cancel, legacy Office files refused, the public `/health` answer, the PostgreSQL schema file and the demo-app notes; before that the third deep check of the whole app, with measurements on PostgreSQL; before it, the second deep check and a rewrite of the docs, and the first check, the audit by QA, security and senior developer reviewers).
 
 **Waiting on the maintainer:** nothing right now. There is no live server (stated 2026-10-11), so everything in [pending-actions.md](pending-actions.md) that needs one (change the shadow password, install ClamAV, deploy `main`, the server settings, monitor and restore rehearsal that follow the decisions of 2026-10-11) is deferred until a server exists. Do not list server steps as pending; keep working on code, tests and docs. Merging the pull requests is still the maintainer's.
 
@@ -21,22 +21,12 @@ Last updated: 2026-10-11 (the maintainer's answers to the third deep check are b
 
 ## Next steps, in order
 
-1. **Deploy `main`** (the maintainer deploys; see [pending-actions.md](pending-actions.md) section 3). Everything that was in the pull requests #218, #230, #234 to #236 and #238 to #246 is already in `main`:
-   - #218 documentation split: short `README.md`, `docs/README.md` index, `CONTRIBUTING.md`, `SECURITY.md`, issue and PR templates.
-   - #230 tests cannot touch a real database; test timezone pinned; alert job lock is 10 minutes (closes #226).
-   - #234 two missing indexes (closes #231).
-   - #235 legal-consent redirect, CSV export order, filter cache key, bulk select count (closes #225 and #227).
-   - #236 sign-ins end on an admin password or role change; blank `SESSION_SECURE_COOKIE` follows `APP_ENV`; newest three backups always kept; backup work folder mode (closes #220 and #221; part of #222).
-2. **#219, the maintainer only:** the shadow account password is in four old commits. Check it on the production server and change it if it is still that value. The password text is deliberately not written in the issue.
-3. **Decisions the maintainer owes:**
-   - #222: refuse to write an unencrypted backup in production? (Today it warns and shows an ops-status advisory.)
-   - #228: what a merged duplicate counts as in reports.
-   - #213: SLA badge logic out of `Ticket` (optional).
-4. **Ready for an agent, not started:** #223 (attachment count cap, real Office file test; also decide the upload-scanning default), #224 (reply double-submit and stale-status race).
-5. **Needs measuring or planning first:** #232 (ticket search cannot use its trigram indexes; run `EXPLAIN` on real data), #233 (report and auto-close jobs load whole tables), #229 (login lockout, client password change, MFA, reply history, missing browser tests and per-route role tests).
-6. **#202 popups**: only if the maintainer asks for it; see Decisions. #202 can be closed once that is decided.
-7. **New work** goes through the full loop: idea → `/grill-with-docs` → `/to-spec` → `/to-tickets` → `/triage` → fix → `/code-review` → PR.
-8. **Phase 5 habits**: run `/retro` at the end of a working session, and `/handoff` before a conversation gets too long.
+1. **Merge the open pull requests** (the maintainer merges): #4 (the third deep check) first, then #5 (the decisions that followed it).
+2. **Nothing needs a server right now.** There is no live server (stated 2026-10-11), so every server step is deferred in [pending-actions.md](pending-actions.md) and is not reported as pending. They become live work when a server exists.
+3. **Before real people and real data go in**, revisit the gaps left open on purpose while this is a demo app: [docs/security.md](../security.md), "Left open on purpose while this is a demo app" (password length, no MFA, shared client password, unencrypted backups, example database password, upload scanning that fails open).
+4. **Small gaps that have a plan but no decision** (see "Small gaps" below): business-hours extras, rotating assignment and availability, queue visibility with Redis, and three items not worth doing without a reason.
+5. **New work** goes through the full loop: idea, `/grill-with-docs`, `/to-spec`, `/to-tickets`, `/triage`, fix, `/code-review`, PR.
+6. **Phase 5 habits**: run `/retro` at the end of a working session, and `/handoff` before a conversation gets too long.
 
 ## Second deep check (2026-10-10)
 
@@ -58,7 +48,7 @@ Browser tests: Playwright used to reuse whatever answered on port 8000, which on
 Looked at and left alone (decisions for the maintainer, not defects):
 
 - The ticket search scanned the table (#232) and the import tests wrote into the real import folder. Both are fixed; see the third deep check below.
-- `database/schema/pgsql-schema.sql` is 14 migrations behind. That is harmless (the rest run after the dump loads); regenerate it with `php artisan schema:dump` on a PostgreSQL database when convenient.
+- `database/schema/pgsql-schema.sql` was 14 migrations behind. That was harmless (the rest run after the dump loads). It was regenerated on 2026-10-11 from a scratch PostgreSQL database, and a second empty database loads it with nothing left to migrate.
 - The `php -l` step in CI repeats what Pint and the tests already catch.
 - PHPStan stays at level 5: level 7 only adds missing generics and return types, no defects.
 - Not run: the workflow YAML on GitHub (it parses; it needs a push to run).
@@ -113,15 +103,28 @@ Branch `fix/after-third-check-decisions` (on top of `fix/third-deep-check`), one
 | 2 | Recommended fix | Waiting and failed queue jobs are advisories; a queue that has not moved for 15 minutes is named. A deploy no longer fails or rolls back on them |
 | 3 | Recommended fix | The deploy script audits and builds before `php artisan down`, deploys the exact audited commit, keeps the previous build for rollback, reads the migration batch with `helpdesk:migration-batch`; `laravel/tinker` is a dev dependency |
 | 4 | Count only failures | The sign-in limit is 15 failed sign-ins a minute per address; successful sign-ins no longer count |
-| 5 | Asked for a plain explanation | **Open.** No change: scanning still accepts uploads when the scanner is down (`allow`), and `.doc` and `.xls` are still accepted |
+| 5 | Left to Claude | `.doc` and `.xls` are no longer accepted (macro-capable; save as `.docx`/`.xlsx`). The scanner still fails open by default, because without ClamAV `block` would refuse every upload; the ClamAV steps now end with setting `HELPDESK_UPLOAD_SCAN_ON_ERROR=block` |
 | 6 | Recommended fix | The bulk status form starts on "Choose a status" |
 | 7 | Business hours | `HELPDESK_SLA_BUSINESS_HOURS_*`, off by default (`App\Support\BusinessHours`); public holidays are not skipped |
-| 8 | Staff, not the client | One reminder email per staff member for Pending tickets quiet for 3 days (`HELPDESK_PENDING_FOLLOW_UP_DAYS`); no client email, no automatic close |
+| 8 | Staff, not the client | One reminder email per staff member for Pending tickets quiet for 3 days (`HELPDESK_PENDING_FOLLOW_UP_DAYS`); no client email. Then 14 days: `tickets:auto-cancel-pending` cancels them (`HELPDESK_PENDING_AUTO_CANCEL_DAYS`, `--dry-run`, off at 0) |
 | 9 | No change | Rotating assignment stays as it is |
 | 10 | Confirmed | Imported tickets get no reminders or emails |
-| 11 | Skipped for now | Security posture items stay recorded decisions |
+| 11 | Left open, this is a demo app | Recorded with the exact change to make before real use in [docs/security.md](../security.md), "Left open on purpose while this is a demo app" |
 | 12 | Yes | The privacy notice states backup and log retention and the National Privacy Commission route; version `2026-10-11` (the data protection officer should read it) |
 | 13 | Yes | [resilience.md](../resilience.md): failure table, recovery targets and restore log, outside monitor, Redis steps, second maintainer checklist. The server-side parts are in [pending-actions.md](pending-actions.md) section 4 |
+
+## Small gaps (plans, nothing built)
+
+Each of these was left alone on purpose. The plan and the best fix for each were given to the maintainer on 2026-10-11 and wait for a yes.
+
+| Gap | Best fix | Cost |
+|---|---|---|
+| **Needs Attention** counts calendar hours, not working hours, even with business hours on | Use `BusinessHours::cutoff(960)` (16 working hours) for the tab and the dashboard count when the setting is on | One line in two places and a test |
+| **Public holidays** are not skipped by the business-hours clock | A list of closed dates in config (`HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES`, comma-separated `YYYY-MM-DD`); `BusinessHours` treats them as non-working days | A small calendar lookup in `BusinessHours`; the maintainer keeps the list yearly |
+| **Ticket page shows real time**, the list badge shows working time | Show working time next to the real time ("2d 1h, 3h working") only when the setting is on | Both sidebar partials and one test |
+| **Rotating assignment ignores leave and workload** | A per-technician "available for assignment" switch the rotation skips, set by staff leads; leave workload balancing out | One column, one checkbox, one condition in the rotation |
+| **The status check cannot see a Redis queue** | When `QUEUE_CONNECTION=redis`, count waiting jobs with `Queue::size()` and say so; the "stuck for 15 minutes" advisory stays database-only | Only needed if Redis is adopted |
+| **Not worth doing without a reason:** export paging by id, chunking auto-close, 24 unused dark-theme colour rules | Leave them | None |
 
 ## Docs rewrite (2026-10-10)
 
@@ -153,6 +156,10 @@ Do not re-ask these.
 - Popups stay JavaScript for now (reviewed 2026-10-10, see the comment on #202). `popover="auto"` cannot delete `exclusive-popups.js` because recent searches and the styled dropdowns are not button-triggered, and the header and message menus would need CSS anchor positioning plus a fallback.
 - The date fields use the browser's own `datetime-local` format (#209). Close that PR to keep flatpickr.
 - Reviewed and not worth doing: splitting `TicketEmailAlertService` by audience (client vs staff) is only a line-count split, and moving the `Ticket::apply*Constraint` helpers off the model would churn every caller for no new depth (`CLAUDE.md` names them as the convention).
+- This is a demo app with no live server (2026-10-11). Password length, MFA, the shared client password, unencrypted backups, the example database password and the upload scanner that fails open stay as they are, recorded in `docs/security.md`, until real data is planned. Server steps are deferred, not pending.
+- Pending tickets: staff reminder after 3 days, automatic cancel after 14 days with no activity (2026-10-11). The client is not emailed about either.
+- `.doc` and `.xls` uploads are refused (2026-10-11); `.docx` and `.xlsx` stay.
+- SLA business hours exist behind a setting that is off. Needs Attention stays on the calendar clock, and public holidays are not skipped, until the maintainer asks.
 - Claude may push feature branches and open PRs. Pushes to `main`, force pushes, `reset --hard`, `clean -f`, `branch -D` and discarding all changes are blocked by `.claude/hooks/block-dangerous-git.mjs`. The maintainer merges every PR.
 
 ## Working with the maintainer

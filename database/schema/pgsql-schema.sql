@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict bZmKeIY2UAPaFMREOxQJrcY0kxkzsAVbKgL4j71VPrxYR7DHD4SFXjB9Bah0WMk
+\restrict h3mEO5dufZilw682DJxJFEnAyfZ1zyPZJoffpEHS8fxVgILy23uym6sXaneotB3
 
 -- Dumped from database version 17.11
 -- Dumped by pg_dump version 17.11
@@ -316,6 +316,43 @@ CREATE SEQUENCE public.jobs_id_seq
 --
 
 ALTER SEQUENCE public.jobs_id_seq OWNED BY public.jobs.id;
+
+
+--
+-- Name: knowledge_articles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.knowledge_articles (
+    id bigint NOT NULL,
+    created_by_user_id bigint NOT NULL,
+    category character varying(255) DEFAULT 'faq'::character varying NOT NULL,
+    title character varying(255) NOT NULL,
+    slug character varying(255) NOT NULL,
+    body text NOT NULL,
+    is_published boolean DEFAULT false NOT NULL,
+    published_at timestamp(0) without time zone,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone
+);
+
+
+--
+-- Name: knowledge_articles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.knowledge_articles_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: knowledge_articles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.knowledge_articles_id_seq OWNED BY public.knowledge_articles.id;
 
 
 --
@@ -646,8 +683,25 @@ CREATE TABLE public.tickets (
     super_users_notified_new_at timestamp(0) without time zone,
     super_users_notified_unchecked_at timestamp(0) without time zone,
     super_users_notified_unassigned_sla_at timestamp(0) without time zone,
+    root_cause_category character varying(255),
+    root_cause_notes text,
+    escalated_to bigint,
+    escalated_by bigint,
+    escalated_at timestamp(0) without time zone,
+    escalation_reason text,
+    escalation_resolved_at timestamp(0) without time zone,
+    cancelled_at timestamp(0) without time zone,
+    cancellation_reason text,
+    client_notified_received_at timestamp(0) without time zone,
+    client_notified_resolved_at timestamp(0) without time zone,
+    client_notified_auto_close_warning_at timestamp(0) without time zone,
+    client_notified_closed_at timestamp(0) without time zone,
+    department character varying(255),
+    anonymized_at timestamp(0) without time zone,
+    retention_hold boolean DEFAULT false NOT NULL,
+    staff_notified_pending_at timestamp(0) without time zone,
     CONSTRAINT tickets_priority_check CHECK (((priority IS NULL) OR ((priority)::text = ANY (ARRAY[('severity_1'::character varying)::text, ('severity_2'::character varying)::text, ('severity_3'::character varying)::text])))),
-    CONSTRAINT tickets_status_check CHECK (((status)::text = ANY (ARRAY[('open'::character varying)::text, ('in_progress'::character varying)::text, ('pending'::character varying)::text, ('resolved'::character varying)::text, ('closed'::character varying)::text])))
+    CONSTRAINT tickets_status_check CHECK (((status)::text = ANY (ARRAY[('open'::character varying)::text, ('in_progress'::character varying)::text, ('pending'::character varying)::text, ('resolved'::character varying)::text, ('closed'::character varying)::text, ('cancelled'::character varying)::text])))
 );
 
 
@@ -728,6 +782,7 @@ CREATE TABLE public.users (
     client_notes text,
     must_change_password boolean DEFAULT false NOT NULL,
     username character varying(255),
+    last_seen_at timestamp(0) without time zone,
     CONSTRAINT users_role_check CHECK (((role)::text = ANY (ARRAY['client'::text, 'shadow'::text, 'admin'::text, 'super_user'::text, 'technical'::text])))
 );
 
@@ -798,6 +853,13 @@ ALTER TABLE ONLY public.failed_jobs ALTER COLUMN id SET DEFAULT nextval('public.
 --
 
 ALTER TABLE ONLY public.jobs ALTER COLUMN id SET DEFAULT nextval('public.jobs_id_seq'::regclass);
+
+
+--
+-- Name: knowledge_articles id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.knowledge_articles ALTER COLUMN id SET DEFAULT nextval('public.knowledge_articles_id_seq'::regclass);
 
 
 --
@@ -987,6 +1049,22 @@ ALTER TABLE ONLY public.job_batches
 
 ALTER TABLE ONLY public.jobs
     ADD CONSTRAINT jobs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: knowledge_articles knowledge_articles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.knowledge_articles
+    ADD CONSTRAINT knowledge_articles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: knowledge_articles knowledge_articles_slug_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.knowledge_articles
+    ADD CONSTRAINT knowledge_articles_slug_unique UNIQUE (slug);
 
 
 --
@@ -1185,6 +1263,20 @@ CREATE INDEX jobs_queue_index ON public.jobs USING btree (queue);
 
 
 --
+-- Name: knowledge_articles_is_published_category_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX knowledge_articles_is_published_category_index ON public.knowledge_articles USING btree (is_published, category);
+
+
+--
+-- Name: knowledge_articles_title_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX knowledge_articles_title_index ON public.knowledge_articles USING btree (title);
+
+
+--
 -- Name: replies_client_notify_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1231,6 +1323,13 @@ CREATE INDEX system_logs_target_type_target_id_index ON public.system_logs USING
 --
 
 CREATE INDEX ticket_assignments_user_id_ticket_id_index ON public.ticket_assignments USING btree (user_id, ticket_id);
+
+
+--
+-- Name: ticket_replies_created_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX ticket_replies_created_at_idx ON public.ticket_replies USING btree (created_at);
 
 
 --
@@ -1283,6 +1382,13 @@ CREATE INDEX ticket_user_states_user_id_last_seen_at_index ON public.ticket_user
 
 
 --
+-- Name: tickets_anonymized_at_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tickets_anonymized_at_index ON public.tickets USING btree (anonymized_at);
+
+
+--
 -- Name: tickets_assigned_at_technical_user_notified_sla_at_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1329,6 +1435,41 @@ CREATE INDEX tickets_creation_source_index ON public.tickets USING btree (creati
 --
 
 CREATE INDEX tickets_creator_created_idx ON public.tickets USING btree (created_by_user_id, created_at);
+
+
+--
+-- Name: tickets_department_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tickets_department_index ON public.tickets USING btree (department);
+
+
+--
+-- Name: tickets_department_trgm_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tickets_department_trgm_idx ON public.tickets USING gin (lower((department)::text) public.gin_trgm_ops);
+
+
+--
+-- Name: tickets_description_trgm_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tickets_description_trgm_idx ON public.tickets USING gin (lower(description) public.gin_trgm_ops);
+
+
+--
+-- Name: tickets_escalated_by_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tickets_escalated_by_index ON public.tickets USING btree (escalated_by);
+
+
+--
+-- Name: tickets_escalated_to_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tickets_escalated_to_index ON public.tickets USING btree (escalated_to);
 
 
 --
@@ -1451,6 +1592,13 @@ CREATE INDEX tickets_type_status_created_idx ON public.tickets USING btree (tick
 
 
 --
+-- Name: tickets_updated_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tickets_updated_at_idx ON public.tickets USING btree (updated_at);
+
+
+--
 -- Name: tickets_user_status_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1514,6 +1662,14 @@ ALTER TABLE ONLY public.credential_handoffs
 
 ALTER TABLE ONLY public.credential_handoffs
     ADD CONSTRAINT credential_handoffs_target_user_id_foreign FOREIGN KEY (target_user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: knowledge_articles knowledge_articles_created_by_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.knowledge_articles
+    ADD CONSTRAINT knowledge_articles_created_by_user_id_foreign FOREIGN KEY (created_by_user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -1637,6 +1793,22 @@ ALTER TABLE ONLY public.tickets
 
 
 --
+-- Name: tickets tickets_escalated_by_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tickets
+    ADD CONSTRAINT tickets_escalated_by_foreign FOREIGN KEY (escalated_by) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: tickets tickets_escalated_to_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tickets
+    ADD CONSTRAINT tickets_escalated_to_foreign FOREIGN KEY (escalated_to) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
 -- Name: tickets tickets_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1656,13 +1828,13 @@ ALTER TABLE ONLY public.user_legal_consents
 -- PostgreSQL database dump complete
 --
 
-\unrestrict bZmKeIY2UAPaFMREOxQJrcY0kxkzsAVbKgL4j71VPrxYR7DHD4SFXjB9Bah0WMk
+\unrestrict h3mEO5dufZilw682DJxJFEnAyfZ1zyPZJoffpEHS8fxVgILy23uym6sXaneotB3
 
 --
 -- PostgreSQL database dump
 --
 
-\restrict nhDRVwB0irumfqHXIzDF1GhVkDxQAGt2ItHcynvpOudpEdEbI96KdMVVACpcte5
+\restrict OC1aanJo6PDiIakckmdaqtSGXeroiwBiU9YygBucn4xP9B4fwOGPmOJwTNgoQRz
 
 -- Dumped from database version 17.11
 -- Dumped by pg_dump version 17.11
@@ -1750,6 +1922,22 @@ COPY public.migrations (id, migration, batch) FROM stdin;
 72	2026_09_27_120000_create_ticket_assignment_rules_table	14
 73	2026_09_27_120100_create_ticket_assignment_settings_table	14
 74	2026_09_27_120200_create_canned_responses_table	14
+75	2026_09_28_120000_add_last_seen_at_to_users_table	15
+76	2026_09_29_090000_add_cancelled_status_to_tickets	15
+77	2026_09_29_090100_add_root_cause_to_tickets	15
+78	2026_09_29_090200_add_escalation_fields_to_tickets	15
+79	2026_09_29_090300_create_knowledge_articles_table	15
+80	2026_09_29_120000_add_cancelled_at_to_tickets	15
+81	2026_09_29_130000_add_index_to_ticket_escalation_columns	15
+82	2026_09_30_090000_add_cancellation_reason_to_tickets	15
+83	2026_09_30_100000_seed_default_departments_when_empty	15
+84	2026_09_30_110000_add_client_email_stamps_to_tickets	15
+85	2026_10_07_100000_add_department_to_tickets_table	15
+86	2026_10_07_110000_fix_ticket_dates_that_precede_the_logged_date	15
+87	2026_10_08_100000_add_retention_columns_to_tickets_table	15
+88	2026_10_10_100000_add_updated_at_and_reply_created_at_indexes	15
+89	2026_10_11_100000_add_description_and_department_search_indexes	15
+90	2026_10_11_110000_add_pending_follow_up_stamp_to_tickets	15
 \.
 
 
@@ -1757,12 +1945,12 @@ COPY public.migrations (id, migration, batch) FROM stdin;
 -- Name: migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.migrations_id_seq', 74, true);
+SELECT pg_catalog.setval('public.migrations_id_seq', 90, true);
 
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict nhDRVwB0irumfqHXIzDF1GhVkDxQAGt2ItHcynvpOudpEdEbI96KdMVVACpcte5
+\unrestrict OC1aanJo6PDiIakckmdaqtSGXeroiwBiU9YygBucn4xP9B4fwOGPmOJwTNgoQRz
 

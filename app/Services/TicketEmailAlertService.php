@@ -466,19 +466,10 @@ class TicketEmailAlertService
 
         $cutoff = now()->subDays($days);
 
-        $tickets = Ticket::query()
-            ->where('is_imported', false)
-            ->where('status', 'pending')
-            ->where('updated_at', '<=', $cutoff)
+        $tickets = Ticket::applyQuietPendingConstraint(Ticket::query(), $cutoff)
             ->where(fn ($query) => $query
                 ->whereNull('staff_notified_pending_at')
                 ->orWhere('staff_notified_pending_at', '<=', $cutoff))
-            ->whereNotExists(fn ($query) => $query
-                ->selectRaw('1')
-                ->from('ticket_replies')
-                ->whereColumn('ticket_replies.ticket_id', 'tickets.id')
-                ->whereNull('ticket_replies.deleted_at')
-                ->where('ticket_replies.created_at', '>', $cutoff))
             ->with('assignedUsers:id,name,email,role,is_active')
             ->withMax(['replies as last_reply_at' => fn ($query) => $query->whereNull('deleted_at')], 'created_at')
             ->orderBy('updated_at')
@@ -525,6 +516,7 @@ class TicketEmailAlertService
                     tickets: $rows,
                     total: count($waiting),
                     days: $days,
+                    cancelAfterDays: max(0, (int) config('helpdesk.pending_auto_cancel_days', 0)),
                 ));
             } catch (\Throwable $exception) {
                 Log::warning('Pending follow-up email failed.', [
@@ -548,7 +540,10 @@ class TicketEmailAlertService
         return count($stamped);
     }
 
-    /** "5 days with no activity", counted from the later of the last status change and the last reply. */
+    /**
+     * "5 days with no activity", counted from the later of the last status change and the last reply, and when the
+     * automatic cancel is on, how long is left before it.
+     */
     private function pendingWaitingLabel(Ticket $ticket): string
     {
         $lastActivity = $ticket->updated_at;
@@ -561,8 +556,17 @@ class TicketEmailAlertService
         }
 
         $days = max(1, (int) floor(($lastActivity ?? now())->diffInDays(now(), true)));
+        $label = $days.' '.($days === 1 ? 'day' : 'days').' with no activity';
 
-        return $days.' '.($days === 1 ? 'day' : 'days').' with no activity';
+        $cancelAfter = max(0, (int) config('helpdesk.pending_auto_cancel_days', 0));
+        if ($cancelAfter > 0) {
+            $left = max(0, $cancelAfter - $days);
+            $label .= $left === 0
+                ? ', cancelled automatically at the next daily run'
+                : ', cancelled automatically in '.$left.' '.($left === 1 ? 'day' : 'days');
+        }
+
+        return $label;
     }
 
     private function sendAssignedTechnicalSlaReminders(): int

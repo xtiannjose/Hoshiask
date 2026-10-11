@@ -19,6 +19,9 @@
                             <p style="margin:0 0 16px 0;font-size:14px;line-height:1.6;">
                                 Hello {{ $recipientName }}, {{ $total === 1 ? 'this ticket has' : 'these tickets have' }} been Pending with no activity for at least {{ $days }} days.
                                 Check whether {{ $total === 1 ? 'it is' : 'they are' }} still waiting, contact the client if needed, or resolve or cancel the ticket if it is no longer needed. The client has not been emailed.
+                                @if($cancelAfterDays > 0)
+                                    A Pending ticket with no activity for {{ $cancelAfterDays }} days is cancelled automatically.
+                                @endif
                             </p>
 
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:0 0 18px 0;">

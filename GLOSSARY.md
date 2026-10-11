@@ -81,7 +81,7 @@ A ticket that is Open, In Progress or Pending: work is still owed.
 _Avoid_: open ticket (Open is one status, not the group)
 
 **Pending**:
-The status for a ticket that waits on the client or on something outside the team's control. Its SLA clock does not count: the row badge reads "Awaiting client", and the SLA Breached tab, the Needs Attention count and the SLA reminders leave it out.
+The status for a ticket that waits on the client or on something outside the team's control. Its SLA clock does not count: the row badge reads "Awaiting client", and the SLA Breached tab, the Needs Attention count and the SLA reminders leave it out. Staff are reminded of a quiet one after 3 days, and it is cancelled automatically after 14 days with no activity.
 
 **Completed ticket**:
 A ticket that is Resolved or Closed.

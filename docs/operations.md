@@ -85,6 +85,7 @@ Development: `php artisan schedule:work`.
 | Daily 02:40 | `helpdesk:backup` | The encrypted backup of the database and every uploaded file. |
 | Daily 03:10 | `helpdesk:cleanup-runtime` | Removes old backups, exports, import files, System Logs entries, used-up password handoffs and expired rows of the database cache. |
 | Daily 03:40 | `tickets:auto-close-resolved` | Warns clients, then closes tickets that stayed Resolved for 7 days. |
+| Daily 03:45 | `tickets:auto-cancel-pending` | Cancels Pending tickets with no activity for 14 days (`HELPDESK_PENDING_AUTO_CANCEL_DAYS`). |
 | Daily 03:55 | `helpdesk:enforce-retention` | Removes personal details from old tickets. Does nothing until you switch it on. |
 | Sunday 04:20 | `helpdesk:backup-verify` | Checks the newest backup again. |
 
@@ -152,7 +153,7 @@ For monitoring tools there is a lightweight address:
 GET /health
 ```
 
-It answers with the status (`ok`, `degraded` or `failed`) and the time of the check, nothing more, and HTTP `503` only for `failed` (no database, or PHP too old). To get the details (database, queue, warnings, advisories) set `HELPDESK_HEALTH_DETAIL_TOKEN` and send it as `Authorization: Bearer <token>` or `X-Health-Token: <token>`. A token in the address is not accepted, because addresses are usually logged.
+It answers with the status (`ok`, `degraded` or `failed`) and the time of the check, nothing more, and HTTP `503` only for `failed` (no database, or PHP too old). Without the token it does not look at the process list, so it cannot tell whether a queue worker runs and does not count that as a problem. To get the details (database, queue, warnings, advisories) set `HELPDESK_HEALTH_DETAIL_TOKEN` and send it as `Authorization: Bearer <token>` or `X-Health-Token: <token>`. A token in the address is not accepted, because addresses are usually logged.
 
 ## Sign-in lockout
 
@@ -185,6 +186,7 @@ A guesser with many different addresses gets eight tries on each, so strong pass
 | `helpdesk:build-workflow-pdf` | Rebuild the guide's PDF. | After editing the guide. |
 | `tickets:send-alert-emails` | Reminders and merged reply emails. | Scheduled every 5 minutes. |
 | `tickets:auto-close-resolved` | Warn, then close old Resolved tickets. | Scheduled. |
+| `tickets:auto-cancel-pending` | Cancel Pending tickets quiet for 14 days. `--dry-run` only lists them. | Scheduled. |
 | `tickets:import` | Import tickets from CSV or XLSX. | See [ticket-import.md](ticket-import.md). |
 | `mail:test` | Send a test email. | Not in production. |
 

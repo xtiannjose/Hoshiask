@@ -448,6 +448,27 @@ class Ticket extends Model
             });
     }
 
+    /**
+     * Pending tickets with no activity since $cutoff: no status or field change and no reply (internal notes
+     * count). Imported tickets are old records and are never quiet in this sense. The staff follow-up email and
+     * the automatic cancel both read their tickets through this one rule.
+     *
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public static function applyQuietPendingConstraint(Builder $query, CarbonInterface $cutoff): Builder
+    {
+        return $query->where('status', 'pending')
+            ->where('is_imported', false)
+            ->where('updated_at', '<=', $cutoff)
+            ->whereNotExists(fn ($replies) => $replies
+                ->selectRaw('1')
+                ->from('ticket_replies')
+                ->whereColumn('ticket_replies.ticket_id', 'tickets.id')
+                ->whereNull('ticket_replies.deleted_at')
+                ->where('ticket_replies.created_at', '>', $cutoff));
+    }
+
     public static function normalizeAssignedUserIds(array $userIds, ?int $primaryAssignedTo = null): array
     {
         $normalizedIds = collect($userIds)

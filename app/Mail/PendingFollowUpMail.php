@@ -26,12 +26,14 @@ class PendingFollowUpMail extends Mailable implements ShouldQueue
     /**
      * @param  list<array{ticket_number: string, subject: string, waiting: string, url: string}>  $tickets  The tickets shown.
      * @param  int  $total  How many tickets are waiting, which can be more than are listed.
+     * @param  int  $cancelAfterDays  Days of quiet after which a Pending ticket is cancelled automatically; 0 when off.
      */
     public function __construct(
         public string $recipientName,
         public array $tickets,
         public int $total,
         public int $days,
+        public int $cancelAfterDays = 0,
     ) {}
 
     public function envelope(): Envelope

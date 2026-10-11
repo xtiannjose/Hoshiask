@@ -45,6 +45,11 @@ Schedule::command('tickets:auto-close-resolved')
     ->withoutOverlapping()
     ->onFailure($reportFailure('tickets:auto-close-resolved'));
 
+Schedule::command('tickets:auto-cancel-pending')
+    ->dailyAt('03:45')
+    ->withoutOverlapping()
+    ->onFailure($reportFailure('tickets:auto-cancel-pending'));
+
 Schedule::command('helpdesk:enforce-retention')
     ->dailyAt('03:55')
     ->withoutOverlapping()

@@ -138,6 +138,7 @@ These are used by `php artisan db:seed` and by account management. The seeder re
 | `HELPDESK_SLA_RESOLUTION_UNDER_FOUR_HOURS_MINUTES` | `240` | The second band limit of that chart. |
 | `HELPDESK_SLA_RESOLUTION_UNDER_TWENTY_FOUR_HOURS_MINUTES` | `1440` | The third band limit of that chart. |
 | `HELPDESK_PENDING_FOLLOW_UP_DAYS` | `3` | A Pending ticket with no status change and no reply for this many days is listed in one reminder email to its assignees (the super users when nobody is assigned), and again after the same number of days while it stays quiet. `0` switches the reminder off. The client is not emailed. |
+| `HELPDESK_PENDING_AUTO_CANCEL_DAYS` | `14` | A Pending ticket with no status change and no reply for this many days is cancelled by the daily `tickets:auto-cancel-pending`, with the reason written in its notes. `0` switches it off. The client is not emailed. Keep it above `HELPDESK_PENDING_FOLLOW_UP_DAYS`, or staff are not reminded first (`helpdesk:ops-status` says so). |
 | `HELPDESK_ASSIGNMENT_ROTATION_WINDOW_DAYS` | `30` | The "rotating counter" assignment compares each technician's share of a category over this many days. |
 | `HELPDESK_CANNED_REPLIES_ENABLED` | `true` | `false` hides canned responses everywhere without touching the database. |
 

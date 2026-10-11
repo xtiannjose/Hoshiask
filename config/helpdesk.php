@@ -72,6 +72,9 @@ return [
     // its assignees, or to the super users when nobody is assigned, and again every this many days while it stays
     // quiet. 0 switches the reminder off. The client is not emailed and the ticket is not closed.
     'pending_follow_up_days' => max(0, (int) env('HELPDESK_PENDING_FOLLOW_UP_DAYS', 3)),
+    // A Pending ticket with no activity for this many days is cancelled by the daily `tickets:auto-cancel-pending`,
+    // with the reason written in its notes. 0 switches it off. The client is not emailed about the cancel.
+    'pending_auto_cancel_days' => max(0, (int) env('HELPDESK_PENDING_AUTO_CANCEL_DAYS', 14)),
     // Who people should contact when they forget their password (there is no self-service reset).
     // An email address, phone number or name; shown on the sign-in page and in the lockout message.
     'password_help_contact' => env('HELPDESK_PASSWORD_HELP_CONTACT'),

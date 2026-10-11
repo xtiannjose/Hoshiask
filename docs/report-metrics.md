@@ -37,6 +37,7 @@ That wording matches the current report calculation and avoids confusing it with
 
 - **Client tickets only.** `Ticket::applyReportableConstraint` leaves out internal staff-to-staff tickets, on the Reports page and in the Custom Report (page, CSV and PDF), so both give the same totals for the same period. Because of this, report totals can be lower than the admin dashboard, which counts every ticket. Both pages show a short note explaining it.
 - **Cancelled tickets** stay in *volume* figures (received, total tickets in scope, the Total Tickets Breakdown, where they have their own "Cancelled" slice so the slices add up to the total) but are excluded from *performance* figures: the resolution rate, the open backlog and every SLA measure below.
+- **Automatically cancelled tickets** (a Pending ticket quiet for 14 days, from 2026-10-11) are Cancelled like any other: they stay in the volume figures and are left out of the performance figures and every SLA measure.
 - **Merged tickets** count like any other Closed ticket. Merging marks each duplicate Closed with the merge time as its resolved time, so a duplicate adds to the completed count and the resolution rate, and gets a resolution time in the Resolution Time bands. This is a decision (2026-10-10, issue #228), not an oversight: do not exclude merged duplicates unless the maintainer changes it.
 
 ## SLA Overview: Resolution Time Compliance

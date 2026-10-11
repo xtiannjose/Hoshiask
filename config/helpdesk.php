@@ -63,6 +63,11 @@ return [
         // 0 sends every reply immediately.
         'reply_batch_minutes' => (int) env('HELPDESK_CLIENT_EMAIL_REPLY_BATCH_MINUTES', 5),
     ],
+    // "Rotating counter" assignment compares each technician's share of a category's tickets over this many days.
+    // Counting every ticket ever would send all new tickets to a newly added technician until the lifetime shares match.
+    'assignment' => [
+        'rotation_window_days' => max(1, (int) env('HELPDESK_ASSIGNMENT_ROTATION_WINDOW_DAYS', 30)),
+    ],
     // Who people should contact when they forget their password (there is no self-service reset).
     // An email address, phone number or name; shown on the sign-in page and in the lockout message.
     'password_help_contact' => env('HELPDESK_PASSWORD_HELP_CONTACT'),

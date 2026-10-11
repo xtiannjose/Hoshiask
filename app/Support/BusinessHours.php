@@ -10,24 +10,26 @@ use Illuminate\Support\Carbon;
 /**
  * The clock the SLA minutes run on. Off (the default) every minute counts, day and night. On, only the working
  * days and hours in `helpdesk.sla.business_hours` count, in the application time zone: a ticket logged at 17:30 on
- * Friday starts its four hours on Monday at the opening time.
+ * Friday starts its four hours on Monday at the opening time. Dates listed as closed (public holidays) count like a
+ * weekend.
  *
- * Two questions are answered, both without looping over days:
+ * Two questions are answered:
  *   - elapsedMinutes(): how many counted minutes lie between two moments (the SLA badge, the reports).
  *   - cutoff(): the moment that is N counted minutes before now. A ticket logged at or before it has used at
  *     least N minutes, so the lists and reminders keep one `created_at <= cutoff` condition in SQL.
  *
  * A calendar day is a number of days since 1970-01-01 (a Thursday). Counted seconds up to a moment are the
- * counted days before it times the length of a working day, plus the part of its own day that has passed.
+ * counted days before it times the length of a working day, plus the part of its own day that has passed, minus
+ * the closed dates. That is plain arithmetic with no loop over days, so a report over thousands of tickets stays
+ * fast; cutoff() finds its moment by halving the time span, about thirty steps.
  *
- * shortcut: public holidays are not skipped and a daylight-saving change shifts one day by an hour; add a
- * holiday list here if the office wants closed days to stop the clock.
+ * shortcut: a daylight-saving change shifts the hours of its own day by one hour; the offices here do not use it.
  */
 final class BusinessHours
 {
     private const SECONDS_PER_DAY = 86400;
 
-    /** @var array<string, array{start: int, length: int, per_week: int, is_working: list<bool>, before: list<int>, offsets: list<int>}|null> */
+    /** @var array<string, array{start: int, length: int, per_week: int, is_working: list<bool>, before: list<int>, closed: list<int>, unreadable: list<string>}|null> */
     private static array $schedules = [];
 
     public static function enabled(): bool
@@ -39,6 +41,18 @@ final class BusinessHours
     public static function misconfigured(): bool
     {
         return self::flagOn() && self::schedule() === null;
+    }
+
+    /**
+     * Entries of the closed-dates setting that are not a real `YYYY-MM-DD` date. They are ignored.
+     *
+     * @return list<string>
+     */
+    public static function unreadableClosedDates(): array
+    {
+        $schedule = self::flagOn() ? self::schedule() : null;
+
+        return $schedule['unreadable'] ?? [];
     }
 
     /** Counted minutes from one moment to a later one (calendar minutes while the setting is off). */
@@ -65,24 +79,35 @@ final class BusinessHours
             return $now->copy()->subMinutes($minutes);
         }
 
-        $target = self::countedSecondsUpTo($now->getTimestamp(), $schedule) - $minutes * 60;
+        $timezone = self::timezone()->getName();
+        $upper = $now->getTimestamp();
+        $target = self::countedSecondsUpTo($upper, $schedule) - max(0, $minutes) * 60;
+
         if ($target < 0) {
-            return Carbon::createFromTimestamp(0, self::timezone()->getName());
+            return Carbon::createFromTimestamp(0, $timezone);
         }
 
-        // The working day that holds the target, and how far into its hours the target lies. A target at the very
-        // end of a day lies at that day's closing time, which is the same counted instant as the next opening.
-        $workingDay = intdiv($target, $schedule['length']);
-        $into = $target - $workingDay * $schedule['length'];
-        $dayNumber = intdiv($workingDay, $schedule['per_week']) * 7 + $schedule['offsets'][$workingDay % $schedule['per_week']];
-        [$year, $month, $day] = array_map('intval', explode('-', gmdate('Y-n-j', $dayNumber * self::SECONDS_PER_DAY)));
+        if ($target >= self::countedSecondsUpTo($upper, $schedule)) {
+            return $now->copy();
+        }
 
-        return Carbon::create($year, $month, $day, 0, 0, 0, self::timezone()->getName())
-            ->addSeconds($schedule['start'] + $into);
+        // The last second whose counted total is still at or below the target: the opening time that the target
+        // falls on, plus the counted seconds into that day. Invariant: total(lower) <= target < total(upper).
+        $lower = 0;
+        while ($upper - $lower > 1) {
+            $middle = intdiv($lower + $upper, 2);
+            if (self::countedSecondsUpTo($middle, $schedule) <= $target) {
+                $lower = $middle;
+            } else {
+                $upper = $middle;
+            }
+        }
+
+        return Carbon::createFromTimestamp($lower, $timezone);
     }
 
     /**
-     * @param  array{start: int, length: int, per_week: int, is_working: list<bool>, before: list<int>, offsets: list<int>}  $schedule
+     * @param  array{start: int, length: int, per_week: int, is_working: list<bool>, before: list<int>, closed: list<int>, unreadable: list<string>}  $schedule
      */
     private static function countedSecondsUpTo(int $timestamp, array $schedule): int
     {
@@ -93,11 +118,31 @@ final class BusinessHours
         $seconds = (intdiv($dayNumber, 7) * $schedule['per_week'] + $schedule['before'][$positionInWeek]) * $schedule['length'];
 
         if ($schedule['is_working'][$positionInWeek]) {
-            $passed = $local - $dayNumber * self::SECONDS_PER_DAY - $schedule['start'];
-            $seconds += min(max($passed, 0), $schedule['length']);
+            $seconds += self::passedOfDay($local, $dayNumber, $schedule);
+        }
+
+        // A closed date takes back the working time it would have added up to this moment.
+        foreach ($schedule['closed'] as $closedDayNumber) {
+            if ($closedDayNumber > $dayNumber) {
+                break;
+            }
+
+            $seconds -= self::passedOfDay($local, $closedDayNumber, $schedule);
         }
 
         return $seconds;
+    }
+
+    /**
+     * Working seconds of one calendar day that have passed at local time $local.
+     *
+     * @param  array{start: int, length: int, per_week: int, is_working: list<bool>, before: list<int>, closed: list<int>, unreadable: list<string>}  $schedule
+     */
+    private static function passedOfDay(int $local, int $dayNumber, array $schedule): int
+    {
+        $passed = $local - $dayNumber * self::SECONDS_PER_DAY - $schedule['start'];
+
+        return min(max($passed, 0), $schedule['length']);
     }
 
     private static function flagOn(): bool
@@ -111,27 +156,28 @@ final class BusinessHours
     }
 
     /**
-     * @return array{start: int, length: int, per_week: int, is_working: list<bool>, before: list<int>, offsets: list<int>}|null
-     *                                                                                                                           Null when the days or hours cannot be read, or leave no working time.
+     * @return array{start: int, length: int, per_week: int, is_working: list<bool>, before: list<int>, closed: list<int>, unreadable: list<string>}|null
+     *                                                                                                                                                    Null when the days or hours cannot be read, or leave no working time.
      */
     private static function schedule(): ?array
     {
         $days = config('helpdesk.sla.business_hours.days', '1,2,3,4,5');
         $start = (string) config('helpdesk.sla.business_hours.start', '08:00');
         $end = (string) config('helpdesk.sla.business_hours.end', '17:00');
-        $key = json_encode([$days, $start, $end]);
+        $closed = config('helpdesk.sla.business_hours.closed_dates', '');
+        $key = json_encode([$days, $start, $end, $closed]);
 
         if (! array_key_exists($key, self::$schedules)) {
-            self::$schedules[$key] = self::buildSchedule($days, $start, $end);
+            self::$schedules[$key] = self::buildSchedule($days, $start, $end, $closed);
         }
 
         return self::$schedules[$key];
     }
 
     /**
-     * @return array{start: int, length: int, per_week: int, is_working: list<bool>, before: list<int>, offsets: list<int>}|null
+     * @return array{start: int, length: int, per_week: int, is_working: list<bool>, before: list<int>, closed: list<int>, unreadable: list<string>}|null
      */
-    private static function buildSchedule(mixed $days, string $start, string $end): ?array
+    private static function buildSchedule(mixed $days, string $start, string $end, mixed $closedDates): ?array
     {
         $startSeconds = self::secondsOfDay($start);
         $endSeconds = self::secondsOfDay($end);
@@ -147,17 +193,37 @@ final class BusinessHours
         // Position 0 is a Thursday, the weekday of 1970-01-01, which is ISO day 4.
         $isWorking = [];
         $before = [];
-        $offsets = [];
         $count = 0;
         for ($position = 0; $position < 7; $position++) {
             $working = in_array(($position + 3) % 7 + 1, $isoDays, true);
             $before[$position] = $count;
             $isWorking[$position] = $working;
             if ($working) {
-                $offsets[] = $position;
                 $count++;
             }
         }
+
+        $closed = [];
+        $unreadable = [];
+        foreach (is_array($closedDates) ? $closedDates : explode(',', (string) $closedDates) as $entry) {
+            $entry = trim((string) $entry);
+            if ($entry === '') {
+                continue;
+            }
+
+            $dayNumber = self::dayNumberOf($entry);
+            if ($dayNumber === null) {
+                $unreadable[] = $entry;
+
+                continue;
+            }
+
+            // A closed date on a weekday that is not worked anyway changes nothing.
+            if ($isWorking[$dayNumber % 7]) {
+                $closed[$dayNumber] = $dayNumber;
+            }
+        }
+        sort($closed);
 
         return [
             'start' => $startSeconds,
@@ -165,8 +231,19 @@ final class BusinessHours
             'per_week' => $count,
             'is_working' => $isWorking,
             'before' => $before,
-            'offsets' => $offsets,
+            'closed' => array_values($closed),
+            'unreadable' => $unreadable,
         ];
+    }
+
+    /** Days since 1970-01-01 of a `YYYY-MM-DD` date, or null when it is not a real date on or after 1970-01-01. */
+    private static function dayNumberOf(string $date): ?int
+    {
+        if (! preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $parts) || ! checkdate((int) $parts[2], (int) $parts[3], (int) $parts[1]) || (int) $parts[1] < 1970) {
+            return null;
+        }
+
+        return intdiv(gmmktime(0, 0, 0, (int) $parts[2], (int) $parts[3], (int) $parts[1]), self::SECONDS_PER_DAY);
     }
 
     /** "08:30" as seconds after midnight; "24:00" is allowed as an end time. Null when it is not a time. */

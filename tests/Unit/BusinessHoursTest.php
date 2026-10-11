@@ -137,6 +137,47 @@ class BusinessHoursTest extends TestCase
         }
     }
 
+    public function test_closed_dates_count_like_a_weekend(): void
+    {
+        // Monday 12 October 2026 is closed: Friday 16:00 to Tuesday 10:00 is one hour on Friday and two on Tuesday.
+        config(['helpdesk.sla.business_hours.closed_dates' => '2026-10-12']);
+
+        $this->assertSame(180, $this->between('2026-10-09 16:00', '2026-10-13 10:00'));
+        $this->assertSame(0, $this->between('2026-10-12 08:00', '2026-10-12 17:00'));
+        // The same span without the closed date is a whole day longer.
+        config(['helpdesk.sla.business_hours.closed_dates' => '']);
+        $this->assertSame(180 + 9 * 60, $this->between('2026-10-09 16:00', '2026-10-13 10:00'));
+    }
+
+    public function test_the_cutoff_skips_a_closed_date_and_still_agrees_with_the_elapsed_minutes(): void
+    {
+        config(['helpdesk.sla.business_hours.closed_dates' => '2026-10-12, 2026-10-14']);
+
+        // Tuesday 13 October 10:00, four hours back: two on Tuesday, then Friday (Monday is closed).
+        $this->assertSame('2026-10-09 15:00:00', $this->cutoff(240, '2026-10-13 10:00'));
+
+        foreach (['2026-10-13 10:00', '2026-10-15 09:00', '2026-10-14 12:00', '2026-10-17 12:00'] as $local) {
+            foreach ([1, 60, 240, 540, 1500, 3000] as $minutes) {
+                $cutoff = Carbon::parse($this->cutoff($minutes, $local), self::ZONE);
+                $now = $this->at($local)->getTimestamp();
+
+                $this->assertSame($minutes, BusinessHours::elapsedMinutes($cutoff->getTimestamp(), $now), "$minutes min before $local");
+                $this->assertSame($minutes - 1, BusinessHours::elapsedMinutes($cutoff->copy()->addMinute()->getTimestamp(), $now), "$minutes min before $local");
+            }
+        }
+    }
+
+    public function test_a_closed_date_on_a_day_that_is_not_worked_changes_nothing_and_a_bad_entry_is_named(): void
+    {
+        // Saturday 10 October is not a working day anyway; the other two entries are not dates.
+        config(['helpdesk.sla.business_hours.closed_dates' => '2026-10-10, soon, 2026-02-30, 2026-10-13']);
+
+        $this->assertSame(['soon', '2026-02-30'], BusinessHours::unreadableClosedDates());
+        $this->assertSame(180, $this->between('2026-10-09 16:00', '2026-10-12 10:00'));
+        // Tuesday 13 October (a real, working, closed date) counts nothing.
+        $this->assertSame(0, $this->between('2026-10-13 08:00', '2026-10-13 17:00'));
+    }
+
     private function at(string $local): Carbon
     {
         return Carbon::parse($local, self::ZONE);

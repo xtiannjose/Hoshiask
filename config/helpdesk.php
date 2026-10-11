@@ -81,13 +81,15 @@ return [
     'sla' => [
         // Off: SLA minutes run around the clock. On: only the working days and hours below count, in the application
         // time zone, so a ticket logged on Friday evening starts its target on Monday morning. Applies to the SLA
-        // Breached tab, the SLA badge, the SLA reminders and the Resolution Time report; "Needs Attention" stays on
-        // the calendar clock. Days are ISO weekdays, 1 = Monday to 7 = Sunday.
+        // Breached tab, the Needs Attention tab (16 working hours), the SLA badge, the SLA reminders and the
+        // Resolution Time report. Days are ISO weekdays, 1 = Monday to 7 = Sunday. closed_dates are public holidays
+        // or other closed days, comma-separated YYYY-MM-DD, that count like a weekend.
         'business_hours' => [
             'enabled' => (bool) env('HELPDESK_SLA_BUSINESS_HOURS_ENABLED', false),
             'days' => env('HELPDESK_SLA_BUSINESS_HOURS_DAYS', '1,2,3,4,5'),
             'start' => env('HELPDESK_SLA_BUSINESS_HOURS_START', '08:00'),
             'end' => env('HELPDESK_SLA_BUSINESS_HOURS_END', '17:00'),
+            'closed_dates' => env('HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES', ''),
         ],
         'resolution_target_minutes' => (int) env('HELPDESK_SLA_RESOLUTION_TARGET_MINUTES', 240),
         'assignment_reminder_minutes' => (int) env('HELPDESK_SLA_ASSIGNMENT_REMINDER_MINUTES', 210),

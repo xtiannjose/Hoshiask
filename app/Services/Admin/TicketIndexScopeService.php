@@ -69,7 +69,7 @@ class TicketIndexScopeService
 
         if ($activeTab === 'attention') {
             $query->whereIn('status', Ticket::SLA_CLOCK_STATUSES)
-                ->where('created_at', '<=', now()->subHours(Ticket::NEEDS_ATTENTION_AFTER_HOURS));
+                ->where('created_at', '<=', BusinessHours::cutoff(Ticket::NEEDS_ATTENTION_AFTER_HOURS * 60));
 
             return;
         }

@@ -68,7 +68,7 @@ class TicketIndexScopeService
 
         if ($activeTab === 'attention') {
             $query->whereNotIn('status', Ticket::TERMINAL_STATUSES)
-                ->where('created_at', '<=', now()->subHours(16));
+                ->where('created_at', '<=', now()->subHours(Ticket::NEEDS_ATTENTION_AFTER_HOURS));
 
             return;
         }

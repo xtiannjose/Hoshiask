@@ -128,6 +128,9 @@ class Ticket extends Model
         TicketStatus::Pending->value,
     ];
 
+    /** An active ticket this old shows under "Needs Attention" (the tab and the dashboard count). */
+    public const NEEDS_ATTENTION_AFTER_HOURS = 16;
+
     /** A Resolved ticket is closed automatically once the client has been silent this long. */
     public const AUTO_CLOSE_RESOLVED_AFTER_DAYS = 7;
 

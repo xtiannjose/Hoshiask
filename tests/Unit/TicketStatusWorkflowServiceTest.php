@@ -4,7 +4,9 @@ namespace Tests\Unit;
 
 use App\Services\Admin\TicketStatusWorkflowService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 use Tests\Traits\CreatesTestData;
 
@@ -105,5 +107,24 @@ class TicketStatusWorkflowServiceTest extends TestCase
         ]);
 
         $this->assertNull($this->service()->reopenClosedStatusGateErrorForTicket($ticket, 'in_progress'));
+    }
+
+    public function test_a_bulk_cancel_is_refused_for_a_ticket_that_moved_on_after_the_caller_checked_it(): void
+    {
+        $client = $this->createClient();
+        $category = $this->createCategory();
+        // The caller saw this ticket as Open, so cancelling passed its check. Meanwhile work started on it.
+        $ticket = $this->createTicket($client, $category, ['status' => 'in_progress']);
+
+        $request = Request::create('/', 'POST', ['status' => 'cancelled', 'close_reason' => 'Not needed']);
+
+        try {
+            $this->service()->bulkStatusTickets($request, [$ticket->id]);
+            $this->fail('The bulk cancel should have been refused.');
+        } catch (ValidationException $exception) {
+            $this->assertStringContainsString('can only be cancelled while it is Open or Pending', $exception->validator->errors()->first());
+        }
+
+        $this->assertSame('in_progress', $ticket->fresh()->status);
     }
 }

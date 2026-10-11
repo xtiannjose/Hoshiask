@@ -14,6 +14,7 @@ use App\Services\SystemLogService;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class TicketBulkActionController extends Controller
 {
@@ -151,7 +152,12 @@ class TicketBulkActionController extends Controller
             }
         }
 
-        $this->ticketStatusWorkflow->bulkStatusTickets($request, $selectedIds->all());
+        try {
+            $this->ticketStatusWorkflow->bulkStatusTickets($request, $selectedIds->all());
+        } catch (ValidationException $exception) {
+            // A ticket changed between the check above and the locked write; nothing was changed.
+            return $this->redirectBackOrReturnTo($request)->with('error', $exception->validator->errors()->first());
+        }
 
         return $this->redirectBackOrReturnTo($request)->with('success', 'Selected ticket statuses updated.');
     }

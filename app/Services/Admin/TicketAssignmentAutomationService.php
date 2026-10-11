@@ -23,7 +23,10 @@ class TicketAssignmentAutomationService
 
         $rules = TicketAssignmentRule::query()
             ->where('category_id', $ticket->category_id)
-            ->whereHas('technician', fn ($query) => $query->where('is_active', true))
+            // Someone away (assignment_paused_until in the future) is skipped; a day-off does not need a rule change.
+            ->whereHas('technician', fn ($query) => $query
+                ->where('is_active', true)
+                ->where(fn ($away) => $away->whereNull('assignment_paused_until')->orWhere('assignment_paused_until', '<=', now())))
             ->get();
 
         if ($rules->isEmpty()) {

@@ -267,7 +267,7 @@ The SLA target is how long a ticket should take: **240 minutes** by default (`HE
 - the assigned technicians, 210 minutes after the assignment, if the ticket is still Open or In Progress (a Pending ticket waits on the client)
 - super users, admins and the shadow account, when an active ticket stays unassigned: once at 120 minutes ("Unchecked Ticket Alert") and once at 180 minutes ("Unassigned SLA Warning"), counted from when the ticket was created
 
-**Business hours.** By default SLA minutes run around the clock. With `HELPDESK_SLA_BUSINESS_HOURS_ENABLED=true` they count only inside the working days and hours (Monday to Friday, 08:00 to 17:00 unless changed), so a ticket logged at 16:00 on Friday has used one hour of its four by Monday at 08:00 and no reminder goes out overnight or over the weekend. This applies to the SLA badge, the SLA Breached tab, the SLA reminders and the Resolution Time report. The Needs Attention tab stays on the calendar clock (it lists tickets more than 16 hours old). Public holidays are not skipped. The ticket page shows the real time a ticket took, not working time.
+**Business hours.** By default SLA minutes run around the clock. With `HELPDESK_SLA_BUSINESS_HOURS_ENABLED=true` they count only inside the working days and hours (Monday to Friday, 08:00 to 17:00 unless changed), so a ticket logged at 16:00 on Friday has used one hour of its four by Monday at 08:00 and no reminder goes out overnight or over the weekend. This applies to the SLA badge, the SLA Breached tab, the Needs Attention tab (16 working hours instead of 16 hours on the clock), the SLA reminders and the Resolution Time report. Public holidays and other closed days listed in `HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES` (`YYYY-MM-DD`, comma-separated) count like a weekend; the list is kept up to date by hand. The ticket page shows the real time a ticket took, and next to it the working time ("2d 18h (3h working)").
 
 A **Pending** ticket gets its own, gentler reminder. When a Pending ticket has had no status change and no reply for 3 days (`HELPDESK_PENDING_FOLLOW_UP_DAYS`, `0` switches it off), its assignees get one email that lists all of their quiet Pending tickets, with a link to each. Nobody assigned: the super users get it. The email asks staff to check whether the ticket is still waiting, contact the client if needed, or resolve or cancel it. The client is not emailed, and a ticket that stays quiet is listed again after another 3 days.
 
@@ -282,7 +282,9 @@ Admins and the shadow account can set rules per category (Admin → Assignment R
 - **Weighted random:** each new ticket rolls against the weights.
 - **Rotating counter:** the ticket goes to whichever technician is furthest below their target share, based on the category's assignments in the last 30 days. A technician added later therefore gets a fair share, not every new ticket.
 
-The method is one setting for all rules, changed on the same page. If a category has no rules, or every technician in it is deactivated, the ticket stays unassigned.
+The method is one setting for all rules, changed on the same page. If a category has no rules, or every technician in it is deactivated or away, the ticket stays unassigned and the super users get the usual unassigned alerts.
+
+**Availability.** The same page lists the technicians with a "Back on" day. Someone who is away (leave, a long absence) is skipped by both methods until that day, so they are not given tickets they cannot answer. Choose the first day they are back; leave it empty to make them available now. It only affects the automatic rules: staff can still assign them by hand. It ends by itself on the day chosen, so nobody has to remember to switch it back.
 
 ### Automatic closing
 

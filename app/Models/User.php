@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 
 /**
  * @property Carbon|null $last_seen_at
+ * @property Carbon|null $assignment_paused_until
  */
 class User extends Authenticatable
 {
@@ -108,6 +109,7 @@ class User extends Authenticatable
             'is_profile_locked' => 'boolean',
             'must_change_password' => 'boolean',
             'last_seen_at' => 'datetime',
+            'assignment_paused_until' => 'datetime',
         ];
     }
 

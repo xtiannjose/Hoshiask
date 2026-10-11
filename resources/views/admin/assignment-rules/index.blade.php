@@ -37,6 +37,36 @@
         </form>
     </div>
 
+    <div class="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="text-lg font-semibold text-slate-900">Availability</h2>
+        <p class="mt-1 text-sm text-slate-500">
+            Someone who is away is skipped by the rules above until the day they are back, so they are not given tickets
+            they cannot answer. Staff can still assign them by hand. Leave the day empty to make them available now.
+        </p>
+        <div class="mt-4 divide-y divide-slate-200">
+            @forelse($technicians as $technician)
+                @php($away = $technician->assignment_paused_until && $technician->assignment_paused_until->isFuture())
+                <form action="{{ route('admin.assignment-rules.availability', $technician) }}" method="POST" class="flex flex-wrap items-center gap-3 py-3" data-submit-feedback>
+                    @csrf
+                    @method('PUT')
+                    <div class="min-w-[12rem] flex-1">
+                        <p class="text-sm font-semibold text-slate-900">{{ $technician->name }}</p>
+                        <p class="text-sm {{ $away ? 'text-amber-700' : 'text-slate-500' }}">
+                            {{ $away ? 'Away until '.$technician->assignment_paused_until->format('M j, Y') : 'Available' }}
+                        </p>
+                    </div>
+                    <label for="back_on_{{ $technician->id }}" class="text-sm text-slate-600">Back on</label>
+                    <input type="date" name="back_on" id="back_on_{{ $technician->id }}" class="form-input w-auto"
+                           value="{{ $away ? $technician->assignment_paused_until->format('Y-m-d') : '' }}"
+                           min="{{ now()->addDay()->format('Y-m-d') }}">
+                    <button type="submit" class="btn-secondary py-2" data-loading-text="Saving...">Save</button>
+                </form>
+            @empty
+                <p class="py-3 text-sm text-slate-500">No active technicians yet.</p>
+            @endforelse
+        </div>
+    </div>
+
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-5 py-4">

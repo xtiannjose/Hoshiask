@@ -153,7 +153,10 @@ _Avoid_: KB post, help page
 The time a ticket should take to be completed: 4 hours by default. SLA reminders and the SLA Breached tab measure against it.
 
 **Business hours** (SLA clock):
-The working days and hours that SLA minutes count when `HELPDESK_SLA_BUSINESS_HOURS_ENABLED` is on. Nights and weekends do not use up the SLA target. Public holidays are not skipped. Off by default, when SLA minutes run around the clock.
+The working days and hours that SLA minutes count when `HELPDESK_SLA_BUSINESS_HOURS_ENABLED` is on. Nights, weekends and the closed dates in `HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES` do not use up the SLA target. Off by default, when SLA minutes run around the clock.
+
+**Away** (assignment):
+A technician with a "Back on" day on the Assignment Rules page. The automatic assignment rules skip them until that day. Staff can still assign them by hand.
 
 **SLA breach**:
 An active ticket, or a ticket completed late, that passed the resolution target.

@@ -326,6 +326,9 @@ Route::middleware(['auth', 'active', 'consent.accepted', 'role:ticket_console', 
         Route::delete('/assignment-rules/{ticketAssignmentRule}', [TicketAssignmentRuleController::class, 'destroy'])
             ->middleware('throttle:20,1')
             ->name('assignment-rules.destroy');
+        Route::put('/assignment-rules/availability/{user}', [TicketAssignmentRuleController::class, 'updateAvailability'])
+            ->middleware('throttle:20,1')
+            ->name('assignment-rules.availability');
         Route::put('/assignment-rules/distribution-method', [TicketAssignmentRuleController::class, 'updateDistributionMethod'])
             ->middleware('throttle:20,1')
             ->name('assignment-rules.distribution-method');

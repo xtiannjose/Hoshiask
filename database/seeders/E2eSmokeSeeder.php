@@ -13,6 +13,9 @@ class E2eSmokeSeeder extends Seeder
 {
     public function run(): void
     {
+        // The forms list departments and categories; a migration no longer inserts them.
+        $this->call(StarterDataSeeder::class);
+
         $superUser = User::updateOrCreate(
             ['email' => 'e2e-super@example.com'],
             [

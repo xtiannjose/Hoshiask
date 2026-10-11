@@ -87,7 +87,7 @@ php artisan migrate --seed
 php artisan storage:link
 ```
 
-The seeder creates 6 accounts (see below), 5 categories and 8 sample tickets. The migrations add 13 departments. The knowledge base and the canned responses start empty: `php artisan db:seed --class=StarterContentSeeder` adds 7 starter articles and 7 canned responses, and is safe to run again.
+The seeder creates 6 accounts (see below), the 13 starter departments, 5 categories and 8 sample tickets. The departments and categories come from `StarterDataSeeder`, not from the migrations, and it only fills an empty table: on a database that was migrated without `--seed`, run `php artisan db:seed --class=StarterDataSeeder` (without departments every user form refuses the department, and `helpdesk:ops-status` says so). The knowledge base and the canned responses start empty: `php artisan db:seed --class=StarterContentSeeder` adds 7 starter articles and 7 canned responses, and is safe to run again.
 
 **5. Start the app**
 

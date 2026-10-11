@@ -65,8 +65,8 @@ bootstrap/app.php       registers the middleware and the route files
 config/                  helpdesk.php (feature settings), security.php, retention.php, legal.php, observability.php, and Laravel's own
 database/
   migrations/            every table change, in order
-  seeders/               sample data; E2eSmokeSeeder is only for the browser tests
-  schema/                a PostgreSQL snapshot that makes a fresh install faster
+  seeders/               StarterDataSeeder (the departments and categories a new installation starts with), sample accounts and tickets; E2eSmokeSeeder is only for the browser tests
+  schema/                a PostgreSQL snapshot (tables only) that makes a fresh install faster; no migration holds data, so it can be regenerated with `php artisan schema:dump`
 lang/en/                 validation messages
 public/                  the web root: index.php, images, and build/ (made by npm run build, not in git)
 resources/

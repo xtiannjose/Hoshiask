@@ -199,6 +199,7 @@ A guesser with many different addresses gets eight tries on each, so strong pass
 - [ ] `HELPDESK_HEALTH_DETAIL_TOKEN` is set
 - [ ] The web root is `public/`, and `storage/` and `bootstrap/cache/` are writable
 - [ ] `LOG_STACK=daily` and `LOG_LEVEL=warning` (one file a day, the last 14 kept)
+- [ ] The starter departments exist (`php artisan migrate --seed` on a new installation, or `php artisan db:seed --class=StarterDataSeeder`; `helpdesk:ops-status` says when there are none)
 - [ ] The cron entry for the scheduler and the queue worker are running
 - [ ] Mail works: real `MAIL_*` values, and `MAIL_FROM_ADDRESS` is not the placeholder
 - [ ] Backups: `HELPDESK_BACKUP_ENCRYPTION_KEY` is set (and stored outside the server), a second copy or an off-server job exists, `helpdesk:backup` and `helpdesk:backup-verify` have run, and a restore was rehearsed ([backup-and-restore.md](backup-and-restore.md))

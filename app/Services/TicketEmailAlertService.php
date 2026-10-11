@@ -451,7 +451,7 @@ class TicketEmailAlertService
         // Imported tickets are old records: reminding about them would mail every open one on the first run.
         $query = Ticket::query()
             ->where('is_imported', false)
-            ->whereIn('status', Ticket::OPEN_STATUSES)
+            ->whereIn('status', Ticket::SLA_CLOCK_STATUSES)
             ->whereNotNull('assigned_at')
             ->where('assigned_at', '<=', $cutoff)
             ->whereNull('technical_user_notified_sla_at');
@@ -509,7 +509,7 @@ class TicketEmailAlertService
 
         $query = Ticket::query()
             ->where('is_imported', false)
-            ->whereIn('status', Ticket::OPEN_STATUSES)
+            ->whereIn('status', Ticket::SLA_CLOCK_STATUSES)
             ->where('created_at', '<=', now()->subMinutes($thresholdMinutes))
             ->whereNull($notifiedColumn);
         $tickets = Ticket::applyUnassignedConstraint($query)

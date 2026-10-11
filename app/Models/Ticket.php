@@ -125,6 +125,16 @@ class Ticket extends Model
         TicketStatus::Pending->value,
     ];
 
+    /**
+     * Statuses where the ticket waits on staff, so its SLA clock matters. Pending waits on the client or on something
+     * outside the team's control: the row badge reads "Awaiting client" and never "Breached", and the SLA Breached
+     * tab, the Needs Attention count and the SLA reminders leave it out too.
+     */
+    public const SLA_CLOCK_STATUSES = [
+        TicketStatus::Open->value,
+        TicketStatus::InProgress->value,
+    ];
+
     /** An active ticket this old shows under "Needs Attention" (the tab and the dashboard count). */
     public const NEEDS_ATTENTION_AFTER_HOURS = 16;
 

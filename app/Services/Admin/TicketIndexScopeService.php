@@ -67,7 +67,7 @@ class TicketIndexScopeService
         }
 
         if ($activeTab === 'attention') {
-            $query->whereNotIn('status', Ticket::TERMINAL_STATUSES)
+            $query->whereIn('status', Ticket::SLA_CLOCK_STATUSES)
                 ->where('created_at', '<=', now()->subHours(Ticket::NEEDS_ATTENTION_AFTER_HOURS));
 
             return;
@@ -75,7 +75,7 @@ class TicketIndexScopeService
 
         if ($activeTab === 'breached') {
             $targetMinutes = Ticket::resolutionTargetMinutes();
-            $query->whereNotIn('status', Ticket::TERMINAL_STATUSES)
+            $query->whereIn('status', Ticket::SLA_CLOCK_STATUSES)
                 ->where('created_at', '<=', now()->subMinutes($targetMinutes));
 
             return;

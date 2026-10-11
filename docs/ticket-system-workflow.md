@@ -233,8 +233,8 @@ The **Tickets** page has four tabs:
 | Tab | What it shows |
 | --- | --- |
 | Tickets | Active tickets. |
-| Needs Attention | Active tickets that are more than 16 hours old. Technicians do not see this tab. |
-| SLA Breached | Active tickets older than the SLA target (240 minutes by default). They need action right now. |
+| Needs Attention | Open and In Progress tickets that are more than 16 hours old. Pending tickets wait on the client and are left out. Technicians do not see this tab. |
+| SLA Breached | Open and In Progress tickets older than the SLA target (240 minutes by default). They need action right now. Pending tickets are left out, as their badge reads "Awaiting client". |
 | History | Resolved, closed and cancelled tickets. |
 
 A technician sees only the tickets assigned to them. Everyone else sees all tickets.
@@ -264,7 +264,7 @@ Deleting cannot be undone, except from a backup. Cancelling or closing is usuall
 
 The SLA target is how long a ticket should take: **240 minutes** by default (`HELPDESK_SLA_RESOLUTION_TARGET_MINUTES`). Staff are reminded by email:
 
-- the assigned technicians, 210 minutes after the assignment, if the ticket is still active
+- the assigned technicians, 210 minutes after the assignment, if the ticket is still Open or In Progress (a Pending ticket waits on the client)
 - super users, admins and the shadow account, when an active ticket stays unassigned: once at 120 minutes ("Unchecked Ticket Alert") and once at 180 minutes ("Unassigned SLA Warning"), counted from when the ticket was created
 
 Imported tickets (see [ticket-import.md](ticket-import.md)) never get these reminders: they are old records, and a reminder for every open one would flood the inboxes on the first run after an import.

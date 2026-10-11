@@ -80,6 +80,9 @@ Where a ticket stands: Open, In Progress, Pending, Resolved, Closed or Cancelled
 A ticket that is Open, In Progress or Pending: work is still owed.
 _Avoid_: open ticket (Open is one status, not the group)
 
+**Pending**:
+The status for a ticket that waits on the client or on something outside the team's control. Its SLA clock does not count: the row badge reads "Awaiting client", and the SLA Breached tab, the Needs Attention count and the SLA reminders leave it out.
+
 **Completed ticket**:
 A ticket that is Resolved or Closed.
 _Avoid_: closed ticket (Closed is one status, not the group), done

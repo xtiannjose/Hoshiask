@@ -52,7 +52,10 @@ export const registerModalKit = () => {
             clearCloseTimer();
             modal.classList.remove('is-closing');
             if (!modal.open) modal.showModal();
-            requestAnimationFrame(() => modal.classList.add('is-open'));
+            requestAnimationFrame(() => {
+                // Closed again before the first frame: let the fade-out finish instead of showing it open.
+                if (modal.open && !modal.classList.contains('is-closing')) modal.classList.add('is-open');
+            });
 
             if (typeof options.onOpen === 'function') options.onOpen();
         };
@@ -66,6 +69,10 @@ export const registerModalKit = () => {
 
         // Runs for every way the dialog closes: close(), or the browser closing it itself.
         const closedHandler = () => {
+            // The close event is delivered as a queued task. When the dialog was opened again before it arrived, it
+            // belongs to the earlier close: handling it would cancel the new close timer and strip the new classes.
+            if (modal.open) return;
+
             clearCloseTimer();
             modal.classList.remove('is-open', 'is-closing');
 

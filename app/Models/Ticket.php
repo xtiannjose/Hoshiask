@@ -772,15 +772,6 @@ class Ticket extends Model
         return $this->sla()->hasBreachedResolutionTarget($asOf);
     }
 
-    /**
-     * Minutes to resolution/closure, or null while the ticket is still open. Shared by the live SLA badge and the
-     * batch SLA reports, so both agree on what "resolved" means.
-     */
-    public function slaResolutionMinutes(): ?int
-    {
-        return $this->sla()->resolutionMinutes();
-    }
-
     public static function resolutionTargetMinutes(): int
     {
         return SlaSettings::resolutionTargetMinutes();

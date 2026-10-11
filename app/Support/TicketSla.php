@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
  * The SLA state of one ticket: how long it took or has taken, whether it breached the resolution target or is
  * close to it, and the badge text and colour the lists show. It only reads the ticket's dates and status, so it
  * can be tested with an unsaved ticket. "Done" means the first of resolved, closed or cancelled that is set, and
- * the reports use the same rule through slaResolutionMinutes().
+ * the reports use the same rule through minutesToCompletion().
  */
 final class TicketSla
 {
@@ -43,13 +43,29 @@ final class TicketSla
     /** Minutes to resolution, closure or cancellation, or null while the ticket is still open. */
     public function resolutionMinutes(): ?int
     {
-        $completedAt = $this->completedAt();
-        $createdAt = $this->ticket->created_at;
-        if (! $completedAt || ! $createdAt instanceof Carbon) {
+        $stamp = static fn (mixed $date): ?int => $date instanceof Carbon ? $date->getTimestamp() : null;
+
+        return self::minutesToCompletion(
+            $stamp($this->ticket->created_at),
+            $stamp($this->ticket->resolved_at),
+            $stamp($this->ticket->closed_at),
+            $stamp($this->ticket->cancelled_at),
+        );
+    }
+
+    /**
+     * The rule behind resolutionMinutes() on plain unix timestamps: "done" is the first of resolved, closed and
+     * cancelled that is set. A report over thousands of tickets reads raw rows and calls this, instead of building
+     * a model and two Carbon dates for each, so both read "done" the same way.
+     */
+    public static function minutesToCompletion(?int $createdAt, ?int $resolvedAt, ?int $closedAt, ?int $cancelledAt = null): ?int
+    {
+        $completedAt = $resolvedAt ?? $closedAt ?? $cancelledAt;
+        if ($createdAt === null || $completedAt === null) {
             return null;
         }
 
-        return max(0, (int) $createdAt->diffInMinutes($completedAt));
+        return max(0, intdiv($completedAt - $createdAt, 60));
     }
 
     public function hasBreachedResolutionTarget(?CarbonInterface $asOf = null): bool

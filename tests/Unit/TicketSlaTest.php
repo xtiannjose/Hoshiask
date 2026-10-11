@@ -91,4 +91,27 @@ class TicketSlaTest extends TestCase
         $this->assertNull($sla->badgeLabel());
         $this->assertFalse($sla->hasBreachedResolutionTarget());
     }
+
+    public function test_the_timestamp_rule_gives_the_same_minutes_as_the_ticket_for_every_combination_of_dates(): void
+    {
+        $created = now()->subHours(30);
+        $cases = [
+            'resolved only' => ['resolved_at' => $created->copy()->addMinutes(95)],
+            'closed only' => ['closed_at' => $created->copy()->addMinutes(95)],
+            'cancelled only' => ['cancelled_at' => $created->copy()->addMinutes(95)],
+            'resolved and closed' => ['resolved_at' => $created->copy()->addMinutes(95), 'closed_at' => $created->copy()->addHours(20)],
+            'closed and cancelled' => ['closed_at' => $created->copy()->addMinutes(95), 'cancelled_at' => $created->copy()->addHours(20)],
+            'a whole minute and 59 seconds' => ['resolved_at' => $created->copy()->addSeconds(119)],
+            'before it was logged' => ['resolved_at' => $created->copy()->subMinutes(10)],
+            'nothing yet' => [],
+        ];
+
+        foreach ($cases as $name => $dates) {
+            $fromTicket = $this->sla(['status' => 'closed', 'created_at' => $created, ...$dates])->resolutionMinutes();
+            $stamp = static fn (string $column): ?int => isset($dates[$column]) ? $dates[$column]->getTimestamp() : null;
+            $fromStamps = TicketSla::minutesToCompletion($created->getTimestamp(), $stamp('resolved_at'), $stamp('closed_at'), $stamp('cancelled_at'));
+
+            $this->assertSame($fromTicket, $fromStamps, $name);
+        }
+    }
 }

@@ -16,6 +16,9 @@ class HelpdeskOperationsStatusService
     /** Three missed runs of the five-minute command. */
     private const SCHEDULER_STALE_AFTER_MINUTES = 15;
 
+    /** A queued job that has waited this long means the worker is not taking jobs. */
+    private const QUEUE_STUCK_AFTER_MINUTES = 15;
+
     public function buildStatus(bool $includeProcessCheck = true): array
     {
         $warnings = [];
@@ -50,14 +53,6 @@ class HelpdeskOperationsStatusService
             );
         }
 
-        if (is_int($pendingJobs) && $pendingJobs > 0) {
-            $warnings[] = sprintf('There are %d pending jobs in the queue.', $pendingJobs);
-        }
-
-        if (is_int($failedJobs) && $failedJobs > 0) {
-            $warnings[] = sprintf('There are %d failed jobs that need attention.', $failedJobs);
-        }
-
         if ($environment === 'production') {
             if ((bool) config('app.debug')) {
                 $warnings[] = 'APP_DEBUG must be false in production.';
@@ -77,7 +72,7 @@ class HelpdeskOperationsStatusService
             }
         }
 
-        $advisories = $environment === 'production' ? $this->productionAdvisories() : [];
+        $advisories = $environment === 'production' ? $this->productionAdvisories($pendingJobs, $failedJobs) : [];
 
         $status = $databaseReachable && $phpSupported
             ? ($warnings === [] ? 'ok' : 'degraded')
@@ -112,9 +107,26 @@ class HelpdeskOperationsStatusService
      *
      * @return list<string>
      */
-    private function productionAdvisories(): array
+    private function productionAdvisories(?int $pendingJobs, ?int $failedJobs): array
     {
         $advisories = [];
+
+        // Queued mail is produced all day, so a job waiting is normal, and one failed email (a mailbox that bounced)
+        // stays in failed_jobs until someone clears it. Neither may fail a deploy or roll it back.
+        if (is_int($failedJobs) && $failedJobs > 0) {
+            $advisories[] = sprintf(
+                '%d queued %s failed (an email or alert that could not be sent). Look at %s with `php artisan queue:failed`; `php artisan queue:retry all` tries again, `php artisan queue:flush` forgets %s.',
+                $failedJobs,
+                $failedJobs === 1 ? 'job' : 'jobs',
+                $failedJobs === 1 ? 'it' : 'them',
+                $failedJobs === 1 ? 'it' : 'them'
+            );
+        }
+
+        $waitedMinutes = is_int($pendingJobs) && $pendingJobs > 0 ? $this->oldestQueuedJobWaitMinutes() : null;
+        if ($waitedMinutes !== null && $waitedMinutes >= self::QUEUE_STUCK_AFTER_MINUTES) {
+            $advisories[] = sprintf('The oldest of %d queued jobs has waited %d minutes: the queue worker may have stopped. Emails and alerts wait behind it.', $pendingJobs, $waitedMinutes);
+        }
 
         $mailer = (string) config('mail.default', 'log');
         if (in_array($mailer, ['log', 'array'], true)) {
@@ -197,6 +209,20 @@ class HelpdeskOperationsStatusService
         }
 
         return DB::table($table)->count();
+    }
+
+    /**
+     * Minutes the longest-waiting job in the database queue has been ready to run, or null when there is no such queue.
+     */
+    private function oldestQueuedJobWaitMinutes(): ?int
+    {
+        if (! Schema::hasTable('jobs')) {
+            return null;
+        }
+
+        $availableAt = DB::table('jobs')->whereNull('reserved_at')->min('available_at');
+
+        return is_numeric($availableAt) ? max(0, intdiv(now()->timestamp - (int) $availableAt, 60)) : null;
     }
 
     private function queueWorkerRunningStatus(string $queueConnection, bool $includeProcessCheck): ?bool

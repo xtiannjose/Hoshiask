@@ -6,6 +6,10 @@
 
 <!-- Tests run and their results, counts, screenshots of UI changes. For a bug: the test that fails without the fix. -->
 
+## Merge Danger
+
+<!-- Door: two-way (cheap to roll back) or one-way (data destroyed, a migration that cannot be undone, an email that cannot be recalled). Blast Radius: what could break and for whom (a screen, a report number, an email, a setting). -->
+
 ## Checklist
 
 - [ ] `composer qa` and `npm run qa` pass (add `npm run qa:full` for UI changes)

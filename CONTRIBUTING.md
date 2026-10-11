@@ -17,7 +17,7 @@ How a change gets into `main`. To find your way around the code, read [docs/stru
 **Commits and pull requests**
 
 - Write the commit message and the pull request title as a plain sentence about behaviour: "Do not create two tickets when the same form is sent twice". No `fix:` or `feat:` prefixes.
-- The pull request body has two parts: **Summary** (how it was before, how it is now) and **Evidence** (the tests you ran, with counts or measurements).
+- The pull request body has three parts: **Summary** (how it was before, how it is now), **Evidence** (the tests you ran, with counts or measurements) and **Merge Danger** (whether it can be walked back, a one-way or two-way door, and the blast radius: what could break for people).
 - Never commit `.env`, backups, exported files or attachments.
 - Files use LF line endings (`.gitattributes`). A file saved with CRLF fails `vendor/bin/pint --test`.
 

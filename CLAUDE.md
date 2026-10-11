@@ -46,7 +46,7 @@ PHPUnit runs on in-memory SQLite; CI also runs the suite on PostgreSQL 16, so ev
 - Name things with the terms in `GLOSSARY.md` (code, UI text, docs, PRs). Before changing how field office, retention clean-up or backups work, read the matching record in `docs/adr/`.
 - Risky features ship switched off behind a config flag, with a `--dry-run` where it applies and an ops-status advisory (see retention clean-up, upload scanning).
 - Commit messages and PR titles are plain-English sentences about behaviour ("Do not create two tickets when the same form is sent twice"), without Conventional Commit prefixes.
-- Branches: `feature/...`, `fix/...`, `docs/...`. PR body: `## Summary` (before / now) and `## Evidence` (tests run, counts, measurements).
+- Branches: `feature/...`, `fix/...`, `docs/...`. PR body: `## Summary` (before / now), `## Evidence` (tests run, counts, measurements) and `## Merge Danger` (one-way or two-way door, and the blast radius).
 - A change in behaviour updates the matching document in the same pull request. After editing `docs/ticket-system-workflow.md` (the staff/client guide), regenerate its PDF with `php artisan helpdesk:build-workflow-pdf`.
 - Files use LF line endings (`.gitattributes`). Write them with the Edit or Write tool: a Windows text-mode script writes CRLF, and `vendor/bin/pint --test` then fails.
 
@@ -71,3 +71,7 @@ The five default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready
 ### Domain docs
 
 Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+### Tooling
+
+The plugins (`caveman`, `ponytail`, `watch`, `claude-code-setup`), the skills, the `motion` and Claude Docs servers, the two project hooks and the command-line tools, with how to install them and the Windows and hook quirks: `docs/agents/tooling.md`. Keep it current when one is added or removed.

@@ -84,7 +84,8 @@ test('a client files a ticket with a file, replies, resolves it with a rating an
     await expect(page.locator('#open-reopen-ticket-modal')).toBeVisible();
     await expect(page.locator('#open-resolve-ticket-modal')).toHaveCount(0);
 
-    // Reopen needs a reason.
+    // Reopen needs a reason. The page was just reloaded; its button is there before its script has attached the handler.
+    await waitForPageScripts(page);
     await page.locator('#open-reopen-ticket-modal').click();
     const reopenDialog = page.locator('dialog#reopen-ticket-modal');
     await expect(reopenDialog).toBeVisible();

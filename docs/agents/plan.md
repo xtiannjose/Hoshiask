@@ -123,7 +123,7 @@ Each of these was left alone on purpose. The plan and the best fix for each were
 | **Public holidays** are not skipped by the business-hours clock | A list of closed dates in config (`HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES`, comma-separated `YYYY-MM-DD`); `BusinessHours` treats them as non-working days | A small calendar lookup in `BusinessHours`; the maintainer keeps the list yearly |
 | **Ticket page shows real time**, the list badge shows working time | Show working time next to the real time ("2d 1h, 3h working") only when the setting is on | Both sidebar partials and one test |
 | **Rotating assignment ignores leave and workload** | A per-technician "available for assignment" switch the rotation skips, set by staff leads; leave workload balancing out | One column, one checkbox, one condition in the rotation |
-| **The status check cannot see a Redis queue** | When `QUEUE_CONNECTION=redis`, count waiting jobs with `Queue::size()` and say so; the "stuck for 15 minutes" advisory stays database-only | Only needed if Redis is adopted |
+| **The status check cannot see a Redis queue** | A worker heartbeat: a `JobProcessed` listener stamps the time of the last finished job in the cache; "jobs are waiting and none finished for 15 minutes" then works for every queue driver (waiting count from `Queue::size()`) | A listener, one change in the status service and a test; only needed when Redis is adopted |
 | **Not worth doing without a reason:** export paging by id, chunking auto-close, 24 unused dark-theme colour rules | Leave them | None |
 
 ## Docs rewrite (2026-10-10)

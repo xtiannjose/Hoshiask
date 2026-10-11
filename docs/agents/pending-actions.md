@@ -4,6 +4,8 @@ Things only the maintainer can do (they need the live server or the GitHub merge
 
 Status on 2026-10-10: **none of this is done yet.** The maintainer could not do it that day.
 
+**Update 2026-10-11: there is no live server for now.** Sections 1 to 4 all need one, so they are **deferred**, not forgotten: nobody is expected to do them until a server exists, and status reports and decision lists leave them out. The steps stay here so they are ready when a server does exist. Section 5 is optional.
+
 ## 1. Change the shadow account password (most urgent)
 
 Why: the shadow account's old password is in four old commits of the repository history (the password text is deliberately not written anywhere in the project). It is no longer in any current file, and the repository is private, but anyone who can clone it can read the history. Issue #219.

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
@@ -11,8 +10,6 @@ use Illuminate\Support\Facades\Storage;
  */
 class Attachment extends Model
 {
-    use HasFactory;
-
     public const PREVIEWABLE_MIME_TYPES = [
         'application/pdf',
         'image/bmp',

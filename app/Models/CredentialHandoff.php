@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CredentialHandoff extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'target_user_id',
         'issued_by_user_id',

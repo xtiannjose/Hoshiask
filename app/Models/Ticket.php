@@ -10,7 +10,6 @@ use App\Support\TicketSla;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -59,8 +58,6 @@ use Illuminate\Support\Str;
  */
 class Ticket extends Model
 {
-    use HasFactory;
-
     public const PRIORITIES = [
         TicketPriority::Severity1->value,
         TicketPriority::Severity2->value,

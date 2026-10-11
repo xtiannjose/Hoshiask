@@ -1,5 +1,6 @@
 import { bootPage } from './shared/boot-page';
 import { announcePopupOpened, onPopupOpened } from '../lib/exclusive-popups';
+import { escapeHtml } from '../lib/html-utils';
 import { createReplyComposer } from './shared/reply-composer';
 import { createTicketSeenSync } from './shared/ticket-seen-sync';
 import {
@@ -94,7 +95,7 @@ const initAdminTicketShowPage = () => {
         const visible = term
             ? cannedResponses.filter((r) => r.title.toLowerCase().includes(term) || r.body.toLowerCase().includes(term))
             : cannedResponses;
-        cannedList.innerHTML = visible.map((r) => `<li><button type="button" class="js-canned-item block w-full px-4 py-3 text-left hover:bg-slate-50 focus:bg-slate-50 focus:outline-none" data-body="${r.body.replace(/"/g, '&quot;')}"><span class="block text-xs font-semibold text-slate-800">${r.title.replace(/</g, '&lt;')}</span><span class="mt-0.5 block truncate text-xs text-slate-500">${r.body.replace(/</g, '&lt;').slice(0, 80)}…</span></button></li>`).join('');
+        cannedList.innerHTML = visible.map((r) => `<li><button type="button" class="js-canned-item block w-full px-4 py-3 text-left hover:bg-slate-50 focus:bg-slate-50 focus:outline-none" data-body="${escapeHtml(r.body)}"><span class="block text-xs font-semibold text-slate-800">${escapeHtml(r.title)}</span><span class="mt-0.5 block truncate text-xs text-slate-500">${escapeHtml(r.body.slice(0, 80))}…</span></button></li>`).join('');
         cannedList.classList.toggle('hidden', visible.length === 0);
         cannedEmpty.classList.toggle('hidden', visible.length > 0);
     };

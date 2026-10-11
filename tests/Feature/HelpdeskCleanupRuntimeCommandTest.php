@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -219,5 +220,22 @@ class HelpdeskCleanupRuntimeCommandTest extends TestCase
         $this->assertTrue(Storage::disk('cleanup-seeded-credentials')->exists('seeded-client-credentials/recent-export.csv'));
         $this->assertFalse(Storage::disk('cleanup-imports')->exists('imports/old-import.csv'));
         $this->assertTrue(Storage::disk('cleanup-imports')->exists('imports/recent-import.csv'));
+    }
+
+    public function test_cleanup_runtime_removes_expired_database_cache_rows_and_keeps_live_ones(): void
+    {
+        // Rows for keys that are never read again (a search, a filter combination) are not removed by the cache itself.
+        config()->set('cache.default', 'database');
+        DB::table('cache')->insert([
+            ['key' => 'helpdesk-cache-expired', 'value' => 's:1:"x";', 'expiration' => now()->subMinute()->getTimestamp()],
+            ['key' => 'helpdesk-cache-live', 'value' => 's:1:"x";', 'expiration' => now()->addHour()->getTimestamp()],
+        ]);
+
+        $this->artisan('helpdesk:cleanup-runtime')
+            ->expectsOutputToContain('Expired cache entries pruned: 1')
+            ->assertSuccessful();
+
+        $this->assertDatabaseMissing('cache', ['key' => 'helpdesk-cache-expired']);
+        $this->assertDatabaseHas('cache', ['key' => 'helpdesk-cache-live']);
     }
 }

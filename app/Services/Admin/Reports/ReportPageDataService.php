@@ -35,12 +35,16 @@ class ReportPageDataService
     {
         $scope = $user->isTechnician() ? 'technician:'.$user->id : 'shared';
 
+        // The three values come straight from the address bar. Hashed, a long or odd value cannot overflow the
+        // cache table's 255-character key column.
         return implode(':', [
             'reports.index',
             $scope,
-            (string) $request->query('month'),
-            (string) $request->query('daily_month'),
-            (string) $request->query('daily_date'),
+            sha1(implode('|', [
+                (string) $request->query('month'),
+                (string) $request->query('daily_month'),
+                (string) $request->query('daily_date'),
+            ])),
         ]);
     }
 

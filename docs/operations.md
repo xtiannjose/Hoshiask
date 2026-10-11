@@ -75,7 +75,7 @@ Development: `php artisan schedule:work`.
 |---|---|---|
 | Every 5 minutes | `tickets:send-alert-emails` | Reminders to staff, merged reply emails to clients, and a heartbeat for the status check. |
 | Daily 02:40 | `helpdesk:backup` | The encrypted backup of the database and every uploaded file. |
-| Daily 03:10 | `helpdesk:cleanup-runtime` | Removes old backups, exports, import files, System Logs entries and used-up password handoffs. |
+| Daily 03:10 | `helpdesk:cleanup-runtime` | Removes old backups, exports, import files, System Logs entries, used-up password handoffs and expired rows of the database cache. |
 | Daily 03:40 | `tickets:auto-close-resolved` | Warns clients, then closes tickets that stayed Resolved for 7 days. |
 | Daily 03:55 | `helpdesk:enforce-retention` | Removes personal details from old tickets. Does nothing until you switch it on. |
 | Sunday 04:20 | `helpdesk:backup-verify` | Checks the newest backup again. |

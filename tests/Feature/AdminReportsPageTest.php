@@ -8,6 +8,7 @@ use App\Models\TicketUserState;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 use Tests\Traits\CreatesTestData;
 
@@ -1205,5 +1206,19 @@ class AdminReportsPageTest extends TestCase
 
             return (int) data_get($buckets, 'Under 1 Hour.count', 0) === 1;
         });
+    }
+
+    public function test_a_very_long_month_value_does_not_make_a_cache_key_longer_than_the_cache_table_allows(): void
+    {
+        config(['legal.require_acceptance' => false, 'cache.default' => 'database']);
+        $superUser = $this->createUser('Long Month Super', 'long-month-super@example.com', User::ROLE_SUPER_USER);
+
+        $this->actingAs($superUser)
+            ->get(route('admin.reports.index', ['month' => str_repeat('9', 400), 'daily_date' => str_repeat('x', 400)]))
+            ->assertOk();
+
+        // The cache table's key column holds 255 characters; PostgreSQL refuses a longer key with an error.
+        $longestKey = collect(DB::table('cache')->pluck('key'))->map(fn (string $key): int => strlen($key))->max();
+        $this->assertLessThanOrEqual(255, $longestKey);
     }
 }

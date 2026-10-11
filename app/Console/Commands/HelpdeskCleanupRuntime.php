@@ -7,6 +7,7 @@ use App\Models\CredentialHandoff;
 use App\Models\SystemLog;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Finder\SplFileInfo;
@@ -27,6 +28,7 @@ class HelpdeskCleanupRuntime extends Command
         $deletedRuntimeDirectories = 0;
         $prunedHandoffs = $this->pruneStaleCredentialHandoffs();
         $prunedSystemLogs = $this->pruneOldSystemLogs();
+        $prunedCacheEntries = $this->pruneExpiredCacheEntries();
         $deletedOrphanAttachments = $this->deleteZeroByteOrphanAttachments();
         $deletedBackupExports = $this->pruneStorageFilesOlderThan(
             (string) config('helpdesk.backup.disk', config('filesystems.default', 'local')),
@@ -62,6 +64,7 @@ class HelpdeskCleanupRuntime extends Command
         $this->line('Runtime directories deleted: '.$deletedRuntimeDirectories);
         $this->line('Stale credential handoffs pruned: '.$prunedHandoffs);
         $this->line('Old system logs pruned: '.$prunedSystemLogs);
+        $this->line('Expired cache entries pruned: '.$prunedCacheEntries);
         $this->line('Zero-byte orphan attachments deleted: '.$deletedOrphanAttachments);
         $this->line('Old backup exports deleted: '.$deletedBackupExports);
         $this->line('Old seeded credential exports deleted: '.$deletedSeededCredentialExports);
@@ -129,6 +132,23 @@ class HelpdeskCleanupRuntime extends Command
 
         return SystemLog::query()
             ->where('occurred_at', '<', now()->subDays($retentionDays))
+            ->delete();
+    }
+
+    /**
+     * The database cache removes an expired entry only when that exact key is read again. Keys built from a search
+     * or a filter combination are rarely read twice, so their expired rows would stay forever.
+     */
+    private function pruneExpiredCacheEntries(): int
+    {
+        $store = (string) config('cache.default');
+        if (config("cache.stores.{$store}.driver") !== 'database') {
+            return 0;
+        }
+
+        return DB::connection(config("cache.stores.{$store}.connection"))
+            ->table((string) config("cache.stores.{$store}.table", 'cache'))
+            ->where('expiration', '<=', now()->getTimestamp())
             ->delete();
     }
 

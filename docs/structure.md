@@ -106,7 +106,7 @@ Defined in `routes/console.php`. Each one is protected against running twice at 
 |---|---|---|
 | Every 5 minutes | `tickets:send-alert-emails` | Reminder emails, the merged reply emails to clients, and the heartbeat the status check looks for. |
 | Daily 02:40 | `helpdesk:backup` | The encrypted backup. |
-| Daily 03:10 | `helpdesk:cleanup-runtime` | Removes old backups, exports and import files, old System Logs entries and used-up password handoffs. |
+| Daily 03:10 | `helpdesk:cleanup-runtime` | Removes old backups, exports and import files, old System Logs entries, used-up password handoffs and expired rows of the database cache. |
 | Daily 03:40 | `tickets:auto-close-resolved` | Warns clients, then closes tickets that stayed Resolved for 7 days. |
 | Daily 03:55 | `helpdesk:enforce-retention` | Removes personal details from old tickets (only when switched on). |
 | Sunday 04:20 | `helpdesk:backup-verify` | Checks the newest backup again. |

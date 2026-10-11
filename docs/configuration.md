@@ -125,6 +125,11 @@ These are used by `php artisan db:seed` and by account management. The seeder re
 | Setting | Example | What it does |
 |---|---|---|
 | `HELPDESK_REPLY_EDIT_WINDOW_MINUTES` | `180` | How long a client can edit or delete their own message. |
+| `HELPDESK_SLA_BUSINESS_HOURS_ENABLED` | `false` | `true` makes every SLA minute count only inside the working days and hours below, in the application time zone (`APP_TIMEZONE`). A ticket logged on Friday evening then starts its target on Monday morning, and no SLA reminder goes out overnight or at the weekend. The Needs Attention tab then counts 16 working hours. Off by default: SLA minutes run around the clock. |
+| `HELPDESK_SLA_BUSINESS_HOURS_DAYS` | `1,2,3,4,5` | Working days as ISO weekdays: 1 = Monday to 7 = Sunday. |
+| `HELPDESK_SLA_BUSINESS_HOURS_START` | `08:00` | Opening time (`HH:MM`). |
+| `HELPDESK_SLA_BUSINESS_HOURS_END` | `17:00` | Closing time (`HH:MM`), after the opening time. If the days or times cannot be read the setting is ignored and `helpdesk:ops-status` says so. |
+| `HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES` | the 2026 nationwide holidays in `.env.example`; empty in the code | Public holidays or other closed days, comma-separated `YYYY-MM-DD`. They count like a weekend. `.env.example` carries the 18 regular and special non-working holidays of 2026 from [the Official Gazette](https://www.officialgazette.gov.ph/nationwide-holidays/2026/); Eid'l Fitr and Eid'l Adha are proclaimed later and are not in it. Replace the list each year and add a holiday when it is proclaimed. An entry that is not a date is ignored and `helpdesk:ops-status` names it. |
 | `HELPDESK_SLA_RESOLUTION_TARGET_MINUTES` | `240` | The time a ticket should take. The SLA Breached tab and the reminders measure against it. |
 | `HELPDESK_SLA_ASSIGNMENT_REMINDER_MINUTES` | `210` | The assigned technicians are reminded this long after a ticket was assigned to them, if it is still active. |
 | `HELPDESK_SLA_SUPER_USER_NEW_TICKET_NOTIFY` | `true` | Email super users, admins and the shadow account when a new ticket arrives. |
@@ -133,6 +138,8 @@ These are used by `php artisan db:seed` and by account management. The seeder re
 | `HELPDESK_SLA_RESOLUTION_UNDER_ONE_HOUR_MINUTES` | `60` | The first band limit of the Resolution Time chart on the Reports page. |
 | `HELPDESK_SLA_RESOLUTION_UNDER_FOUR_HOURS_MINUTES` | `240` | The second band limit of that chart. |
 | `HELPDESK_SLA_RESOLUTION_UNDER_TWENTY_FOUR_HOURS_MINUTES` | `1440` | The third band limit of that chart. |
+| `HELPDESK_PENDING_FOLLOW_UP_DAYS` | `3` | A Pending ticket with no status change and no reply for this many days is listed in one reminder email to its assignees (the super users when nobody is assigned), and again after the same number of days while it stays quiet. `0` switches the reminder off. The client is not emailed. |
+| `HELPDESK_PENDING_AUTO_CANCEL_DAYS` | `14` | A Pending ticket with no status change and no reply for this many days is cancelled by the daily `tickets:auto-cancel-pending`, with the reason written in its notes. `0` switches it off. The client is not emailed. Keep it above `HELPDESK_PENDING_FOLLOW_UP_DAYS`, or staff are not reminded first (`helpdesk:ops-status` says so). |
 | `HELPDESK_ASSIGNMENT_ROTATION_WINDOW_DAYS` | `30` | The "rotating counter" assignment compares each technician's share of a category over this many days. |
 | `HELPDESK_CANNED_REPLIES_ENABLED` | `true` | `false` hides canned responses everywhere without touching the database. |
 
@@ -202,8 +209,8 @@ These fill the Terms, Privacy Notice and Ticket Consent pages. When you change a
 | Setting | Example | What it does |
 |---|---|---|
 | `LEGAL_REQUIRE_ACCEPTANCE` | `true` | `false` turns the acceptance screen off. Do not do this in production. |
-| `LEGAL_TERMS_VERSION`, `LEGAL_PRIVACY_VERSION`, `LEGAL_PLATFORM_CONSENT_VERSION`, `LEGAL_TICKET_CONSENT_VERSION` | `2026-02-25` | The version of each text. |
-| `LEGAL_EFFECTIVE_DATE` | `"February 25, 2026"` | The date shown on the texts. |
+| `LEGAL_TERMS_VERSION`, `LEGAL_PRIVACY_VERSION`, `LEGAL_PLATFORM_CONSENT_VERSION`, `LEGAL_TICKET_CONSENT_VERSION` | `2026-02-25` (privacy notice: `2026-10-11`) | The version of each text. The privacy notice moved to `2026-10-11` when it gained the backup and log retention periods and the National Privacy Commission complaint route. |
+| `LEGAL_EFFECTIVE_DATE` | `"October 11, 2026"` | The date shown on the texts. |
 | `LEGAL_ORGANIZATION_NAME` | `"Hoshishi Corporation"` | The organisation in the texts. |
 | `LEGAL_GOVERNING_LAW` | `"Republic of the Philippines"` | The law the terms refer to. |
 | `LEGAL_DPO_EMAIL`, `LEGAL_SUPPORT_EMAIL` | placeholders | The contacts printed in the texts. Change them. |

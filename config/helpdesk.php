@@ -68,10 +68,29 @@ return [
     'assignment' => [
         'rotation_window_days' => max(1, (int) env('HELPDESK_ASSIGNMENT_ROTATION_WINDOW_DAYS', 30)),
     ],
+    // A Pending ticket with no activity (status change or reply) for this many days is listed in one reminder email to
+    // its assignees, or to the super users when nobody is assigned, and again every this many days while it stays
+    // quiet. 0 switches the reminder off. The client is not emailed and the ticket is not closed.
+    'pending_follow_up_days' => max(0, (int) env('HELPDESK_PENDING_FOLLOW_UP_DAYS', 3)),
+    // A Pending ticket with no activity for this many days is cancelled by the daily `tickets:auto-cancel-pending`,
+    // with the reason written in its notes. 0 switches it off. The client is not emailed about the cancel.
+    'pending_auto_cancel_days' => max(0, (int) env('HELPDESK_PENDING_AUTO_CANCEL_DAYS', 14)),
     // Who people should contact when they forget their password (there is no self-service reset).
     // An email address, phone number or name; shown on the sign-in page and in the lockout message.
     'password_help_contact' => env('HELPDESK_PASSWORD_HELP_CONTACT'),
     'sla' => [
+        // Off: SLA minutes run around the clock. On: only the working days and hours below count, in the application
+        // time zone, so a ticket logged on Friday evening starts its target on Monday morning. Applies to the SLA
+        // Breached tab, the Needs Attention tab (16 working hours), the SLA badge, the SLA reminders and the
+        // Resolution Time report. Days are ISO weekdays, 1 = Monday to 7 = Sunday. closed_dates are public holidays
+        // or other closed days, comma-separated YYYY-MM-DD, that count like a weekend.
+        'business_hours' => [
+            'enabled' => (bool) env('HELPDESK_SLA_BUSINESS_HOURS_ENABLED', false),
+            'days' => env('HELPDESK_SLA_BUSINESS_HOURS_DAYS', '1,2,3,4,5'),
+            'start' => env('HELPDESK_SLA_BUSINESS_HOURS_START', '08:00'),
+            'end' => env('HELPDESK_SLA_BUSINESS_HOURS_END', '17:00'),
+            'closed_dates' => env('HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES', ''),
+        ],
         'resolution_target_minutes' => (int) env('HELPDESK_SLA_RESOLUTION_TARGET_MINUTES', 240),
         'assignment_reminder_minutes' => (int) env('HELPDESK_SLA_ASSIGNMENT_REMINDER_MINUTES', 210),
         'super_user_new_ticket_notify' => (bool) env('HELPDESK_SLA_SUPER_USER_NEW_TICKET_NOTIFY', true),

@@ -29,7 +29,7 @@ npm run qa:full           # the same plus the browser tests (read "Running the b
 
 - **Feature tests** (`tests/Feature`) go through the whole app: an HTTP request, a command, the database. **Unit tests** (`tests/Unit`) check one class.
 - Use the helpers in `tests/Traits/CreatesTestData`: `createClient`, `createSupportUser`, `createAssignedSupportUser` (a technician), `createUser` for any role, `createCategory` and `createTicket`.
-- `tests/TestCase.php` already fakes the attachments disk and switches Vite off. `phpunit.xml` sets in-memory SQLite, an array cache, a synchronous queue and a mail array.
+- `tests/TestCase.php` already fakes the attachments disk, switches Vite off and seeds the starter departments and categories (`StarterDataSeeder`) the way a new installation gets them, since migrations hold no data. `phpunit.xml` sets in-memory SQLite, an array cache, a synchronous queue and a mail array.
 - `tests/Support/TestDatabaseGuard` refuses to run the suite on a real database: it only accepts SQLite in memory, or a database whose name ends in `_test`. This is because `RefreshDatabase` wipes the database.
 - Guard tests such as `UiConsistencyGuardTest` and `QaAccessibilityMarkupTest` read the source text of Blade and JavaScript files. If you rename a shared partial or class, update them on purpose.
 - A bug fix comes with a test that fails without the fix. To check, stash only the fix and run the test.

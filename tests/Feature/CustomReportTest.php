@@ -115,6 +115,33 @@ class CustomReportTest extends TestCase
         $this->assertStringContainsString('text/csv', (string) $response->headers->get('content-type'));
     }
 
+    public function test_the_detailed_csv_lists_every_ticket_in_id_order_across_more_than_one_page(): void
+    {
+        $admin = $this->createUser('Admin User', 'admin-custom-report-pages@example.com', User::ROLE_ADMIN);
+        $client = $this->createClient();
+        $category = $this->createCategory();
+
+        $expected = [];
+        for ($i = 0; $i < 205; $i++) {
+            $expected[] = $this->createTicket($client, $category, ['subject' => 'Page test '.$i])->ticket_number;
+        }
+
+        $csv = $this->actingAs($admin)
+            ->get(route('admin.reports.custom.csv', ['layout' => 'detailed']))
+            ->assertOk()
+            ->streamedContent();
+
+        $numbers = [];
+        foreach (preg_split('/\R/', trim($csv)) ?: [] as $line) {
+            $row = str_getcsv($line);
+            if (str_starts_with((string) ($row[1] ?? ''), 'Page test ')) {
+                $numbers[] = $row[0];
+            }
+        }
+
+        $this->assertSame($expected, $numbers);
+    }
+
     public function test_custom_report_csv_escapes_spreadsheet_formula_values(): void
     {
         $admin = $this->createUser('Admin User', 'admin-custom-report-formula@example.com', User::ROLE_ADMIN);

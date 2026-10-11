@@ -155,14 +155,14 @@
                         <label for="attachments" class="form-label">Attachments <span class="text-slate-500">(Optional)</span></label>
                         <input type="file" name="attachments[]" id="attachments" multiple
                                class="form-input cursor-pointer @error('attachments.*') border-red-500 @enderror"
-                               accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.txt,.xls,.xlsx"
+                               accept=".jpg,.jpeg,.png,.pdf,.docx,.txt,.xlsx"
                                aria-describedby="attachments-help attachments-guard"
                                data-upload-guard="attachments-guard"
                                data-max-files="{{ \App\Support\UploadLimits::MAX_FILES }}"
                                data-max-file-bytes="{{ \App\Support\UploadLimits::perFileBytes() }}"
                                data-max-request-bytes="{{ \App\Support\UploadLimits::perRequestBytes() }}">
                         <p id="attachments-help" class="mt-1 text-sm text-slate-500">
-                            Adding a screenshot helps us solve it faster (max {{ \App\Support\UploadLimits::perFileLabel() }} each and {{ \App\Support\UploadLimits::MAX_FILES }} files; JPG, PNG, PDF, DOC, DOCX, XLS, XLSX or TXT).
+                            Adding a screenshot helps us solve it faster (max {{ \App\Support\UploadLimits::perFileLabel() }} each and {{ \App\Support\UploadLimits::MAX_FILES }} files; JPG, PNG, PDF, DOCX, XLSX or TXT).
                         </p>
                         <p id="attachments-guard" class="mt-1 hidden text-sm font-medium text-red-600" role="alert"></p>
                         @error('attachments')

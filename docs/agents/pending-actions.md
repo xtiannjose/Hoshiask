@@ -4,6 +4,8 @@ Things only the maintainer can do (they need the live server or the GitHub merge
 
 Status on 2026-10-10: **none of this is done yet.** The maintainer could not do it that day.
 
+**Update 2026-10-11: there is no live server for now.** Sections 1 to 4 all need one, so they are **deferred**, not forgotten: nobody is expected to do them until a server exists, and status reports and decision lists leave them out. The steps stay here so they are ready when a server does exist. Section 5 is optional.
+
 ## 1. Change the shadow account password (most urgent)
 
 Why: the shadow account's old password is in four old commits of the repository history (the password text is deliberately not written anywhere in the project). It is no longer in any current file, and the repository is private, but anyone who can clone it can read the history. Issue #219.
@@ -41,7 +43,8 @@ Steps (Ubuntu or Debian):
    - Add `HELPDESK_CLAMAV_SOCKET=/var/run/clamav/clamd.ctl`.
 8. Reload the settings: `php artisan optimize:clear && php artisan optimize && php artisan queue:restart`.
 9. Test: `php artisan helpdesk:upload-scan-check`. It must end with "Virus scanning works."
-10. Final check: `php artisan helpdesk:ops-status` shows no scanning warning.
+10. Add `HELPDESK_UPLOAD_SCAN_ON_ERROR=block` to `.env` so that a scanner that is down refuses uploads instead of letting them through, then `php artisan optimize`.
+11. Final check: `php artisan helpdesk:ops-status` shows no scanning warning.
 
 If step 9 cannot reach the scanner, wait a few more minutes, or look for the socket with `ls /var/run/clamav/`. Until it works, uploads are still allowed. The longer reference is in [docs/security.md](../security.md).
 
@@ -66,10 +69,19 @@ Deploy as usual ([docs/operations.md](../operations.md)); the deploy runs the mi
 After deploying:
 
 1. Open one PDF attachment on a ticket. The preview must show the file. This was only tested with a text file.
-2. As a client, upload one Word and one Excel file to a ticket. Old `.doc` and `.xls` files could not be tested here, and the type check might refuse some.
+2. As a client, upload one Word (`.docx`) and one Excel (`.xlsx`) file made in Microsoft Office to a ticket. Older `.doc` and `.xls` files are refused on purpose.
 3. Run `php artisan helpdesk:ops-status` and read the advisories.
 
-## 4. Still open, only if wanted
+## 4. After deploying the decisions of 2026-10-11
+
+Branch `fix/after-third-check-decisions` holds the answers to the third deep check ([plan.md](plan.md)). Deploy it like `main`; it adds two migrations (a nullable column on `tickets` and one on `users`).
+
+1. **Privacy notice.** The text changed (backup and log retention, complaints to the National Privacy Commission) and its version moved to `2026-10-11`. On the server `.env`, set `LEGAL_PRIVACY_VERSION=2026-10-11` and `LEGAL_EFFECTIVE_DATE="October 11, 2026"`, then `php artisan config:clear`. Everyone accepts the new notice at their next sign-in. Have the data protection officer read the new paragraphs first.
+2. **Quiet Pending tickets** are handled on their own: a staff reminder after 3 days (`HELPDESK_PENDING_FOLLOW_UP_DAYS`) and an automatic cancel after 14 days (`HELPDESK_PENDING_AUTO_CANCEL_DAYS`); `0` switches either off. Staff, not clients, get the email. The first run cancels every Pending ticket already older than 14 days with no activity: run `php artisan tickets:auto-cancel-pending --dry-run` first to see which.
+3. **Business hours SLA** is off. To switch it on, set `HELPDESK_SLA_BUSINESS_HOURS_ENABLED=true` (and `_DAYS`, `_START`, `_END` if the office hours differ, and `_CLOSED_DATES`, which `.env.example` already fills with the 2026 nationwide holidays; replace it each January), then `php artisan config:clear`. Report numbers for the Resolution Time bands change from that day on ([report-metrics.md](../report-metrics.md)).
+4. **Resilience** ([resilience.md](../resilience.md)): set up the outside monitor on `/health`, fill in the "where it is kept" table with a second person, do one timed restore and write it in the restore log, and confirm or change the two recovery targets.
+
+## 5. Still open, only if wanted
 
 - Issue #233: measured on 2026-10-11 with 60,000 tickets. The all-time report and the ticket search were fixed (see the third deep check in [plan.md](plan.md)); the first auto-close and reminder runs after a long outage are slow but one-off, and PDFs are built while the user waits (the detailed custom report takes about 3 s).
 - Issue #229: what is left of the larger list (MFA and client password changes were decided against; see [docs/security.md](../security.md)).

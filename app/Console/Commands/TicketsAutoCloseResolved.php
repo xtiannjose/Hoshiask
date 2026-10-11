@@ -32,26 +32,31 @@ class TicketsAutoCloseResolved extends Command
 
         $warned = $this->sendWarnings($alerts);
 
-        $tickets = Ticket::query()
+        // 200 at a time, by id: after a long outage the backlog can be thousands of tickets, and closing one takes
+        // it out of this list, which a page-by-id read is not affected by.
+        $closed = 0;
+        Ticket::query()
             ->where('status', 'resolved')
             ->where('resolved_at', '<=', now()->subDays($closeAfterDays))
             ->with('user:id,name,email,role,is_active')
-            ->get()
-            ->filter(fn (Ticket $ticket) => $this->isReadyToClose($ticket, $alerts));
+            ->chunkById(200, function ($tickets) use ($alerts, $closeAfterDays, &$closed): void {
+                foreach ($tickets as $ticket) {
+                    if (! $this->isReadyToClose($ticket, $alerts)) {
+                        continue;
+                    }
 
-        $closed = 0;
-        foreach ($tickets as $ticket) {
-            $request = Request::create('/', 'POST', [
-                'status' => 'closed',
-                'close_reason' => 'Automatically closed after '.$closeAfterDays.' days with no client response following resolution.',
-            ]);
+                    $request = Request::create('/', 'POST', [
+                        'status' => 'closed',
+                        'close_reason' => 'Automatically closed after '.$closeAfterDays.' days with no client response following resolution.',
+                    ]);
 
-            try {
-                $closed += (int) $this->ticketStatusWorkflow->updateTicketStatus($request, $ticket);
-            } catch (ValidationException) {
-                // Reopened (or otherwise changed) since it was selected above: leave it as it now is.
-            }
-        }
+                    try {
+                        $closed += (int) $this->ticketStatusWorkflow->updateTicketStatus($request, $ticket);
+                    } catch (ValidationException) {
+                        // Reopened (or otherwise changed) since it was selected above: leave it as it now is.
+                    }
+                }
+            });
 
         $this->info(sprintf(
             'Auto-closed %d resolved ticket(s) inactive for %d+ days. Warned %d client(s) of an upcoming close.',
@@ -70,29 +75,29 @@ class TicketsAutoCloseResolved extends Command
     {
         $warnAfterDays = Ticket::AUTO_CLOSE_RESOLVED_AFTER_DAYS - Ticket::AUTO_CLOSE_WARNING_DAYS_BEFORE;
 
-        $tickets = Ticket::query()
+        $warned = 0;
+
+        Ticket::query()
             ->where('status', 'resolved')
             ->where('resolved_at', '<=', now()->subDays($warnAfterDays))
             ->whereNull('client_notified_auto_close_warning_at')
             ->with('user:id,name,email,role,is_active')
-            ->get();
+            ->chunkById(200, function ($tickets) use ($alerts, &$warned): void {
+                foreach ($tickets as $ticket) {
+                    $closesAt = $ticket->resolved_at->copy()->addDays(Ticket::AUTO_CLOSE_RESOLVED_AFTER_DAYS);
+                    $earliestAllowed = now()->addHours(Ticket::AUTO_CLOSE_MIN_HOURS_AFTER_WARNING);
 
-        $warned = 0;
+                    // A ticket that is already past its close date (first run after this feature
+                    // shipped, or a long scheduler outage) still gets its full notice period.
+                    if ($closesAt->lt($earliestAllowed)) {
+                        $closesAt = $earliestAllowed;
+                    }
 
-        foreach ($tickets as $ticket) {
-            $closesAt = $ticket->resolved_at->copy()->addDays(Ticket::AUTO_CLOSE_RESOLVED_AFTER_DAYS);
-            $earliestAllowed = now()->addHours(Ticket::AUTO_CLOSE_MIN_HOURS_AFTER_WARNING);
-
-            // A ticket that is already past its close date (first run after this feature
-            // shipped, or a long scheduler outage) still gets its full notice period.
-            if ($closesAt->lt($earliestAllowed)) {
-                $closesAt = $earliestAllowed;
-            }
-
-            if ($alerts->notifyClientOfAutoCloseWarning($ticket, $closesAt)) {
-                $warned++;
-            }
-        }
+                    if ($alerts->notifyClientOfAutoCloseWarning($ticket, $closesAt)) {
+                        $warned++;
+                    }
+                }
+            });
 
         return $warned;
     }

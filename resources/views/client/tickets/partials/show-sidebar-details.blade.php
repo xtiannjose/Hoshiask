@@ -1,10 +1,5 @@
 @php
-    $formatTicketDuration = static function ($startAt, $endAt): ?string {
-        if (! $startAt || ! $endAt || $endAt->lt($startAt)) {
-            return null;
-        }
-
-        $minutes = (int) $startAt->diffInMinutes($endAt);
+    $formatMinutes = static function (int $minutes): string {
         $days = intdiv($minutes, 1440);
         $hours = intdiv($minutes % 1440, 60);
         $remainingMinutes = $minutes % 60;
@@ -24,8 +19,22 @@
 
         return implode(' ', $parts);
     };
+    $formatTicketDuration = static function ($startAt, $endAt) use ($formatMinutes): ?string {
+        if (! $startAt || ! $endAt || $endAt->lt($startAt)) {
+            return null;
+        }
+
+        return $formatMinutes((int) $startAt->diffInMinutes($endAt));
+    };
     $resolutionEndedAt = $ticket->resolved_at ?? $ticket->closed_at;
     $resolutionTimeDisplay = $formatTicketDuration($ticket->created_at, $resolutionEndedAt);
+    // With working hours on, the SLA badge and the reports count working time: show it next to the real time.
+    if ($resolutionTimeDisplay && \App\Support\BusinessHours::enabled()) {
+        $resolutionTimeDisplay .= ' ('.$formatMinutes(\App\Support\BusinessHours::elapsedMinutes(
+            $ticket->created_at->getTimestamp(),
+            $resolutionEndedAt->getTimestamp()
+        )).' working)';
+    }
 @endphp
 
 <div class="bg-white shadow sm:rounded-lg">

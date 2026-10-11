@@ -4,6 +4,8 @@
     $supportEmail = (string) config('legal.support_email');
     $address = (string) config('legal.contact_address');
     $retentionPeriod = (string) config('legal.retention_period');
+    $backupDays = max(1, (int) config('helpdesk.cleanup.backup_retention_days', 14));
+    $logDays = max(1, (int) config('observability.system_logs.retention_days', 365));
 @endphp
 
 <div class="space-y-4 text-sm text-slate-700">
@@ -58,6 +60,13 @@
         <p>
             Ticket and related account records are retained for {{ $retentionPeriod }}
         </p>
+        <p class="mt-2">
+            Encrypted backups of the Platform are kept for {{ $backupDays }} days, so personal data that has already
+            been removed from the live system can remain in a backup until that backup is deleted.
+        </p>
+        <p class="mt-2">
+            Security and audit logs, such as sign-ins and administrative actions, are kept for {{ $logDays }} days.
+        </p>
     </div>
 
     <div>
@@ -82,6 +91,11 @@
             <li>Data Privacy Contact: <a class="font-semibold text-hoshishi-blue-700 hover:text-hoshishi-blue-900" href="mailto:{{ $dpoEmail }}">{{ $dpoEmail }}</a></li>
             <li>Support Contact: <a class="font-semibold text-hoshishi-blue-700 hover:text-hoshishi-blue-900" href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a></li>
             <li>Address: {{ $address }}</li>
+            <li>
+                Complaints: if you believe your data protection rights were violated, you may also lodge a complaint
+                with the National Privacy Commission of the Philippines
+                (<a class="font-semibold text-hoshishi-blue-700 hover:text-hoshishi-blue-900" href="https://privacy.gov.ph">privacy.gov.ph</a>).
+            </li>
         </ul>
     </div>
 

@@ -9,6 +9,7 @@ New here? Read [setup.md](setup.md) to run the app, then [structure.md](structur
 | [configuration.md](configuration.md) | Every environment variable and what it does |
 | [operations.md](operations.md) | Deploy, scheduler, queue worker, backups, email, health checks, all commands, production checklist |
 | [backup-and-restore.md](backup-and-restore.md) | Step-by-step backup copy, restore on a new server, quarterly rehearsal |
+| [resilience.md](resilience.md) | What breaks when a part fails, recovery targets and a restore log, the outside monitor on `/health`, when and how to add Redis, and the second maintainer checklist |
 | [data-retention.md](data-retention.md) | What the retention clean-up removes and keeps, and how to switch it on |
 | [security.md](security.md) | What the app already does, production security settings and optional virus scanning |
 | [ticket-import.md](ticket-import.md) | Importing tickets from CSV or the old XLSX tracker |

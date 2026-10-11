@@ -80,6 +80,9 @@ Where a ticket stands: Open, In Progress, Pending, Resolved, Closed or Cancelled
 A ticket that is Open, In Progress or Pending: work is still owed.
 _Avoid_: open ticket (Open is one status, not the group)
 
+**Pending**:
+The status for a ticket that waits on the client or on something outside the team's control. Its SLA clock does not count: the row badge reads "Awaiting client", and the SLA Breached tab, the Needs Attention count and the SLA reminders leave it out. Staff are reminded of a quiet one after 3 days, and it is cancelled automatically after 14 days with no activity.
+
 **Completed ticket**:
 A ticket that is Resolved or Closed.
 _Avoid_: closed ticket (Closed is one status, not the group), done
@@ -148,6 +151,15 @@ _Avoid_: KB post, help page
 
 **SLA target**:
 The time a ticket should take to be completed: 4 hours by default. SLA reminders and the SLA Breached tab measure against it.
+
+**Business hours** (SLA clock):
+The working days and hours that SLA minutes count when `HELPDESK_SLA_BUSINESS_HOURS_ENABLED` is on. Nights, weekends and the closed dates in `HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES` do not use up the SLA target. Off by default, when SLA minutes run around the clock.
+
+**Workload** (assignment):
+The `Open` and `In Progress` tickets a technician holds, as primary or shared assignee, in any category. The "Least workload" distribution method gives the next ticket to whoever has the least for their weight.
+
+**Away** (assignment):
+A technician with a "Back on" day on the Assignment Rules page. The automatic assignment rules skip them until that day. Staff can still assign them by hand.
 
 **SLA breach**:
 An active ticket, or a ticket completed late, that passed the resolution target.

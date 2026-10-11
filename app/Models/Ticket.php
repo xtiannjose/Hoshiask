@@ -40,6 +40,7 @@ use Illuminate\Support\Str;
  * @property Carbon|null $client_notified_resolved_at
  * @property Carbon|null $client_notified_auto_close_warning_at
  * @property Carbon|null $client_notified_closed_at
+ * @property Carbon|null $staff_notified_pending_at
  * @property Carbon|null $anonymized_at
  * @property bool $retention_hold
  * @property-read User $user
@@ -125,6 +126,16 @@ class Ticket extends Model
         TicketStatus::Pending->value,
     ];
 
+    /**
+     * Statuses where the ticket waits on staff, so its SLA clock matters. Pending waits on the client or on something
+     * outside the team's control: the row badge reads "Awaiting client" and never "Breached", and the SLA Breached
+     * tab, the Needs Attention count and the SLA reminders leave it out too.
+     */
+    public const SLA_CLOCK_STATUSES = [
+        TicketStatus::Open->value,
+        TicketStatus::InProgress->value,
+    ];
+
     /** An active ticket this old shows under "Needs Attention" (the tab and the dashboard count). */
     public const NEEDS_ATTENTION_AFTER_HOURS = 16;
 
@@ -192,6 +203,7 @@ class Ticket extends Model
         'client_notified_resolved_at',
         'client_notified_auto_close_warning_at',
         'client_notified_closed_at',
+        'staff_notified_pending_at',
         'anonymized_at',
         'retention_hold',
     ];
@@ -217,6 +229,7 @@ class Ticket extends Model
             'client_notified_resolved_at' => 'datetime',
             'client_notified_auto_close_warning_at' => 'datetime',
             'client_notified_closed_at' => 'datetime',
+            'staff_notified_pending_at' => 'datetime',
             'anonymized_at' => 'datetime',
             'retention_hold' => 'boolean',
         ];
@@ -433,6 +446,27 @@ class Ticket extends Model
             ->whereNotExists(function ($assignmentQuery) {
                 self::configureAssignmentExistsQuery($assignmentQuery);
             });
+    }
+
+    /**
+     * Pending tickets with no activity since $cutoff: no status or field change and no reply (internal notes
+     * count). Imported tickets are old records and are never quiet in this sense. The staff follow-up email and
+     * the automatic cancel both read their tickets through this one rule.
+     *
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public static function applyQuietPendingConstraint(Builder $query, CarbonInterface $cutoff): Builder
+    {
+        return $query->where('status', 'pending')
+            ->where('is_imported', false)
+            ->where('updated_at', '<=', $cutoff)
+            ->whereNotExists(fn ($replies) => $replies
+                ->selectRaw('1')
+                ->from('ticket_replies')
+                ->whereColumn('ticket_replies.ticket_id', 'tickets.id')
+                ->whereNull('ticket_replies.deleted_at')
+                ->where('ticket_replies.created_at', '>', $cutoff));
     }
 
     public static function normalizeAssignedUserIds(array $userIds, ?int $primaryAssignedTo = null): array

@@ -996,10 +996,6 @@
 }
 
 @layer base {
-    html:not(.theme-dark) .text-slate-400 {
-        color: #64748b !important;
-    }
-
     /* Muted text often sits directly on the pale #f3f5f7 page background of the signed-in layout,
        where slate-500 is only 4.36:1 (WCAG AA needs 4.5:1). This is slightly darker (5.4:1) and
        keeps utility hover colours working. Scoped to the signed-in layout so the login page is unchanged. */
@@ -1010,11 +1006,6 @@
     /* Brand navy text on white / the page background; the darker navy keeps it clearly above AA. */
     html:not(.theme-dark) body.app-authenticated .text-hoshishi-primary:not(:hover) {
         color: #21304f !important;
-    }
-
-    html:not(.theme-dark) .placeholder-slate-400::placeholder {
-        color: #64748b !important;
-        opacity: 1;
     }
 
     .theme-dark {
@@ -1282,9 +1273,7 @@
 
     .theme-dark .border-slate-100,
     .theme-dark .border-slate-200,
-    .theme-dark .border-slate-300,
-    .theme-dark .border-gray-200,
-    .theme-dark .border-gray-300 {
+    .theme-dark .border-slate-300 {
         border-color: var(--dm-border) !important;
     }
 
@@ -1315,7 +1304,6 @@
     .theme-dark .bg-emerald-100 { @apply bg-emerald-900!; }
     .theme-dark .bg-sky-50 { @apply bg-sky-950!; }
     .theme-dark .bg-sky-100 { @apply bg-sky-900!; }
-    .theme-dark .bg-indigo-50 { @apply bg-indigo-950!; }
     .theme-dark .bg-indigo-100 { @apply bg-indigo-900!; }
     .theme-dark .bg-violet-50 { @apply bg-violet-950!; }
     .theme-dark .bg-violet-100 { @apply bg-violet-900!; }
@@ -1333,8 +1321,7 @@
     .theme-dark .text-green-800 { @apply text-green-300!; }
 
     .theme-dark .text-blue-600,
-    .theme-dark .text-blue-800,
-    .theme-dark .text-blue-900 { @apply text-blue-300!; }
+    .theme-dark .text-blue-800 { @apply text-blue-300!; }
 
     /* Links use the brand navy (the hoshishi-blue scale is navy now). Dark navy on the dark surface is too dim;
        this lighter navy is ~11:1. Applies to every page, including the login page's Terms / Privacy / Consent links. */
@@ -1358,13 +1345,9 @@
     .theme-dark .text-emerald-900 { @apply text-emerald-300!; }
 
     .theme-dark .text-sky-600,
-    .theme-dark .text-sky-700,
-    .theme-dark .text-sky-800 { @apply text-sky-300!; }
+    .theme-dark .text-sky-700 { @apply text-sky-300!; }
 
-    .theme-dark .text-indigo-600,
-    .theme-dark .text-indigo-700,
-    .theme-dark .text-indigo-800,
-    .theme-dark .text-indigo-900 { @apply text-indigo-300!; }
+    .theme-dark .text-indigo-800 { @apply text-indigo-300!; }
 
     .theme-dark .border-red-200,
     .theme-dark .border-red-300 { @apply border-red-800!; }
@@ -1375,34 +1358,22 @@
     .theme-dark .border-emerald-200,
     .theme-dark .border-emerald-300 { @apply border-emerald-800!; }
 
-    .theme-dark .border-sky-200,
-    .theme-dark .border-sky-300 { @apply border-sky-800!; }
+    .theme-dark .border-sky-200 { @apply border-sky-800!; }
 
-    .theme-dark .border-rose-200,
     .theme-dark .border-rose-300 { @apply border-rose-800!; }
 
-    .theme-dark .border-orange-200,
-    .theme-dark .border-orange-300 { @apply border-orange-800!; }
+    .theme-dark .border-orange-200 { @apply border-orange-800!; }
 
-    .theme-dark .text-violet-600,
-    .theme-dark .text-violet-700,
-    .theme-dark .text-violet-800,
-    .theme-dark .text-violet-900 { @apply text-violet-300!; }
+    .theme-dark .text-violet-800 { @apply text-violet-300!; }
 
-    .theme-dark .text-rose-600,
-    .theme-dark .text-rose-700,
-    .theme-dark .text-rose-800,
-    .theme-dark .text-rose-900 { @apply text-rose-300!; }
+    .theme-dark .text-rose-800 { @apply text-rose-300!; }
 
-    .theme-dark .text-orange-600,
     .theme-dark .text-orange-700,
-    .theme-dark .text-orange-800,
-    .theme-dark .text-orange-900 { @apply text-orange-300!; }
+    .theme-dark .text-orange-800 { @apply text-orange-300!; }
 
     .theme-dark .text-sky-900 { @apply text-sky-200!; }
 
-    .theme-dark .text-cyan-700,
-    .theme-dark .text-cyan-800 { @apply text-cyan-300!; }
+    .theme-dark .text-cyan-700 { @apply text-cyan-300!; }
 
     /* Keyboard focus ring on buttons: light gold on the dark surface, with a dark gap instead of a white one. */
     .theme-dark .btn-primary:focus-visible,
@@ -1432,8 +1403,7 @@
 
     .theme-dark .text-slate-700,
     .theme-dark .text-slate-600,
-    .theme-dark .text-slate-500,
-    .theme-dark .text-slate-400 {
+    .theme-dark .text-slate-500 {
         color: var(--dm-muted) !important;
     }
 

@@ -136,6 +136,18 @@ class AdminTicketBulkActionSuccessTest extends TestCase
         ]);
     }
 
+    public function test_the_bulk_status_form_starts_on_a_placeholder_so_apply_never_reopens_by_accident(): void
+    {
+        [$superUser, , , $ticketOne] = $this->seedBulkActionContext();
+
+        $html = $this->actingAs($superUser)->get(route('admin.tickets.index'))->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/<select id="bulk-status-select"[^>]*>\s*<option value="" selected disabled>Choose a status<\/option>/', $html);
+
+        $this->actingAs($superUser)
+            ->post(route('admin.tickets.bulk-action'), ['action' => 'status', 'selected_ids' => [$ticketOne->id]])
+            ->assertSessionHas('error', 'Please choose a status.');
+    }
+
     public function test_the_bulk_severity_form_does_not_offer_a_choice_the_server_refuses(): void
     {
         [$superUser, , , $ticketOne] = $this->seedBulkActionContext();

@@ -6,6 +6,7 @@ use App\Events\ProductionAdvisoriesRequested;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 
 class HelpdeskOperationsStatusService
@@ -13,8 +14,14 @@ class HelpdeskOperationsStatusService
     /** Written by the five-minute scheduled command, so the status check can tell whether cron is running. */
     public const SCHEDULER_HEARTBEAT_CACHE_KEY = 'helpdesk:scheduler:heartbeat';
 
+    /** Written by a queue worker when it finishes a job, whatever the queue driver. */
+    public const QUEUE_HEARTBEAT_CACHE_KEY = 'helpdesk:queue:last-job-finished-at';
+
     /** Three missed runs of the five-minute command. */
     private const SCHEDULER_STALE_AFTER_MINUTES = 15;
+
+    /** A queued job that has waited this long means the worker is not taking jobs. */
+    private const QUEUE_STUCK_AFTER_MINUTES = 15;
 
     public function buildStatus(bool $includeProcessCheck = true): array
     {
@@ -26,7 +33,7 @@ class HelpdeskOperationsStatusService
         $queueWorkerRequired = $queueConnection !== 'sync';
         $queueWorkerRunning = $this->queueWorkerRunningStatus($queueConnection, $includeProcessCheck);
         $databaseReachable = $this->databaseReachable();
-        $pendingJobs = $databaseReachable ? $this->countTableRows('jobs') : null;
+        $pendingJobs = $databaseReachable ? $this->pendingJobCount($queueConnection) : null;
         $failedJobs = $databaseReachable ? $this->countTableRows('failed_jobs') : null;
         $environment = app()->environment();
         $appUrl = (string) config('app.url');
@@ -43,19 +50,14 @@ class HelpdeskOperationsStatusService
             $warnings[] = 'Database connectivity check failed.';
         }
 
-        if ($queueWorkerRequired && $queueWorkerRunning !== true) {
+        // A caller that did not look at the process list (the public /health) cannot know; "unknown" is not a
+        // warning there, or every monitor without the token would see "degraded" for ever.
+        $workerProblem = $queueWorkerRunning === false || ($queueWorkerRunning === null && $includeProcessCheck);
+        if ($queueWorkerRequired && $workerProblem) {
             $warnings[] = sprintf(
                 'Queue connection "%s" requires a running queue worker for queued mail and jobs.',
                 $queueConnection
             );
-        }
-
-        if (is_int($pendingJobs) && $pendingJobs > 0) {
-            $warnings[] = sprintf('There are %d pending jobs in the queue.', $pendingJobs);
-        }
-
-        if (is_int($failedJobs) && $failedJobs > 0) {
-            $warnings[] = sprintf('There are %d failed jobs that need attention.', $failedJobs);
         }
 
         if ($environment === 'production') {
@@ -77,7 +79,7 @@ class HelpdeskOperationsStatusService
             }
         }
 
-        $advisories = $environment === 'production' ? $this->productionAdvisories() : [];
+        $advisories = $environment === 'production' ? $this->productionAdvisories($pendingJobs, $failedJobs) : [];
 
         $status = $databaseReachable && $phpSupported
             ? ($warnings === [] ? 'ok' : 'degraded')
@@ -99,6 +101,9 @@ class HelpdeskOperationsStatusService
             'queue_worker_running' => $queueWorkerRunning,
             'pending_jobs' => $pendingJobs,
             'failed_jobs' => $failedJobs,
+            'queue_last_job_finished_at' => ($lastJobFinishedAt = $this->lastJobFinishedAt()) !== null
+                ? Carbon::now()->setTimestamp($lastJobFinishedAt)->toIso8601String()
+                : null,
             'mail_mailer' => (string) config('mail.default', 'log'),
             'scheduled_alert_command' => 'tickets:send-alert-emails (technical SLA reminders every 5 minutes)',
             'warnings' => $warnings,
@@ -112,9 +117,34 @@ class HelpdeskOperationsStatusService
      *
      * @return list<string>
      */
-    private function productionAdvisories(): array
+    private function productionAdvisories(?int $pendingJobs, ?int $failedJobs): array
     {
         $advisories = [];
+
+        // Queued mail is produced all day, so a job waiting is normal, and one failed email (a mailbox that bounced)
+        // stays in failed_jobs until someone clears it. Neither may fail a deploy or roll it back.
+        if (is_int($failedJobs) && $failedJobs > 0) {
+            $advisories[] = sprintf(
+                '%d queued %s failed (an email or alert that could not be sent). Look at %s with `php artisan queue:failed`; `php artisan queue:retry all` tries again, `php artisan queue:flush` forgets %s.',
+                $failedJobs,
+                $failedJobs === 1 ? 'job' : 'jobs',
+                $failedJobs === 1 ? 'it' : 'them',
+                $failedJobs === 1 ? 'it' : 'them'
+            );
+        }
+
+        $waitedMinutes = is_int($pendingJobs) && $pendingJobs > 0 ? $this->oldestQueuedJobWaitMinutes() : null;
+        if ($waitedMinutes !== null && $waitedMinutes >= self::QUEUE_STUCK_AFTER_MINUTES) {
+            $advisories[] = sprintf('The oldest of %d queued jobs has waited %d minutes: the queue worker may have stopped. Emails and alerts wait behind it.', $pendingJobs, $waitedMinutes);
+        }
+
+        // A queue that is not the jobs table (Redis) has no "waiting since": use the worker's own heartbeat instead.
+        // No heartbeat yet means no job has finished since the queue was switched, which proves nothing.
+        $lastFinished = $this->queueUsesJobsTable((string) config('queue.default', 'sync')) ? null : $this->lastJobFinishedAt();
+        if ($lastFinished !== null && is_int($pendingJobs) && $pendingJobs > 0
+            && $lastFinished <= now()->subMinutes(self::QUEUE_STUCK_AFTER_MINUTES)->timestamp) {
+            $advisories[] = sprintf('%d queued jobs are waiting and no job has finished for %d minutes: the queue worker may have stopped. Emails and alerts wait behind it.', $pendingJobs, intdiv(now()->timestamp - $lastFinished, 60));
+        }
 
         $mailer = (string) config('mail.default', 'log');
         if (in_array($mailer, ['log', 'array'], true)) {
@@ -190,6 +220,32 @@ class HelpdeskOperationsStatusService
         }
     }
 
+    /** Whether waiting jobs are rows of the `jobs` table (the database queue) rather than in another service. */
+    private function queueUsesJobsTable(string $queueConnection): bool
+    {
+        $driver = (string) config('queue.connections.'.$queueConnection.'.driver', $queueConnection);
+
+        return in_array($driver, ['database', 'sync', 'null'], true);
+    }
+
+    private function pendingJobCount(string $queueConnection): ?int
+    {
+        if ($this->queueUsesJobsTable($queueConnection)) {
+            return $this->countTableRows('jobs');
+        }
+
+        $size = rescue(static fn () => Queue::connection($queueConnection)->size(), null, false);
+
+        return is_int($size) ? $size : null;
+    }
+
+    private function lastJobFinishedAt(): ?int
+    {
+        $stamp = rescue(static fn () => Cache::get(self::QUEUE_HEARTBEAT_CACHE_KEY), null, false);
+
+        return is_numeric($stamp) ? (int) $stamp : null;
+    }
+
     private function countTableRows(string $table): ?int
     {
         if (! Schema::hasTable($table)) {
@@ -197,6 +253,20 @@ class HelpdeskOperationsStatusService
         }
 
         return DB::table($table)->count();
+    }
+
+    /**
+     * Minutes the longest-waiting job in the database queue has been ready to run, or null when there is no such queue.
+     */
+    private function oldestQueuedJobWaitMinutes(): ?int
+    {
+        if (! Schema::hasTable('jobs')) {
+            return null;
+        }
+
+        $availableAt = DB::table('jobs')->whereNull('reserved_at')->min('available_at');
+
+        return is_numeric($availableAt) ? max(0, intdiv(now()->timestamp - (int) $availableAt, 60)) : null;
     }
 
     private function queueWorkerRunningStatus(string $queueConnection, bool $includeProcessCheck): ?bool

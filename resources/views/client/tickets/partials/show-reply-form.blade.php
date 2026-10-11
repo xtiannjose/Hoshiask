@@ -47,7 +47,7 @@
                             id="attachments"
                             multiple
                             class="hidden"
-                            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.txt,.xls,.xlsx"
+                            accept=".jpg,.jpeg,.png,.pdf,.docx,.txt,.xlsx"
                         >
                         <p id="attachment-count" class="text-xs text-slate-500">No files selected</p>
                     </div>

@@ -22,10 +22,10 @@ return [
     |
     */
     'terms_version' => env('LEGAL_TERMS_VERSION', '2026-02-25'),
-    'privacy_version' => env('LEGAL_PRIVACY_VERSION', '2026-02-25'),
+    'privacy_version' => env('LEGAL_PRIVACY_VERSION', '2026-10-11'),
     'platform_consent_version' => env('LEGAL_PLATFORM_CONSENT_VERSION', '2026-02-25'),
     'ticket_consent_version' => env('LEGAL_TICKET_CONSENT_VERSION', '2026-02-25'),
-    'effective_date' => env('LEGAL_EFFECTIVE_DATE', 'February 25, 2026'),
+    'effective_date' => env('LEGAL_EFFECTIVE_DATE', 'October 11, 2026'),
 
     /*
     |--------------------------------------------------------------------------

@@ -66,7 +66,7 @@ class StoreTicketRequest extends FormRequest
                 ? [$this->assignableAgentRule()]
                 : ['prohibited'],
             'attachments' => ['nullable', 'array', 'max:'.UploadLimits::MAX_FILES],
-            'attachments.*' => ['file', 'max:10240', 'mimes:jpg,jpeg,png,pdf,doc,docx,txt,xls,xlsx', 'mimetypes:image/jpeg,image/png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', new NoMalware],
+            'attachments.*' => ['file', 'max:10240', 'mimes:jpg,jpeg,png,pdf,docx,txt,xlsx', 'mimetypes:image/jpeg,image/png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', new NoMalware],
             'created_at' => $manualDateRule,
             'resolved_at' => $manualDateRule,
             'closed_at' => $manualDateRule,

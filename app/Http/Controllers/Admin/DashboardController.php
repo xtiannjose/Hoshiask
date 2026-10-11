@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Services\DashboardSnapshotService;
+use App\Support\BusinessHours;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -38,8 +39,8 @@ class DashboardController extends Controller
         ];
 
         if (! $user->isTechnician()) {
-            $stats['attention_tickets'] = (clone $scopedTickets)->whereNotIn('status', Ticket::TERMINAL_STATUSES)
-                ->where('created_at', '<=', now()->subHours(Ticket::NEEDS_ATTENTION_AFTER_HOURS))
+            $stats['attention_tickets'] = (clone $scopedTickets)->whereIn('status', Ticket::SLA_CLOCK_STATUSES)
+                ->where('created_at', '<=', BusinessHours::cutoff(Ticket::NEEDS_ATTENTION_AFTER_HOURS * 60))
                 ->count();
         }
 

@@ -38,7 +38,7 @@ A technician sees and works only the tickets assigned to them, and can open othe
 app/
   Console/Commands/      the artisan commands (list in operations.md)
   Enums/                 TicketStatus (statuses, labels, colours), TicketPriority (severity), RootCauseCategory, KnowledgeArticleCategory
-  Events/, Listeners/    how a feature adds a note to helpdesk:ops-status (ProductionAdvisoriesRequested)
+  Events/, Listeners/    how a feature adds a note to helpdesk:ops-status (ProductionAdvisoriesRequested), and the queue worker heartbeat
   Http/
     Controllers/         Admin/ = staff console, Client/ = client portal, Concerns/ = shared traits,
                          top level = sign-in, attachments, health check, legal pages, notifications
@@ -59,14 +59,14 @@ app/
     Security/            ClamAV virus scanner
     TicketImport/        CSV and XLSX import
     (top level)          audit log, email alerts, notifications, branding, acknowledgment, dashboard snapshot
-  Support/               small helpers: SLA settings, LIKE and date helpers for every database, upload limits, login lockout
+  Support/               small helpers: SLA settings and the business-hours clock (BusinessHours), LIKE and date helpers for every database, upload limits, login lockout
   View/Composers/        data every page header needs
 bootstrap/app.php       registers the middleware and the route files
 config/                  helpdesk.php (feature settings), security.php, retention.php, legal.php, observability.php, and Laravel's own
 database/
   migrations/            every table change, in order
-  seeders/               sample data; E2eSmokeSeeder is only for the browser tests
-  schema/                a PostgreSQL snapshot that makes a fresh install faster
+  seeders/               StarterDataSeeder (the departments and categories a new installation starts with), sample accounts and tickets; E2eSmokeSeeder is only for the browser tests
+  schema/                a PostgreSQL snapshot (tables only) that makes a fresh install faster; no migration holds data, so it can be regenerated with `php artisan schema:dump`
 lang/en/                 validation messages
 public/                  the web root: index.php, images, and build/ (made by npm run build, not in git)
 resources/
@@ -108,6 +108,7 @@ Defined in `routes/console.php`. Each one is protected against running twice at 
 | Daily 02:40 | `helpdesk:backup` | The encrypted backup. |
 | Daily 03:10 | `helpdesk:cleanup-runtime` | Removes old backups, exports and import files, old System Logs entries, used-up password handoffs and expired rows of the database cache. |
 | Daily 03:40 | `tickets:auto-close-resolved` | Warns clients, then closes tickets that stayed Resolved for 7 days. |
+| Daily 03:45 | `tickets:auto-cancel-pending` | Cancels Pending tickets with no activity for 14 days. |
 | Daily 03:55 | `helpdesk:enforce-retention` | Removes personal details from old tickets (only when switched on). |
 | Sunday 04:20 | `helpdesk:backup-verify` | Checks the newest backup again. |
 
@@ -121,6 +122,7 @@ The times follow `APP_TIMEZONE`.
 | Who may open a page or do an action | The role groups in `app/Models/User.php`, the route in `routes/web.php`, the policy in `app/Policies` |
 | What happens when staff change a status | `app/Services/Admin/TicketStatusWorkflowService.php` (every staff status change goes through it) |
 | A report number | [report-metrics.md](report-metrics.md) first, then `app/Services/Admin/Reports` |
+| How SLA minutes are counted (round the clock or working hours, closed dates) | `app/Support/BusinessHours.php`; every SLA cut-off and elapsed time goes through it |
 | An email to a client or to staff | `app/Services/TicketEmailAlertService.php` and `resources/views/emails` |
 | A setting | The config file, then `.env.example` and [configuration.md](configuration.md) |
 | A scheduled job | `routes/console.php`, copying the pattern of the existing entries |

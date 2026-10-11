@@ -9,7 +9,7 @@ A help desk for an organisation with field offices. **Clients** file support tic
 ## What it does
 
 - **Sign-in** with a username or email, for five roles: `client`, `technical`, `super_user`, `admin` and `shadow` (a hidden monitoring account).
-- **Tickets** that move through Open, In Progress, Pending, Resolved, Closed and Cancelled, with assignment to one or more staff, escalation, merging duplicates, bulk actions, SLA reminders and automatic closing of resolved tickets.
+- **Tickets** that move through Open, In Progress, Pending, Resolved, Closed and Cancelled, with assignment to one or more staff, escalation, merging duplicates, bulk actions, SLA reminders, automatic closing of resolved tickets and automatic cancelling of Pending tickets that nobody has touched for 14 days.
 - **Conversation** on each ticket: public replies, internal notes, attachments (with optional virus scanning) and canned responses.
 - **Emails** to clients at the moments that need their attention, and reminders to staff.
 - **Knowledge base** of FAQs, policies and guides.

@@ -53,6 +53,13 @@ class AuthController extends Controller
         $remember = $request->boolean('remember');
         $isEmailLogin = filter_var($loginInput, FILTER_VALIDATE_EMAIL) !== false;
         $accountLockKey = LoginThrottle::accountKey($loginInput, $request->ip());
+        $addressKey = LoginThrottle::ipKey($request->ip());
+
+        if (RateLimiter::tooManyAttempts($addressKey, LoginThrottle::IP_MAX_FAILURES_PER_MINUTE)) {
+            return back()->withErrors([
+                'login' => 'Too many failed sign-in attempts from this network. Wait a minute and try again.',
+            ])->onlyInput('login');
+        }
 
         if (RateLimiter::tooManyAttempts($accountLockKey, LoginThrottle::MAX_ATTEMPTS)) {
             $secondsUntilRetry = RateLimiter::availableIn($accountLockKey);
@@ -74,6 +81,7 @@ class AuthController extends Controller
         if ($matchedUser && $passwordMatches) {
             if (! $matchedUser->is_active) {
                 RateLimiter::hit($accountLockKey, LoginThrottle::LOCKOUT_SECONDS);
+                RateLimiter::hit($addressKey, LoginThrottle::IP_WINDOW_SECONDS);
                 $this->systemLogs->record(
                     'auth.login_failed',
                     'Failed login attempt: account inactive.',
@@ -122,6 +130,7 @@ class AuthController extends Controller
         }
 
         RateLimiter::hit($accountLockKey, LoginThrottle::LOCKOUT_SECONDS);
+        RateLimiter::hit($addressKey, LoginThrottle::IP_WINDOW_SECONDS);
         $this->systemLogs->record(
             'auth.login_failed',
             'Failed login attempt: invalid credentials.',

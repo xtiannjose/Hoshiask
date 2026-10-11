@@ -398,7 +398,7 @@ const initAdminTicketsIndexPage = () => {
 
             populateHiddenSelectedIds(bulkStatusSelectedIds, selectedIds);
             if (bulkStatusModalCount) bulkStatusModalCount.textContent = bulkSelectionCountText();
-            if (bulkStatusSelect) bulkStatusSelect.value = 'open';
+            if (bulkStatusSelect) bulkStatusSelect.value = '';
             if (bulkStatusCloseReasonInput) bulkStatusCloseReasonInput.value = '';
             syncBulkStatusState();
             if (bulkStatusModalController) bulkStatusModalController.open();

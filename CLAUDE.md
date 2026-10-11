@@ -39,7 +39,7 @@ PHPUnit runs on in-memory SQLite; CI also runs the suite on PostgreSQL 16, so ev
 
 **Frontend.** `resources/js/app.js` registers shared behaviours from `lib/` and lazy-loads one `pages/` module per page, matched by a `data-*-page` attribute on the page root. Alpine components are registered with `Alpine.data()` (see `lib/theme-state.js`) because the CSP build cannot evaluate arbitrary inline JS; scripts load from files, never inline `<script>`. Vitest tests sit beside their module as `*.test.js`.
 
-**Tests.** `tests/TestCase.php` fakes the attachments disk and disables Vite; fixtures come from `tests/Traits/CreatesTestData` (`createClient`, `createSupportUser`, `createTicket`). Guard tests such as `UiConsistencyGuardTest` and `QaAccessibilityMarkupTest` assert on Blade/JS source text: renaming a shared partial or class means updating them on purpose.
+**Tests.** `tests/TestCase.php` fakes the attachments disk, disables Vite and seeds the starter departments and categories (`StarterDataSeeder`; no migration holds data, so `database/schema/pgsql-schema.sql` can be regenerated); fixtures come from `tests/Traits/CreatesTestData` (`createClient`, `createSupportUser`, `createTicket`). Guard tests such as `UiConsistencyGuardTest` and `QaAccessibilityMarkupTest` assert on Blade/JS source text: renaming a shared partial or class means updating them on purpose.
 
 ## Conventions
 

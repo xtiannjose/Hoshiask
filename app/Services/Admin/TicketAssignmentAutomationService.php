@@ -23,7 +23,10 @@ class TicketAssignmentAutomationService
 
         $rules = TicketAssignmentRule::query()
             ->where('category_id', $ticket->category_id)
-            ->whereHas('technician', fn ($query) => $query->where('is_active', true))
+            // Someone away (assignment_paused_until in the future) is skipped; a day-off does not need a rule change.
+            ->whereHas('technician', fn ($query) => $query
+                ->where('is_active', true)
+                ->where(fn ($away) => $away->whereNull('assignment_paused_until')->orWhere('assignment_paused_until', '<=', now())))
             ->get();
 
         if ($rules->isEmpty()) {
@@ -31,9 +34,11 @@ class TicketAssignmentAutomationService
         }
 
         $distributionMethod = TicketAssignmentSetting::current()->distribution_method;
-        $technicianId = $distributionMethod === TicketAssignmentSetting::METHOD_ROTATING_COUNTER
-            ? $this->pickByRotatingCounter($ticket, $rules)
-            : $this->pickByWeightedRandom($rules);
+        $technicianId = match ($distributionMethod) {
+            TicketAssignmentSetting::METHOD_ROTATING_COUNTER => $this->pickByRotatingCounter($ticket, $rules),
+            TicketAssignmentSetting::METHOD_LEAST_WORKLOAD => $this->pickByLeastWorkload($rules),
+            default => $this->pickByWeightedRandom($rules),
+        };
 
         if ($technicianId === null) {
             return;
@@ -83,6 +88,46 @@ class TicketAssignmentAutomationService
         }
 
         return (int) $rules->last()->user_id;
+    }
+
+    /**
+     * The technician with the least work for their weight: Open and In Progress tickets they hold (as the primary or
+     * as one of several assignees, in any category) divided by the rule's weight, so a weight of 60 carries twice
+     * the work of a weight of 30. Pending tickets wait on someone else and imported ones are old records, so
+     * neither counts. A tie goes to the bigger weight, then to the lower user id, so the choice is repeatable.
+     *
+     * @param  Collection<int, TicketAssignmentRule>  $rules
+     */
+    private function pickByLeastWorkload(Collection $rules): ?int
+    {
+        $best = null;
+
+        foreach ($rules as $rule) {
+            $weight = (int) $rule->weight;
+            if ($weight <= 0) {
+                continue;
+            }
+
+            $userId = (int) $rule->user_id;
+            $load = Ticket::applyAssignedToConstraint(
+                Ticket::query()
+                    ->whereIn('status', Ticket::SLA_CLOCK_STATUSES)
+                    ->where('is_imported', false),
+                $userId
+            )->count();
+
+            // load/weight < bestLoad/bestWeight, compared without dividing.
+            $better = $best === null
+                || $load * $best['weight'] < $best['load'] * $weight
+                || ($load * $best['weight'] === $best['load'] * $weight
+                    && ($weight > $best['weight'] || ($weight === $best['weight'] && $userId < $best['user_id'])));
+
+            if ($better) {
+                $best = ['user_id' => $userId, 'load' => $load, 'weight' => $weight];
+            }
+        }
+
+        return $best['user_id'] ?? null;
     }
 
     /**

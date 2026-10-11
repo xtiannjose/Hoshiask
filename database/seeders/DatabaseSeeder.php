@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
             ShadowSeeder::class,
             AdminSeeder::class,
             UserSeeder::class,
-            CategorySeeder::class,
+            StarterDataSeeder::class,
             TicketSeeder::class,
         ]);
     }

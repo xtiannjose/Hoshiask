@@ -65,7 +65,7 @@ Use these meanings consistently so everyone reads a ticket the same way.
 | `Pending` | The ticket is waiting on something. | Waiting for the client, a schedule, an approval, parts or outside action. |
 | `Resolved` | The issue looks fixed, but the ticket is not yet closed. | The work is done and the team waits for the client's confirmation or the automatic close. |
 | `Closed` | The ticket is finished. | The final status, once a close reason is recorded. |
-| `Cancelled` | The ticket was called off before real work happened. | The client or staff cancel a request that is no longer needed while it is still `Open` or `Pending`. |
+| `Cancelled` | The ticket was called off before real work happened. | The client or staff cancel a request that is no longer needed while it is still `Open` or `Pending`, or the system cancels a `Pending` ticket that nobody has touched for 14 days. |
 
 An **active ticket** is one that is `Open`, `In Progress` or `Pending`. A **completed ticket** is `Resolved` or `Closed`.
 
@@ -210,7 +210,7 @@ When the same problem was filed more than once, an admin-level staff member (sup
 
 ### Starting a ticket
 
-- Attachments are optional. Each file can be up to `10 MB`, at most 10 files per ticket or reply. Allowed types: images (`jpg`, `jpeg`, `png`), PDF, Word, text and Excel files.
+- Attachments are optional. Each file can be up to `10 MB`, at most 10 files per ticket or reply. Allowed types: images (`jpg`, `jpeg`, `png`), PDF, Word (`docx`), text and Excel (`xlsx`) files. Older `.doc` and `.xls` files are refused because they can carry macros: save them as `.docx` or `.xlsx` first.
 - Staff who log a ticket for a client use **New Ticket** (technician, super user and admin). They pick the requester account from a list that shows the first 50 accounts by name. The search box above the list finds any other account by name, username, email, phone or department, and the line under the list says how many accounts match.
 - An **internal ticket** has a staff member as the requester and is assigned to a staff member. It is only seen by the people involved, no client emails are sent for it, and the reports leave it out.
 
@@ -233,8 +233,8 @@ The **Tickets** page has four tabs:
 | Tab | What it shows |
 | --- | --- |
 | Tickets | Active tickets. |
-| Needs Attention | Active tickets that are more than 16 hours old. Technicians do not see this tab. |
-| SLA Breached | Active tickets older than the SLA target (240 minutes by default). They need action right now. |
+| Needs Attention | Open and In Progress tickets that are more than 16 hours old. Pending tickets wait on the client and are left out. Technicians do not see this tab. |
+| SLA Breached | Open and In Progress tickets older than the SLA target (240 minutes by default). They need action right now. Pending tickets are left out, as their badge reads "Awaiting client". |
 | History | Resolved, closed and cancelled tickets. |
 
 A technician sees only the tickets assigned to them. Everyone else sees all tickets.
@@ -264,8 +264,14 @@ Deleting cannot be undone, except from a backup. Cancelling or closing is usuall
 
 The SLA target is how long a ticket should take: **240 minutes** by default (`HELPDESK_SLA_RESOLUTION_TARGET_MINUTES`). Staff are reminded by email:
 
-- the assigned technicians, 210 minutes after the assignment, if the ticket is still active
+- the assigned technicians, 210 minutes after the assignment, if the ticket is still Open or In Progress (a Pending ticket waits on the client)
 - super users, admins and the shadow account, when an active ticket stays unassigned: once at 120 minutes ("Unchecked Ticket Alert") and once at 180 minutes ("Unassigned SLA Warning"), counted from when the ticket was created
+
+**Business hours.** By default SLA minutes run around the clock. With `HELPDESK_SLA_BUSINESS_HOURS_ENABLED=true` they count only inside the working days and hours (Monday to Friday, 08:00 to 17:00 unless changed), so a ticket logged at 16:00 on Friday has used one hour of its four by Monday at 08:00 and no reminder goes out overnight or over the weekend. This applies to the SLA badge, the SLA Breached tab, the Needs Attention tab (16 working hours instead of 16 hours on the clock), the SLA reminders and the Resolution Time report. Public holidays and other closed days listed in `HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES` (`YYYY-MM-DD`, comma-separated) count like a weekend; the list is kept up to date by hand (the example settings carry the 2026 nationwide holidays from the Official Gazette). The ticket page shows the real time a ticket took, and next to it the working time ("2d 18h (3h working)").
+
+A **Pending** ticket gets its own, gentler reminder. When a Pending ticket has had no status change and no reply for 3 days (`HELPDESK_PENDING_FOLLOW_UP_DAYS`, `0` switches it off), its assignees get one email that lists all of their quiet Pending tickets, with a link to each. Nobody assigned: the super users get it. The email asks staff to check whether the ticket is still waiting, contact the client if needed, or resolve or cancel it. The client is not emailed, and a ticket that stays quiet is listed again after another 3 days.
+
+**Pending tickets are cancelled automatically** when they stay quiet for **14 days** (`HELPDESK_PENDING_AUTO_CANCEL_DAYS`, `0` switches it off). The daily job `tickets:auto-cancel-pending` (03:45) cancels them and writes "Automatically cancelled after 14 days with no activity while Pending." in the ticket's notes and as its cancellation reason. Any reply or change before then, internal notes included, starts the count again. The client is not emailed about it, and imported tickets are never cancelled this way. A cancelled ticket can still be reopened by staff like any other. The reminder emails say how many days are left.
 
 Imported tickets (see [ticket-import.md](ticket-import.md)) never get these reminders: they are old records, and a reminder for every open one would flood the inboxes on the first run after an import.
 
@@ -275,8 +281,11 @@ Admins and the shadow account can set rules per category (Admin → Assignment R
 
 - **Weighted random:** each new ticket rolls against the weights.
 - **Rotating counter:** the ticket goes to whichever technician is furthest below their target share, based on the category's assignments in the last 30 days. A technician added later therefore gets a fair share, not every new ticket.
+- **Least workload:** the ticket goes to whoever has the fewest `Open` and `In Progress` tickets for their weight. Their tickets in every category count, whether they are the primary assignee or share the ticket; `Pending`, resolved, closed and imported tickets do not. A weight of 60 carries twice the work of a weight of 30. A tie goes to the bigger weight, then to the lower account id. Choose this when one person ends up buried while others are idle, which the other two methods do not notice.
 
-The method is one setting for all rules, changed on the same page. If a category has no rules, or every technician in it is deactivated, the ticket stays unassigned.
+The method is one setting for all rules, changed on the same page. If a category has no rules, or every technician in it is deactivated or away, the ticket stays unassigned and the super users get the usual unassigned alerts.
+
+**Availability.** The same page lists the technicians with a "Back on" day. Someone who is away (leave, a long absence) is skipped by both methods until that day, so they are not given tickets they cannot answer. Choose the first day they are back; leave it empty to make them available now. It only affects the automatic rules: staff can still assign them by hand. It ends by itself on the day chosen, so nobody has to remember to switch it back.
 
 ### Automatic closing
 
@@ -432,4 +441,4 @@ If more work is needed after resolution: `Resolved` → back to `Open` or `In Pr
 
 If a recently closed ticket needs more work: `Closed` → `In Progress` within `7 days`.
 
-If a request turns out not to be needed: `Open` or `Pending` → `Cancelled` (only before work starts).
+If a request turns out not to be needed: `Open` or `Pending` → `Cancelled` (only before work starts). A `Pending` ticket nobody touches for 14 days is cancelled for you.

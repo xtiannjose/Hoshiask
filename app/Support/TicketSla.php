@@ -10,7 +10,8 @@ use Illuminate\Support\Carbon;
  * The SLA state of one ticket: how long it took or has taken, whether it breached the resolution target or is
  * close to it, and the badge text and colour the lists show. It only reads the ticket's dates and status, so it
  * can be tested with an unsaved ticket. "Done" means the first of resolved, closed or cancelled that is set, and
- * the reports use the same rule through minutesToCompletion().
+ * the reports use the same rule through minutesToCompletion(). Minutes are counted by BusinessHours: around the
+ * clock unless the working-hours setting is on.
  */
 final class TicketSla
 {
@@ -37,7 +38,7 @@ final class TicketSla
 
         $endAt = $this->completedAt() ?? ($asOf ?? now());
 
-        return max(0, (int) $createdAt->diffInMinutes($endAt));
+        return BusinessHours::elapsedMinutes($createdAt->getTimestamp(), $endAt->getTimestamp());
     }
 
     /** Minutes to resolution, closure or cancellation, or null while the ticket is still open. */
@@ -65,7 +66,7 @@ final class TicketSla
             return null;
         }
 
-        return max(0, intdiv($completedAt - $createdAt, 60));
+        return BusinessHours::elapsedMinutes($createdAt, $completedAt);
     }
 
     public function hasBreachedResolutionTarget(?CarbonInterface $asOf = null): bool

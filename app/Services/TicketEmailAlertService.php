@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Mail\PendingFollowUpMail;
 use App\Mail\TicketAlertMail;
 use App\Models\Ticket;
 use App\Models\TicketReply;
 use App\Models\User;
+use App\Support\BusinessHours;
 use App\Support\SlaSettings;
 use App\Support\TicketEmailThread;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +23,9 @@ class TicketEmailAlertService
      * recorded after the fact, e.g. backlog entered from paper: the client is not emailed about it.
      */
     private const AFTER_THE_FACT_HOURS = 24;
+
+    /** Tickets named in one follow-up email; the rest are counted ("and 4 more"). */
+    private const FOLLOW_UP_TICKETS_LISTED = 15;
 
     public function notifyAssignedTechnicalUsersAboutAssignment(Ticket $ticket, ?array $assigneeIds = null): bool
     {
@@ -441,17 +446,137 @@ class TicketEmailAlertService
                 'This ticket has been unassigned for %s and risks breaching the SLA.',
             ),
             'client_reply_digests' => $this->sendClientReplyDigests(),
+            'pending_follow_ups' => $this->sendPendingFollowUps(),
         ];
+    }
+
+    /**
+     * One email per staff member listing the Pending tickets that have had no status change and no reply for
+     * `pending_follow_up_days`: the assignees, or the super users when nobody holds the ticket. The client is not
+     * told. A ticket that stays quiet is listed again after the same number of days.
+     *
+     * @return int Tickets listed in an email that went out.
+     */
+    private function sendPendingFollowUps(): int
+    {
+        $days = max(0, (int) config('helpdesk.pending_follow_up_days', 3));
+        if ($days < 1) {
+            return 0;
+        }
+
+        $cutoff = now()->subDays($days);
+
+        $tickets = Ticket::applyQuietPendingConstraint(Ticket::query(), $cutoff)
+            ->where(fn ($query) => $query
+                ->whereNull('staff_notified_pending_at')
+                ->orWhere('staff_notified_pending_at', '<=', $cutoff))
+            ->with('assignedUsers:id,name,email,role,is_active')
+            ->withMax(['replies as last_reply_at' => fn ($query) => $query->whereNull('deleted_at')], 'created_at')
+            ->orderBy('updated_at')
+            ->get();
+
+        if ($tickets->isEmpty()) {
+            return 0;
+        }
+
+        $superUsers = $this->activeSuperUserRecipients();
+        $perRecipient = [];
+
+        foreach ($tickets as $ticket) {
+            $holders = $ticket->assignedUsers
+                ->filter(fn (User $user) => $user->is_active
+                    && ! $user->isClient()
+                    && is_string($user->email)
+                    && trim($user->email) !== '');
+
+            foreach (($holders->isNotEmpty() ? $holders : $superUsers) as $recipient) {
+                $perRecipient[$recipient->id]['user'] = $recipient;
+                $perRecipient[$recipient->id]['tickets'][] = $ticket;
+            }
+        }
+
+        $stamped = [];
+
+        foreach ($perRecipient as $entry) {
+            /** @var User $recipient */
+            $recipient = $entry['user'];
+            /** @var list<Ticket> $waiting */
+            $waiting = $entry['tickets'];
+
+            $rows = array_map(fn (Ticket $ticket) => [
+                'ticket_number' => (string) $ticket->ticket_number,
+                'subject' => (string) $ticket->subject,
+                'waiting' => $this->pendingWaitingLabel($ticket),
+                'url' => route('admin.tickets.show', $ticket),
+            ], array_slice($waiting, 0, self::FOLLOW_UP_TICKETS_LISTED));
+
+            try {
+                Mail::to($recipient->email)->queue(new PendingFollowUpMail(
+                    recipientName: (string) $recipient->name,
+                    tickets: $rows,
+                    total: count($waiting),
+                    days: $days,
+                    cancelAfterDays: max(0, (int) config('helpdesk.pending_auto_cancel_days', 0)),
+                ));
+            } catch (\Throwable $exception) {
+                Log::warning('Pending follow-up email failed.', [
+                    'recipient_user_id' => $recipient->id,
+                    'recipient_email' => $recipient->email,
+                    'error' => $exception->getMessage(),
+                ]);
+
+                continue;
+            }
+
+            foreach ($waiting as $ticket) {
+                $stamped[$ticket->id] = $ticket;
+            }
+        }
+
+        foreach ($stamped as $ticket) {
+            $this->recordNotifiedAt($ticket, 'staff_notified_pending_at');
+        }
+
+        return count($stamped);
+    }
+
+    /**
+     * "5 days with no activity", counted from the later of the last status change and the last reply, and when the
+     * automatic cancel is on, how long is left before it.
+     */
+    private function pendingWaitingLabel(Ticket $ticket): string
+    {
+        $lastActivity = $ticket->updated_at;
+        $lastReplyAt = $ticket->getAttribute('last_reply_at');
+        if ($lastReplyAt !== null) {
+            $lastReply = Carbon::parse($lastReplyAt);
+            if ($lastActivity === null || $lastReply->gt($lastActivity)) {
+                $lastActivity = $lastReply;
+            }
+        }
+
+        $days = max(1, (int) floor(($lastActivity ?? now())->diffInDays(now(), true)));
+        $label = $days.' '.($days === 1 ? 'day' : 'days').' with no activity';
+
+        $cancelAfter = max(0, (int) config('helpdesk.pending_auto_cancel_days', 0));
+        if ($cancelAfter > 0) {
+            $left = max(0, $cancelAfter - $days);
+            $label .= $left === 0
+                ? ', cancelled automatically at the next daily run'
+                : ', cancelled automatically in '.$left.' '.($left === 1 ? 'day' : 'days');
+        }
+
+        return $label;
     }
 
     private function sendAssignedTechnicalSlaReminders(): int
     {
-        $cutoff = now()->subMinutes(SlaSettings::assignmentReminderMinutes());
+        $cutoff = BusinessHours::cutoff(SlaSettings::assignmentReminderMinutes());
 
         // Imported tickets are old records: reminding about them would mail every open one on the first run.
         $query = Ticket::query()
             ->where('is_imported', false)
-            ->whereIn('status', Ticket::OPEN_STATUSES)
+            ->whereIn('status', Ticket::SLA_CLOCK_STATUSES)
             ->whereNotNull('assigned_at')
             ->where('assigned_at', '<=', $cutoff)
             ->whereNull('technical_user_notified_sla_at');
@@ -509,8 +634,8 @@ class TicketEmailAlertService
 
         $query = Ticket::query()
             ->where('is_imported', false)
-            ->whereIn('status', Ticket::OPEN_STATUSES)
-            ->where('created_at', '<=', now()->subMinutes($thresholdMinutes))
+            ->whereIn('status', Ticket::SLA_CLOCK_STATUSES)
+            ->where('created_at', '<=', BusinessHours::cutoff($thresholdMinutes))
             ->whereNull($notifiedColumn);
         $tickets = Ticket::applyUnassignedConstraint($query)
             ->get(['id', 'ticket_number', 'subject', 'priority', 'created_at']);

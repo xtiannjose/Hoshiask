@@ -50,6 +50,7 @@ class HelpdeskOpsStatus extends Command
         ));
         $this->line('Pending jobs: '.$this->formatCount($status['pending_jobs']));
         $this->line('Failed jobs: '.$this->formatCount($status['failed_jobs']));
+        $this->line('Last queued job finished: '.($status['queue_last_job_finished_at'] ?? 'not seen yet'));
         $this->line('Mail mailer: '.$status['mail_mailer']);
         $this->line('Scheduled alert command: '.$status['scheduled_alert_command']);
 

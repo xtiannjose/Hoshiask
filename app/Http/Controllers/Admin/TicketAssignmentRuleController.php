@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\TicketAssignmentRules\StoreTicketAssignmentRuleRequest;
+use App\Http\Requests\Admin\TicketAssignmentRules\UpdateTechnicianAvailabilityRequest;
 use App\Http\Requests\Admin\TicketAssignmentRules\UpdateTicketAssignmentSettingRequest;
 use App\Models\Category;
 use App\Models\TicketAssignmentRule;
 use App\Models\TicketAssignmentSetting;
 use App\Models\User;
 use App\Services\SystemLogService;
+use Illuminate\Support\Carbon;
 
 class TicketAssignmentRuleController extends Controller
 {
@@ -31,7 +33,7 @@ class TicketAssignmentRuleController extends Controller
             ->whereIn('role', User::TICKET_ASSIGNABLE_ROLES)
             ->where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name', 'role']);
+            ->get(['id', 'name', 'role', 'assignment_paused_until']);
 
         $distributionMethod = TicketAssignmentSetting::current()->distribution_method;
 
@@ -92,6 +94,37 @@ class TicketAssignmentRuleController extends Controller
 
         return redirect()->route('admin.assignment-rules.index')
             ->with('success', 'Assignment rule removed.');
+    }
+
+    /**
+     * Skip one person in the assignment rules until a day, or make them available again. Staff can still assign
+     * them by hand; only the automatic rules look at it.
+     */
+    public function updateAvailability(UpdateTechnicianAvailabilityRequest $request, User $user)
+    {
+        abort_unless($user->is_active && in_array($user->role, User::TICKET_ASSIGNABLE_ROLES, true), 404);
+
+        $backOn = $request->input('back_on');
+        $user->forceFill([
+            'assignment_paused_until' => $backOn ? Carbon::createFromFormat('Y-m-d', $backOn)->startOfDay() : null,
+        ])->save();
+
+        $this->systemLogs->record(
+            'ticket_assignment_rule.availability_updated',
+            $backOn ? 'Paused automatic assignment for a technician.' : 'Made a technician available for automatic assignment.',
+            [
+                'category' => 'configuration',
+                'target_type' => User::class,
+                'target_id' => $user->id,
+                'metadata' => ['back_on' => $backOn ?: null],
+                'request' => $request,
+            ]
+        );
+
+        return redirect()->route('admin.assignment-rules.index')
+            ->with('success', $backOn
+                ? $user->name.' is skipped by the assignment rules until '.Carbon::createFromFormat('Y-m-d', $backOn)->format('M j, Y').'.'
+                : $user->name.' is available for automatic assignment.');
     }
 
     public function updateDistributionMethod(UpdateTicketAssignmentSettingRequest $request)

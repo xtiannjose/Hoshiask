@@ -490,6 +490,7 @@
                 <div>
                     <label for="bulk-status-select" class="form-label">Status</label>
                     <select id="bulk-status-select" name="status" class="form-input">
+                        <option value="" selected disabled>Choose a status</option>
                         <x-ui.ticket-status-options />
                     </select>
                 </div>

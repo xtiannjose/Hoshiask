@@ -7,23 +7,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $otherCategory = DB::table('categories')
-            ->where('name', 'Other')
-            ->first();
-
-        if (! $otherCategory) {
-            $otherId = DB::table('categories')->insertGetId([
-                'name' => 'Other',
-                'description' => 'General inquiries and other support requests',
-                'color' => '#6B7280',
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        } else {
-            $otherId = (int) $otherCategory->id;
-        }
-
         $retiredIds = DB::table('categories')
             ->whereIn('name', [
                 'Printer & Scanning',
@@ -35,8 +18,27 @@ return new class extends Migration
             ])
             ->pluck('id')
             ->map(fn (mixed $id): int => (int) $id)
-            ->filter(fn (int $id): bool => $id !== $otherId)
             ->values();
+
+        // Nothing to retire (a new installation, whose categories come from the seeder): nothing to do.
+        if ($retiredIds->isEmpty()) {
+            return;
+        }
+
+        // Their tickets move to "Other", which is created only when there is something to move.
+        $otherId = DB::table('categories')->where('name', 'Other')->value('id');
+        if ($otherId === null) {
+            $otherId = DB::table('categories')->insertGetId([
+                'name' => 'Other',
+                'description' => 'General inquiries and other support requests',
+                'color' => '#6B7280',
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+        $otherId = (int) $otherId;
+        $retiredIds = $retiredIds->filter(fn (int $id): bool => $id !== $otherId)->values();
 
         if ($retiredIds->isEmpty()) {
             return;

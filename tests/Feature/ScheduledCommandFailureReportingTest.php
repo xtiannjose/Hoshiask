@@ -27,7 +27,7 @@ class ScheduledCommandFailureReportingTest extends TestCase
         $this->assertCount(count($events), $failureLogs);
         $this->assertSame('system', $failureLogs->first()->category);
         $this->assertTrue(
-            $failureLogs->contains(fn (SystemLog $log) => $log->description === 'Scheduled command [helpdesk:backup] failed.')
+            $failureLogs->contains(fn (SystemLog $log) => $log->description === 'Scheduled command [hoshiask:backup] failed.')
         );
         Log::shouldHaveReceived('error')->times(count($events));
     }

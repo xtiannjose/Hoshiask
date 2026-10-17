@@ -4,13 +4,13 @@
     $supportEmail = (string) config('legal.support_email');
     $address = (string) config('legal.contact_address');
     $retentionPeriod = (string) config('legal.retention_period');
-    $backupDays = max(1, (int) config('helpdesk.cleanup.backup_retention_days', 14));
+    $backupDays = max(1, (int) config('hoshiask.cleanup.backup_retention_days', 14));
     $logDays = max(1, (int) config('observability.system_logs.retention_days', 365));
 @endphp
 
 <div class="space-y-4 text-sm text-slate-700">
     <p>
-        This Privacy Notice explains how {{ $organization }} processes personal data in the Helpdesk Ticketing
+        This Privacy Notice explains how {{ $organization }} processes personal data in the Hoshiask Ticketing
         System. By using the Platform, you acknowledge this notice and provide consent where consent is the legal
         basis.
     </p>
@@ -103,7 +103,7 @@
         <h2 class="text-base font-semibold text-slate-900">9. Consent Statement</h2>
         <p>
             By accepting this Privacy Notice in the Platform, you confirm that you understand how your personal data is
-            processed for helpdesk operations and related compliance/security purposes.
+            processed for Hoshiask operations and related compliance/security purposes.
         </p>
     </div>
 </div>

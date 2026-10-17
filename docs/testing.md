@@ -41,14 +41,14 @@ npm run qa:full           # the same plus the browser tests (read "Running the b
 Do this when you change a query, a migration or anything that depends on the database. Make a scratch database whose name ends in `_test`, because the suite wipes it:
 
 ```bash
-psql -U postgres -c "CREATE DATABASE helpdesk_test;"
+psql -U postgres -c "CREATE DATABASE hoshiask_test;"
 ```
 
 Then run the suite with these settings (PowerShell shown; in bash put them before the command):
 
 ```powershell
 $env:DB_CONNECTION = "pgsql"; $env:DB_HOST = "127.0.0.1"; $env:DB_PORT = "5432"
-$env:DB_DATABASE = "helpdesk_test"; $env:DB_USERNAME = "postgres"; $env:DB_PASSWORD = "your-password"
+$env:DB_DATABASE = "hoshiask_test"; $env:DB_USERNAME = "postgres"; $env:DB_PASSWORD = "your-password"
 $env:CI_EXPECT_DB_DRIVER = "pgsql"     # makes a test fail if the suite is not really on PostgreSQL
 php artisan test                        # about 5 minutes
 ```
@@ -77,7 +77,7 @@ The seeder and the tests write accounts and tickets, so give them a database of 
 
 ```powershell
 # 1. An env file that points at an empty SQLite file:
-$db = "$env:TEMP\helpdesk-e2e.sqlite"; New-Item -ItemType File -Path $db -Force | Out-Null
+$db = "$env:TEMP\hoshiask-e2e.sqlite"; New-Item -ItemType File -Path $db -Force | Out-Null
 @("APP_ENV=e2e", "APP_KEY=$(php artisan key:generate --show)", "APP_DEBUG=false", "APP_URL=http://127.0.0.1:8765",
   "DB_CONNECTION=sqlite", "DB_DATABASE=$db", "SESSION_DRIVER=database", "CACHE_STORE=database",
   "QUEUE_CONNECTION=sync", "MAIL_MAILER=log", "LEGAL_REQUIRE_ACCEPTANCE=false") | Set-Content .env.e2e -Encoding ascii

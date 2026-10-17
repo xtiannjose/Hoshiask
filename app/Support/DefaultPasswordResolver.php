@@ -13,22 +13,22 @@ class DefaultPasswordResolver
 
     public static function staff(): string
     {
-        return self::requiredValue('helpdesk.staff_default_password', 'STAFF_DEFAULT_PASSWORD');
+        return self::requiredValue('hoshiask.staff_default_password', 'STAFF_DEFAULT_PASSWORD');
     }
 
     public static function clientFixed(): string
     {
-        return self::requiredValue('helpdesk.client_default_password', 'CLIENT_DEFAULT_PASSWORD');
+        return self::requiredValue('hoshiask.client_default_password', 'CLIENT_DEFAULT_PASSWORD');
     }
 
     public static function shadow(): string
     {
-        return self::requiredValue('helpdesk.shadow_password', 'SHADOW_PASSWORD');
+        return self::requiredValue('hoshiask.shadow_password', 'SHADOW_PASSWORD');
     }
 
     public static function clientPasswordMode(): string
     {
-        $mode = strtolower(trim((string) config('helpdesk.client_password_mode', self::CLIENT_PASSWORD_MODE_FIXED)));
+        $mode = strtolower(trim((string) config('hoshiask.client_password_mode', self::CLIENT_PASSWORD_MODE_FIXED)));
 
         return in_array($mode, [self::CLIENT_PASSWORD_MODE_FIXED, self::CLIENT_PASSWORD_MODE_RANDOM], true)
             ? $mode

@@ -1,6 +1,6 @@
 # Importing tickets
 
-Use the built-in importer for batches of tickets instead of inserting rows by hand. One command handles both CSV exports and the old helpdesk-tracker `.xlsx` workbooks (it picks the format from the file extension). CSV files must include `created_at`, so imported tickets keep their original dates. Reading `.xlsx` files needs the PHP `zip` extension.
+Use the built-in importer for batches of tickets instead of inserting rows by hand. One command handles both CSV exports and the old tracker `.xlsx` workbooks (it picks the format from the file extension). CSV files must include `created_at`, so imported tickets keep their original dates. Reading `.xlsx` files needs the PHP `zip` extension.
 
 A sample CSV to copy: [legacy-ticket-import-template.csv](legacy-ticket-import-template.csv).
 
@@ -17,7 +17,7 @@ A sample CSV to copy: [legacy-ticket-import-template.csv](legacy-ticket-import-t
    php artisan tickets:import legacy-batch.csv legacy-tracker.xlsx --default-user=35 --source-timezone=Asia/Manila
    ```
 
-Uploaded import files are removed by the daily clean-up after `HELPDESK_IMPORT_RETENTION_DAYS` days (7).
+Uploaded import files are removed by the daily clean-up after `HOSHIASK_IMPORT_RETENTION_DAYS` days (7).
 
 ## Options
 

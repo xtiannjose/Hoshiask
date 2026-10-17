@@ -29,7 +29,7 @@ How a change gets into `main`. To find your way around the code, read [docs/stru
 - Security-relevant actions and every data export write an entry with `SystemLogService::record()`.
 - Report numbers follow [docs/report-metrics.md](docs/report-metrics.md) and count only `Ticket::applyReportableConstraint()` tickets.
 - Escape text people typed. Do not use `{!! !!}` on it.
-- A risky feature ships switched off behind a setting, with a `--dry-run` where it applies and a note in `helpdesk:ops-status`.
+- A risky feature ships switched off behind a setting, with a `--dry-run` where it applies and a note in `hoshiask:ops-status`.
 - Name things with the terms in [GLOSSARY.md](GLOSSARY.md), in code, on screen, in docs and in pull requests.
 
 **Tests**
@@ -41,7 +41,7 @@ How a change gets into `main`. To find your way around the code, read [docs/stru
 **Documentation**
 
 - A new setting goes in `.env.example`, the config file and [docs/configuration.md](docs/configuration.md).
-- After you edit `docs/ticket-system-workflow.md`, run `php artisan helpdesk:build-workflow-pdf` and commit the new PDF.
+- After you edit `docs/ticket-system-workflow.md`, run `php artisan hoshiask:build-workflow-pdf` and commit the new PDF.
 - A decision that is hard to undo gets a short record in `docs/adr/`.
 
 ## Review checklist

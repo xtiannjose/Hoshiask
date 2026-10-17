@@ -106,12 +106,12 @@ class FailedLoginTextTest extends TestCase
         ]);
         $before = DB::table('system_logs')->where('id', $oldPassword->id)->first();
 
-        $this->artisan('helpdesk:scrub-failed-login-text', ['--dry-run' => true])
+        $this->artisan('hoshiask:scrub-failed-login-text', ['--dry-run' => true])
             ->expectsOutputToContain('1 failed sign-in entry would be masked')
             ->assertSuccessful();
         $this->assertSame(self::PASSWORD_LIKE, $oldPassword->fresh()->metadata['login'], 'a dry run changes nothing');
 
-        $this->artisan('helpdesk:scrub-failed-login-text')
+        $this->artisan('hoshiask:scrub-failed-login-text')
             ->expectsOutputToContain('Masked the typed text in 1 failed sign-in entry')
             ->assertSuccessful();
 
@@ -134,8 +134,8 @@ class FailedLoginTextTest extends TestCase
     {
         $this->failedEntry(self::PASSWORD_LIKE, ['method' => 'username']);
 
-        $this->artisan('helpdesk:scrub-failed-login-text')->assertSuccessful();
-        $this->artisan('helpdesk:scrub-failed-login-text')
+        $this->artisan('hoshiask:scrub-failed-login-text')->assertSuccessful();
+        $this->artisan('hoshiask:scrub-failed-login-text')
             ->expectsOutputToContain('Masked the typed text in 0 failed sign-in entries')
             ->assertSuccessful();
 

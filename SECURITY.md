@@ -11,7 +11,7 @@ Do not open a public issue or pull request for a security problem. Tell the repo
 
 ## Scope
 
-The application in this repository and its deployment scripts. Third-party services (mail provider, hosting) are out of scope.
+The application in this repository. Third-party services (mail provider, hosting) are out of scope.
 
 ## For maintainers
 

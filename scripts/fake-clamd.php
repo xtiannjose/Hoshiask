@@ -3,12 +3,12 @@
 /*
  * A stand-in for the ClamAV daemon, for trying upload scanning on a computer without ClamAV.
  * It is NOT a virus scanner: it only answers PING and INSTREAM, and calls a file infected when it
- * contains HELPDESK-TEST-VIRUS-SIGNATURE or the standard EICAR test file.
+ * contains HOSHIASK-TEST-VIRUS-SIGNATURE or the standard EICAR test file.
  *
  *   php scripts/fake-clamd.php 3310                     (listen on 127.0.0.1:3310)
  *   php scripts/fake-clamd.php /tmp/fake-clamd.sock     (listen on a Unix socket)
  *
- * Then set HELPDESK_UPLOAD_SCAN=clamav and HELPDESK_CLAMAV_PORT (or HELPDESK_CLAMAV_SOCKET) in .env.
+ * Then set HOSHIASK_UPLOAD_SCAN=clamav and HOSHIASK_CLAMAV_PORT (or HOSHIASK_CLAMAV_SOCKET) in .env.
  */
 
 if (PHP_SAPI !== 'cli' || ! isset($argv[1])) {
@@ -24,7 +24,7 @@ if ($server === false) {
 }
 
 // Built from pieces so the file itself never looks like the test virus to antivirus software.
-$markers = ['HELPDESK-TEST-VIRUS-SIGNATURE', 'X5O!P%@AP[4'.chr(92).'PZX54(P^)7CC)7}'.'$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!'.'$H+H*'];
+$markers = ['HOSHIASK-TEST-VIRUS-SIGNATURE', 'X5O!P%@AP[4'.chr(92).'PZX54(P^)7CC)7}'.'$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!'.'$H+H*'];
 $readExactly = static function ($client, int $length): ?string {
     $data = '';
     while (strlen($data) < $length) {
@@ -59,7 +59,7 @@ while (true) {
             $data .= $readExactly($client, $length) ?? '';
         }
         $infected = array_filter($markers, static fn (string $marker): bool => str_contains($data, $marker)) !== [];
-        fwrite($client, $infected ? "stream: HELPDESK-TEST-VIRUS-SIGNATURE FOUND\0" : "stream: OK\0");
+        fwrite($client, $infected ? "stream: HOSHIASK-TEST-VIRUS-SIGNATURE FOUND\0" : "stream: OK\0");
         echo date('H:i:s').' scanned '.strlen($data).' bytes: '.($infected ? 'FOUND' : 'OK')."\n";
     } else {
         fwrite($client, "UNKNOWN COMMAND\0");

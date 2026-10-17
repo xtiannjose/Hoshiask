@@ -10,15 +10,15 @@ use Illuminate\Support\Facades\File;
 use RuntimeException;
 use Throwable;
 
-class HelpdeskBackup extends Command
+class HoshiaskBackup extends Command
 {
-    protected $signature = 'helpdesk:backup';
+    protected $signature = 'hoshiask:backup';
 
     protected $description = 'Back up the database and every uploaded file into one checked (and, with a key, encrypted) file, and copy it to the second location if one is set.';
 
     public function handle(BackupBundle $bundles, SystemLogService $systemLogs): int
     {
-        $lock = Cache::lock('helpdesk:backup', 3600);
+        $lock = Cache::lock('hoshiask:backup', 3600);
         if (! $lock->get()) {
             $this->error('Another backup is still running. Nothing was done.');
 
@@ -29,7 +29,7 @@ class HelpdeskBackup extends Command
 
         try {
             if ($bundles->key() === null) {
-                $this->warn('WARNING: HELPDESK_BACKUP_ENCRYPTION_KEY is not set, so this backup is NOT encrypted and will not be copied away. Run `php artisan helpdesk:backup-key` (see docs/backup-and-restore.md).');
+                $this->warn('WARNING: HOSHIASK_BACKUP_ENCRYPTION_KEY is not set, so this backup is NOT encrypted and will not be copied away. Run `php artisan hoshiask:backup-key` (see docs/backup-and-restore.md).');
             }
 
             $backup = $bundles->create();
@@ -79,18 +79,18 @@ class HelpdeskBackup extends Command
     }
 
     /**
-     * Copies an encrypted backup to HELPDESK_BACKUP_COPY_PATH (a second disk, a mounted network drive), checks the
+     * Copies an encrypted backup to HOSHIASK_BACKUP_COPY_PATH (a second disk, a mounted network drive), checks the
      * copy, and removes copies there older than the retention period.
      */
     private function copyAway(string $path, bool $encrypted): bool
     {
-        $copyPath = rtrim(trim((string) config('helpdesk.backup.copy_path')), '/\\');
+        $copyPath = rtrim(trim((string) config('hoshiask.backup.copy_path')), '/\\');
         if ($copyPath === '') {
             return false;
         }
 
         if (! $encrypted) {
-            $this->warn('Not copied to '.$copyPath.': an unencrypted backup is never copied away. Set HELPDESK_BACKUP_ENCRYPTION_KEY first.');
+            $this->warn('Not copied to '.$copyPath.': an unencrypted backup is never copied away. Set HOSHIASK_BACKUP_ENCRYPTION_KEY first.');
 
             return false;
         }
@@ -108,9 +108,9 @@ class HelpdeskBackup extends Command
         }
         rename($partial, $target);
 
-        $cutoff = now()->subDays((int) config('helpdesk.cleanup.backup_retention_days', 14))->getTimestamp();
+        $cutoff = now()->subDays((int) config('hoshiask.cleanup.backup_retention_days', 14))->getTimestamp();
         $pruned = 0;
-        foreach (array_merge(glob($copyPath.'/helpdesk-*.tar.enc') ?: [], glob($copyPath.'/helpdesk-*.tar') ?: []) as $old) {
+        foreach (BackupBundle::bundlesIn($copyPath) as $old) {
             if (filemtime($old) < $cutoff && @unlink($old)) {
                 $pruned++;
             }

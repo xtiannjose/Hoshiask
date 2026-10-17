@@ -9,7 +9,7 @@ class PrivacyNoticeContentTest extends TestCase
     public function test_the_notice_states_how_long_backups_and_logs_are_kept_and_how_to_complain(): void
     {
         config([
-            'helpdesk.cleanup.backup_retention_days' => 21,
+            'hoshiask.cleanup.backup_retention_days' => 21,
             'observability.system_logs.retention_days' => 400,
         ]);
 

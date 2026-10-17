@@ -7,9 +7,9 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use League\CommonMark\GithubFlavoredMarkdownConverter;
 
-class HelpdeskBuildWorkflowPdf extends Command
+class HoshiaskBuildWorkflowPdf extends Command
 {
-    protected $signature = 'helpdesk:build-workflow-pdf';
+    protected $signature = 'hoshiask:build-workflow-pdf';
 
     protected $description = 'Regenerate docs/ticket-system-workflow.pdf from the current docs/ticket-system-workflow.md.';
 

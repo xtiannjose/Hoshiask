@@ -12,12 +12,14 @@ use Throwable;
 
 /**
  * One backup = one file holding the database dump, every uploaded file and a manifest that lists them with their
- * sizes and SHA-256 sums: helpdesk-YYYYmmdd-HHMMSS.tar.enc (encrypted, see BackupEncryption) or .tar (no key set).
+ * sizes and SHA-256 sums: hoshiask-YYYYmmdd-HHMMSS.tar.enc (encrypted, see BackupEncryption) or .tar (no key set).
  * Making, checking and unpacking all stream, so memory stays flat whatever the size.
  */
 class BackupBundle
 {
     public const MANIFEST = 'manifest.json';
+
+    public const PREFIX = 'hoshiask-';
 
     /** Disks whose files go into the backup, with the folder on that disk (empty = the whole disk). */
     private const FILE_SOURCES = ['attachments' => 'attachments', 'department-logos' => ''];
@@ -26,8 +28,8 @@ class BackupBundle
 
     public function directory(): string
     {
-        $disk = (string) config('helpdesk.backup.disk', config('filesystems.default', 'local'));
-        $path = trim((string) config('helpdesk.backup.path', 'backups'), '/');
+        $disk = (string) config('hoshiask.backup.disk', config('filesystems.default', 'local'));
+        $path = trim((string) config('hoshiask.backup.path', 'backups'), '/');
         Storage::disk($disk)->makeDirectory($path);
 
         return Storage::disk($disk)->path($path);
@@ -35,7 +37,7 @@ class BackupBundle
 
     public function key(): ?string
     {
-        $key = trim((string) config('helpdesk.backup.encryption_key'));
+        $key = trim((string) config('hoshiask.backup.encryption_key'));
 
         return $key === '' ? null : $key;
     }
@@ -45,10 +47,20 @@ class BackupBundle
      */
     public static function newestIn(string $directory): ?string
     {
-        $bundles = array_merge(glob($directory.'/helpdesk-*.tar.enc') ?: [], glob($directory.'/helpdesk-*.tar') ?: []);
+        $bundles = self::bundlesIn($directory);
         usort($bundles, fn (string $a, string $b): int => strcmp(basename($b), basename($a)));
 
         return $bundles[0] ?? null;
+    }
+
+    /**
+     * Every bundle in a folder.
+     *
+     * @return list<string>
+     */
+    public static function bundlesIn(string $directory): array
+    {
+        return array_merge(glob($directory.'/'.self::PREFIX.'*.tar.enc') ?: [], glob($directory.'/'.self::PREFIX.'*.tar') ?: []);
     }
 
     /**
@@ -68,7 +80,7 @@ class BackupBundle
         $work = $directory.'/.work-'.$stamp;
         File::ensureDirectoryExists($work, 0700); // holds the plaintext dump until it is encrypted
         $key = $this->key();
-        $final = $directory.'/helpdesk-'.$stamp.($key !== null ? '.tar.enc' : '.tar');
+        $final = $directory.'/'.self::PREFIX.$stamp.($key !== null ? '.tar.enc' : '.tar');
 
         try {
             $raw = $work.'/dump.raw';
@@ -283,7 +295,7 @@ class BackupBundle
             rewind($handle);
 
             if ($encrypted && $key === null) {
-                throw new RuntimeException('This backup is encrypted. Give the key with --key or set HELPDESK_BACKUP_ENCRYPTION_KEY.');
+                throw new RuntimeException('This backup is encrypted. Give the key with --key or set HOSHIASK_BACKUP_ENCRYPTION_KEY.');
             }
 
             $pieces = $encrypted
@@ -447,7 +459,7 @@ class BackupBundle
     {
         $sources = [];
         $skipped = [];
-        $disks = ['attachments' => (string) config('helpdesk.attachments_disk', 'local'), 'department-logos' => 'department-logos'];
+        $disks = ['attachments' => (string) config('hoshiask.attachments_disk', 'local'), 'department-logos' => 'department-logos'];
 
         foreach (self::FILE_SOURCES as $label => $folder) {
             $disk = $disks[$label];

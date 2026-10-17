@@ -7,9 +7,9 @@ use App\Services\Retention\TicketRetentionService;
 use App\Services\SystemLogService;
 use Illuminate\Console\Command;
 
-class HelpdeskRetentionHold extends Command
+class HoshiaskRetentionHold extends Command
 {
-    protected $signature = 'helpdesk:retention-hold
+    protected $signature = 'hoshiask:retention-hold
         {ticket_number : The ticket number, for example TK-ABCD1234}
         {--release : Lift the hold instead of setting it}
         {--reason= : Why the hold is set or lifted (kept in the audit log)}';

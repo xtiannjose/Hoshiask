@@ -414,8 +414,8 @@ class TicketEmailAlertsTest extends TestCase
     {
         Mail::fake();
         config([
-            'helpdesk.sla.assignment_reminder_minutes' => 30,
-            'helpdesk.sla.resolution_target_minutes' => 60,
+            'hoshiask.sla.assignment_reminder_minutes' => 30,
+            'hoshiask.sla.resolution_target_minutes' => 60,
         ]);
 
         $technical = $this->createUser('Config SLA Tech', 'config-sla-tech@example.com', User::ROLE_TECHNICAL);

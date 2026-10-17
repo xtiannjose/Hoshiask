@@ -38,10 +38,10 @@ class BusinessHoursSlaTest extends TestCase
         config([
             'legal.require_acceptance' => false,
             'app.timezone' => 'Asia/Manila',
-            'helpdesk.sla.business_hours.enabled' => true,
-            'helpdesk.sla.business_hours.days' => '1,2,3,4,5',
-            'helpdesk.sla.business_hours.start' => '08:00',
-            'helpdesk.sla.business_hours.end' => '17:00',
+            'hoshiask.sla.business_hours.enabled' => true,
+            'hoshiask.sla.business_hours.days' => '1,2,3,4,5',
+            'hoshiask.sla.business_hours.start' => '08:00',
+            'hoshiask.sla.business_hours.end' => '17:00',
         ]);
 
         // Friday 16:00 in the office; the helpers below move the clock.
@@ -85,7 +85,7 @@ class BusinessHoursSlaTest extends TestCase
 
     public function test_the_round_the_clock_clock_breaches_over_the_weekend(): void
     {
-        config(['helpdesk.sla.business_hours.enabled' => false]);
+        config(['hoshiask.sla.business_hours.enabled' => false]);
         $this->travelToOffice('2026-10-10 22:00');
 
         $this->assertStringContainsString($this->ticket->ticket_number, $this->breachedTab());
@@ -130,7 +130,7 @@ class BusinessHoursSlaTest extends TestCase
 
     public function test_the_round_the_clock_clock_puts_it_under_needs_attention_after_sixteen_calendar_hours(): void
     {
-        config(['helpdesk.sla.business_hours.enabled' => false]);
+        config(['hoshiask.sla.business_hours.enabled' => false]);
         $this->travelToOffice('2026-10-10 08:00');
 
         $this->assertStringContainsString($this->ticket->ticket_number, $this->attentionTab());
@@ -149,7 +149,7 @@ class BusinessHoursSlaTest extends TestCase
             ->assertOk()
             ->assertSee('2d 18h (3h working)', false);
 
-        config(['helpdesk.sla.business_hours.enabled' => false]);
+        config(['hoshiask.sla.business_hours.enabled' => false]);
         $this->actingAs($this->staff)->get(route('admin.tickets.show', $this->ticket))
             ->assertOk()
             ->assertSee('2d 18h', false)

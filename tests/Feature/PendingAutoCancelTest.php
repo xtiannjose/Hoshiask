@@ -30,7 +30,7 @@ class PendingAutoCancelTest extends TestCase
         parent::setUp();
         Carbon::setTestNow(Carbon::create(2026, 10, 12, 8, 0, 0));
         Mail::fake();
-        config(['helpdesk.pending_auto_cancel_days' => 14, 'helpdesk.pending_follow_up_days' => 3]);
+        config(['hoshiask.pending_auto_cancel_days' => 14, 'hoshiask.pending_follow_up_days' => 3]);
 
         $this->client = $this->createUser('Client Cancel', 'client-cancel@example.com', User::ROLE_CLIENT, 'Hoshishi');
         $this->technical = $this->createUser('Tech Cancel', 'tech-cancel@example.com', User::ROLE_TECHNICAL);
@@ -77,7 +77,7 @@ class PendingAutoCancelTest extends TestCase
 
     public function test_zero_days_switches_the_cancel_off(): void
     {
-        config(['helpdesk.pending_auto_cancel_days' => 0]);
+        config(['hoshiask.pending_auto_cancel_days' => 0]);
         $ticket = $this->pendingTicket(daysQuiet: 60);
 
         $this->artisan('tickets:auto-cancel-pending')->assertSuccessful();
@@ -109,18 +109,18 @@ class PendingAutoCancelTest extends TestCase
 
     public function test_the_status_check_names_a_cancel_that_comes_before_the_reminder(): void
     {
-        config(['helpdesk.pending_auto_cancel_days' => 3, 'helpdesk.pending_follow_up_days' => 3]);
+        config(['hoshiask.pending_auto_cancel_days' => 3, 'hoshiask.pending_follow_up_days' => 3]);
         $request = new ProductionAdvisoriesRequested;
         (new ReportPendingTicketAdvisories)->handle($request);
         $this->assertCount(1, $request->advisories());
         $this->assertStringContainsString('not later than the first staff reminder', $request->advisories()[0]);
 
-        config(['helpdesk.pending_auto_cancel_days' => 14, 'helpdesk.pending_follow_up_days' => 0]);
+        config(['hoshiask.pending_auto_cancel_days' => 14, 'hoshiask.pending_follow_up_days' => 0]);
         $request = new ProductionAdvisoriesRequested;
         (new ReportPendingTicketAdvisories)->handle($request);
         $this->assertStringContainsString('staff are not reminded first', $request->advisories()[0]);
 
-        config(['helpdesk.pending_auto_cancel_days' => 14, 'helpdesk.pending_follow_up_days' => 3]);
+        config(['hoshiask.pending_auto_cancel_days' => 14, 'hoshiask.pending_follow_up_days' => 3]);
         $request = new ProductionAdvisoriesRequested;
         (new ReportPendingTicketAdvisories)->handle($request);
         $this->assertSame([], $request->advisories());

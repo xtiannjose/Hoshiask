@@ -1,8 +1,8 @@
-# Helpdesk
+# Hoshiask
 
-[![CI](https://github.com/xtiannjose/Helpdesk/actions/workflows/ci.yml/badge.svg)](https://github.com/xtiannjose/Helpdesk/actions/workflows/ci.yml)
+[![CI](https://github.com/xtiannjose/Hoshiask/actions/workflows/ci.yml/badge.svg)](https://github.com/xtiannjose/Hoshiask/actions/workflows/ci.yml)
 
-A help desk for an organisation with field offices. **Clients** file support tickets in a **client portal** (`/client`). **Staff** work them in a **staff console** (`/admin`): they assign, answer, escalate, close and report on tickets. The version is in [`VERSION`](VERSION) and is also shown by `php artisan helpdesk:ops-status`.
+A help desk for an organisation with field offices. **Clients** file support tickets in a **client portal** (`/client`). **Staff** work them in a **staff console** (`/admin`): they assign, answer, escalate, close and report on tickets. The version is in [`VERSION`](VERSION) and is also shown by `php artisan hoshiask:ops-status`.
 
 **Built with:** PHP 8.3, Laravel 13, PostgreSQL (MySQL or SQLite also work), Blade, Alpine.js, Tailwind CSS 4 and Vite 8.
 
@@ -53,7 +53,7 @@ The seeded accounts (`admin`, `super.user`, `technical`, `shadow`, `client.one`,
 | The same plus the browser tests | `npm run qa:full` (read [docs/testing.md](docs/testing.md) first) |
 | Fix PHP code style | `vendor/bin/pint` |
 | Static analysis | `composer analyse` |
-| Check the health of a running system | `php artisan helpdesk:ops-status` |
+| Check the health of a running system | `php artisan hoshiask:ops-status` |
 
 ## Where things are
 
@@ -70,7 +70,7 @@ Everything is indexed in [docs/README.md](docs/README.md). Start here:
 | Learn how clients and staff work a ticket | [docs/ticket-system-workflow.md](docs/ticket-system-workflow.md) |
 | Understand the words used in code and screens | [GLOSSARY.md](GLOSSARY.md) |
 | Change a setting | [docs/configuration.md](docs/configuration.md) |
-| Deploy, schedule, back up and monitor a server | [docs/operations.md](docs/operations.md) |
+| Schedule, back up and monitor a server | [docs/operations.md](docs/operations.md) |
 | Run or write tests | [docs/testing.md](docs/testing.md) |
 | Make a change and get it merged | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Report a security problem | [SECURITY.md](SECURITY.md) |

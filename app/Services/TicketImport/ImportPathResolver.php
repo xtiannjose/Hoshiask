@@ -15,8 +15,8 @@ class ImportPathResolver
             throw new InvalidArgumentException('Import path cannot be empty.');
         }
 
-        $storageCandidate = Storage::disk((string) config('helpdesk.ticket_import_disk', 'local'))
-            ->path(trim((string) config('helpdesk.ticket_import_path', 'imports').'/'.$trimmedPath, '/'));
+        $storageCandidate = Storage::disk((string) config('hoshiask.ticket_import_disk', 'local'))
+            ->path(trim((string) config('hoshiask.ticket_import_path', 'imports').'/'.$trimmedPath, '/'));
 
         $candidates = [
             $trimmedPath,

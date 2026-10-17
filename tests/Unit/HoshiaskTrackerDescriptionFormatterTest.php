@@ -2,15 +2,15 @@
 
 namespace Tests\Unit;
 
-use App\Services\TicketImport\HelpdeskTrackerDescriptionFormatter;
+use App\Services\TicketImport\HoshiaskTrackerDescriptionFormatter;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
-class HelpdeskTrackerDescriptionFormatterTest extends TestCase
+class HoshiaskTrackerDescriptionFormatterTest extends TestCase
 {
     public function test_it_formats_excel_serial_dates_and_times_without_1899_time_artifacts(): void
     {
-        $formatter = new HelpdeskTrackerDescriptionFormatter;
+        $formatter = new HoshiaskTrackerDescriptionFormatter;
 
         $this->assertSame('03/17/2026', $formatter->formatExcelDate(46098.0));
         $this->assertSame('2:00:00 PM', $formatter->formatExcelTime(0.5833333333333334));
@@ -19,7 +19,7 @@ class HelpdeskTrackerDescriptionFormatterTest extends TestCase
 
     public function test_it_builds_the_expected_ticket_information_block(): void
     {
-        $formatter = new HelpdeskTrackerDescriptionFormatter;
+        $formatter = new HoshiaskTrackerDescriptionFormatter;
         $createdAt = Carbon::parse('2026-03-17 14:00:00', 'Asia/Manila')->utc();
         $completedAt = Carbon::parse('2026-03-17 17:00:00', 'Asia/Manila')->utc();
 
@@ -53,7 +53,7 @@ class HelpdeskTrackerDescriptionFormatterTest extends TestCase
 
     public function test_it_falls_back_to_issue_via_when_issue_description_is_blank_for_subjects(): void
     {
-        $formatter = new HelpdeskTrackerDescriptionFormatter;
+        $formatter = new HoshiaskTrackerDescriptionFormatter;
 
         $this->assertSame(
             'ICTSI - Server 48 Stopped',
@@ -63,7 +63,7 @@ class HelpdeskTrackerDescriptionFormatterTest extends TestCase
 
     public function test_it_normalizes_noon_tokens_inside_free_text_fields_without_changing_names(): void
     {
-        $formatter = new HelpdeskTrackerDescriptionFormatter;
+        $formatter = new HoshiaskTrackerDescriptionFormatter;
         $createdAt = Carbon::parse('2025-11-08 08:00:00', 'Asia/Manila')->utc();
 
         $description = $formatter->buildDescription([
@@ -87,7 +87,7 @@ class HelpdeskTrackerDescriptionFormatterTest extends TestCase
 
     public function test_it_preserves_source_time_display_without_forcing_seconds(): void
     {
-        $formatter = new HelpdeskTrackerDescriptionFormatter;
+        $formatter = new HoshiaskTrackerDescriptionFormatter;
         $createdAt = Carbon::parse('2026-03-06 14:00:00', 'Asia/Manila')->utc();
         $completedAt = Carbon::parse('2026-03-06 15:00:00', 'Asia/Manila')->utc();
 

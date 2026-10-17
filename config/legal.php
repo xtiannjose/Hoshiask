@@ -32,7 +32,7 @@ return [
     | Organization Details
     |--------------------------------------------------------------------------
     */
-    'organization_name' => env('LEGAL_ORGANIZATION_NAME', env('HELPDESK_SUPPORT_ORGANIZATION_NAME', 'Hoshishi Corporation')),
+    'organization_name' => env('LEGAL_ORGANIZATION_NAME', env('HOSHIASK_SUPPORT_ORGANIZATION_NAME', 'Hoshishi Corporation')),
     'governing_law' => env('LEGAL_GOVERNING_LAW', 'Republic of the Philippines'),
     'dpo_email' => env('LEGAL_DPO_EMAIL', 'privacy@example.com'),
     'support_email' => env('LEGAL_SUPPORT_EMAIL', 'support@example.com'),

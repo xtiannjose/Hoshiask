@@ -114,6 +114,6 @@
 
     {!! $bodyHtml !!}
 
-    <p class="footer">Generated from docs/ticket-system-workflow.md via `php artisan helpdesk:build-workflow-pdf`.</p>
+    <p class="footer">Generated from docs/ticket-system-workflow.md via `php artisan hoshiask:build-workflow-pdf`.</p>
 </body>
 </html>

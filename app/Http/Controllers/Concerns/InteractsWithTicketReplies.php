@@ -36,7 +36,7 @@ trait InteractsWithTicketReplies
             return;
         }
 
-        $disk = (string) config('helpdesk.attachments_disk', 'local');
+        $disk = (string) config('hoshiask.attachments_disk', 'local');
 
         foreach ($request->file('attachments') as $file) {
             $path = $file->store('attachments', $disk);

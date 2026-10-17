@@ -25,11 +25,11 @@ class ReportUploadScanAdvisories
             return;
         }
 
-        $problem = Cache::remember('helpdesk:upload-scan:ping', self::PING_CACHE_SECONDS, fn () => $this->scanner->ping(2.0) ?? '');
+        $problem = Cache::remember('hoshiask:upload-scan:ping', self::PING_CACHE_SECONDS, fn () => $this->scanner->ping(2.0) ?? '');
 
         if ($problem !== '') {
             $uploads = config('security.upload_scan.on_error') === 'block' ? 'blocked' : 'allowed without a check';
-            $request->add("Virus scanning is switched on but the scanner cannot be reached ({$problem}); uploads are {$uploads} meanwhile. Run `php artisan helpdesk:upload-scan-check`.");
+            $request->add("Virus scanning is switched on but the scanner cannot be reached ({$problem}); uploads are {$uploads} meanwhile. Run `php artisan hoshiask:upload-scan-check`.");
         }
     }
 }

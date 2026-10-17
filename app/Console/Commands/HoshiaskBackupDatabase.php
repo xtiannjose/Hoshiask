@@ -7,13 +7,13 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
-class HelpdeskBackupDatabase extends Command
+class HoshiaskBackupDatabase extends Command
 {
-    protected $signature = 'helpdesk:backup-database
+    protected $signature = 'hoshiask:backup-database
         {--connection= : Database connection to export}
         {--path= : Storage path for backup exports}';
 
-    protected $description = 'Export the configured helpdesk database to private storage.';
+    protected $description = 'Export the configured Hoshiask database to private storage.';
 
     public function handle(DatabaseDumper $dumper): int
     {
@@ -27,8 +27,8 @@ class HelpdeskBackupDatabase extends Command
         }
 
         $driver = (string) ($connection['driver'] ?? '');
-        $disk = (string) config('helpdesk.backup.disk', config('filesystems.default', 'local'));
-        $backupPath = trim((string) ($this->option('path') ?: config('helpdesk.backup.path', 'backups')), '/');
+        $disk = (string) config('hoshiask.backup.disk', config('filesystems.default', 'local'));
+        $backupPath = trim((string) ($this->option('path') ?: config('hoshiask.backup.path', 'backups')), '/');
 
         if ($backupPath === '') {
             $this->error('Backup path cannot be empty.');

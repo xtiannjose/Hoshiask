@@ -4,5 +4,5 @@ The privacy notice promises personal details are not kept past the retention per
 
 ## Consequences
 
-- Removal cannot be undone except from a backup, so the clean-up ships switched off (`HELPDESK_RETENTION_ENABLED=false`) with a `--dry-run`, a legal hold, and an ops-status advisory when tickets are past the period.
+- Removal cannot be undone except from a backup, so the clean-up ships switched off (`HOSHIASK_RETENTION_ENABLED=false`) with a `--dry-run`, a legal hold, and an ops-status advisory when tickets are past the period.
 - Staff and client accounts are out of scope. Backups keep removed details until they age out (14 days).

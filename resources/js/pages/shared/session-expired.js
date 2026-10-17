@@ -1,4 +1,4 @@
-const DRAFT_KEY_PREFIX = 'helpdesk:reply-draft:';
+const DRAFT_KEY_PREFIX = 'hoshiask:reply-draft:';
 
 // 401: not signed in any more. 419: the page's security token no longer matches (session ended).
 export const isSessionExpiredStatus = (status) => status === 401 || status === 419;

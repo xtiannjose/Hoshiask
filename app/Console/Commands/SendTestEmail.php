@@ -27,7 +27,7 @@ class SendTestEmail extends Command
             return self::FAILURE;
         }
 
-        $appName = (string) config('app.name', 'Helpdesk');
+        $appName = (string) config('app.name', 'Hoshiask');
 
         try {
             Mail::raw(

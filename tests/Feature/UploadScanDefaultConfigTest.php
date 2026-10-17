@@ -11,7 +11,7 @@ class UploadScanDefaultConfigTest extends TestCase
 
     private function driver(?string $setting, string $appEnv): string
     {
-        $this->setEnvironmentValue('HELPDESK_UPLOAD_SCAN', $setting);
+        $this->setEnvironmentValue('HOSHIASK_UPLOAD_SCAN', $setting);
         $this->setEnvironmentValue('APP_ENV', $appEnv);
 
         $config = require config_path('security.php');

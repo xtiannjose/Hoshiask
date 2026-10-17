@@ -112,7 +112,7 @@ class AttachmentDownloadAuthorizationTest extends TestCase
     public function test_technical_requester_can_download_closed_internal_ticket_attachments(): void
     {
         Storage::fake('local');
-        config()->set('helpdesk.attachments_disk', 'local');
+        config()->set('hoshiask.attachments_disk', 'local');
 
         $technicalRequester = $this->createSupportUser('Internal Requester', 'internal-requester-attachments@example.com', User::ROLE_TECHNICAL);
         $assignedTechnical = $this->createSupportUser('Assigned Technical', 'assigned-technical-attachments@example.com', User::ROLE_TECHNICAL);
@@ -313,7 +313,7 @@ class AttachmentDownloadAuthorizationTest extends TestCase
     {
         Storage::fake('local');
         Storage::fake('public');
-        config()->set('helpdesk.attachments_disk', 'local');
+        config()->set('hoshiask.attachments_disk', 'local');
 
         $client = User::create([
             'name' => 'Attachment Client',

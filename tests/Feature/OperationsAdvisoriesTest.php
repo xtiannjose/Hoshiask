@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Events\ProductionAdvisoriesRequested;
 use App\Http\Controllers\HealthCheckController;
-use App\Services\Operations\HelpdeskOperationsStatusService;
+use App\Services\Operations\HoshiaskOperationsStatusService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -24,17 +24,17 @@ class OperationsAdvisoriesTest extends TestCase
         app()->detectEnvironment(fn () => 'production');
         config([
             'app.debug' => false,
-            'app.url' => 'https://helpdesk.example.org',
+            'app.url' => 'https://hoshiask.example.org',
             'session.secure' => true,
-            'helpdesk.health.detail_token' => 'monitor-secret',
+            'hoshiask.health.detail_token' => 'monitor-secret',
             'queue.default' => 'sync',
             'mail.default' => 'smtp',
-            'mail.from.address' => 'helpdesk@example.org',
+            'mail.from.address' => 'hoshiask@example.org',
             'logging.default' => 'stack',
             'logging.channels.stack.channels' => ['daily'],
             'app.timezone' => 'Asia/Manila',
         ]);
-        Cache::forever(HelpdeskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY, now()->timestamp);
+        Cache::forever(HoshiaskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY, now()->timestamp);
         // Only the built-in advisories here; features that add their own (app/Listeners) test them separately.
         Event::fake([ProductionAdvisoriesRequested::class]);
     }
@@ -43,7 +43,7 @@ class OperationsAdvisoriesTest extends TestCase
     {
         $this->production();
 
-        $status = (new HelpdeskOperationsStatusService)->buildStatus(false);
+        $status = (new HoshiaskOperationsStatusService)->buildStatus(false);
 
         $this->assertSame([], $status['advisories']);
         $this->assertSame([], $status['warnings']);
@@ -55,13 +55,13 @@ class OperationsAdvisoriesTest extends TestCase
         $this->production();
         config([
             'mail.default' => 'log',
-            'mail.from.address' => 'helpdesk@yourdomain.com',
+            'mail.from.address' => 'hoshiask@yourdomain.com',
             'logging.channels.stack.channels' => ['single'],
             'app.timezone' => 'UTC',
         ]);
-        Cache::forever(HelpdeskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY, now()->subMinutes(40)->timestamp);
+        Cache::forever(HoshiaskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY, now()->subMinutes(40)->timestamp);
 
-        $status = (new HelpdeskOperationsStatusService)->buildStatus(false);
+        $status = (new HoshiaskOperationsStatusService)->buildStatus(false);
 
         $text = implode("\n", $status['advisories']);
         $this->assertStringContainsString('MAIL_MAILER is "log"', $text);
@@ -78,9 +78,9 @@ class OperationsAdvisoriesTest extends TestCase
     public function test_a_scheduler_that_has_never_reported_is_an_advisory(): void
     {
         $this->production();
-        Cache::forget(HelpdeskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY);
+        Cache::forget(HoshiaskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY);
 
-        $advisories = (new HelpdeskOperationsStatusService)->buildStatus(false)['advisories'];
+        $advisories = (new HoshiaskOperationsStatusService)->buildStatus(false)['advisories'];
 
         $this->assertCount(1, $advisories);
         $this->assertStringContainsString('has not reported in yet', $advisories[0]);
@@ -89,26 +89,26 @@ class OperationsAdvisoriesTest extends TestCase
     public function test_a_recent_heartbeat_is_fine(): void
     {
         $this->production();
-        Cache::forever(HelpdeskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY, now()->subMinutes(14)->timestamp);
+        Cache::forever(HoshiaskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY, now()->subMinutes(14)->timestamp);
 
-        $this->assertSame([], (new HelpdeskOperationsStatusService)->buildStatus(false)['advisories']);
+        $this->assertSame([], (new HoshiaskOperationsStatusService)->buildStatus(false)['advisories']);
     }
 
     public function test_nothing_is_advised_outside_production(): void
     {
         config(['mail.default' => 'log', 'app.timezone' => 'UTC']);
-        Cache::forget(HelpdeskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY);
+        Cache::forget(HoshiaskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY);
 
-        $this->assertSame([], (new HelpdeskOperationsStatusService)->buildStatus(false)['advisories']);
+        $this->assertSame([], (new HoshiaskOperationsStatusService)->buildStatus(false)['advisories']);
     }
 
     public function test_the_five_minute_command_records_the_heartbeat(): void
     {
-        Cache::forget(HelpdeskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY);
+        Cache::forget(HoshiaskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY);
 
         $this->artisan('tickets:send-alert-emails')->assertSuccessful();
 
-        $this->assertEqualsWithDelta(now()->timestamp, (int) Cache::get(HelpdeskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY), 5);
+        $this->assertEqualsWithDelta(now()->timestamp, (int) Cache::get(HoshiaskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY), 5);
     }
 
     public function test_the_ops_status_command_lists_advisories_and_still_succeeds_with_fail_on_warning(): void
@@ -116,7 +116,7 @@ class OperationsAdvisoriesTest extends TestCase
         $this->production();
         config(['mail.default' => 'log']);
 
-        $this->artisan('helpdesk:ops-status', ['--fail-on-warning' => true])
+        $this->artisan('hoshiask:ops-status', ['--fail-on-warning' => true])
             ->expectsOutputToContain('Advisories (the deploy does not stop for these')
             ->expectsOutputToContain('MAIL_MAILER is "log"')
             ->expectsOutput('Warnings: none')
@@ -128,7 +128,7 @@ class OperationsAdvisoriesTest extends TestCase
         $this->production();
         config(['mail.default' => 'log']);
 
-        $this->artisan('helpdesk:ops-status', ['--json' => true, '--fail-on-warning' => true])
+        $this->artisan('hoshiask:ops-status', ['--json' => true, '--fail-on-warning' => true])
             ->expectsOutputToContain('"advisories"')
             ->assertSuccessful();
 
@@ -136,7 +136,7 @@ class OperationsAdvisoriesTest extends TestCase
         // trusted-host list set for every test that runs after this one.
         $health = fn (string $token): array => app(HealthCheckController::class)(
             Request::create('/health', 'GET', [], [], [], ['HTTP_X_HEALTH_TOKEN' => $token]),
-            app(HelpdeskOperationsStatusService::class)
+            app(HoshiaskOperationsStatusService::class)
         )->getData(true);
 
         $detailed = $health('monitor-secret');

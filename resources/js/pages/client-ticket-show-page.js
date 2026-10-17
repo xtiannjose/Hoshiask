@@ -117,7 +117,7 @@ const initClientTicketShowPage = () => {
     let pendingDeleteRow = null;
 
     const isEditingReply = () => editingReplyId !== '';
-    // The window comes from the server (helpdesk.reply_edit_window_minutes); the constant is only a fallback.
+    // The window comes from the server (hoshiask.reply_edit_window_minutes); the constant is only a fallback.
     const editWindowMs = Number(replyForm ? replyForm.dataset.editWindowMs : 0) || EDIT_DELETE_WINDOW_MS;
     const editWindowLabel = (replyForm ? replyForm.dataset.editWindowLabel : '') || '3 hours';
     const editWindowMessage = `You can only edit or delete messages within ${editWindowLabel}.`;

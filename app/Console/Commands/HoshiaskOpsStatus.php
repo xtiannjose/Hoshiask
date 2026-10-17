@@ -2,19 +2,19 @@
 
 namespace App\Console\Commands;
 
-use App\Services\Operations\HelpdeskOperationsStatusService;
+use App\Services\Operations\HoshiaskOperationsStatusService;
 use Illuminate\Console\Command;
 
-class HelpdeskOpsStatus extends Command
+class HoshiaskOpsStatus extends Command
 {
-    protected $signature = 'helpdesk:ops-status
+    protected $signature = 'hoshiask:ops-status
         {--fail-on-warning : Exit with a failure code when warnings are present}
         {--json : Output the status payload as JSON}';
 
-    protected $description = 'Show production-facing runtime and queue checks for the helpdesk app.';
+    protected $description = 'Show production-facing runtime and queue checks for the Hoshiask app.';
 
     public function __construct(
-        private readonly HelpdeskOperationsStatusService $opsStatus,
+        private readonly HoshiaskOperationsStatusService $opsStatus,
     ) {
         parent::__construct();
     }
@@ -33,7 +33,7 @@ class HelpdeskOpsStatus extends Command
                 : ($status['status'] === 'failed' ? self::FAILURE : self::SUCCESS);
         }
 
-        $this->info('Helpdesk operations status');
+        $this->info('Hoshiask operations status');
         $this->line('App version: '.$status['app_version']);
         $this->line('Environment: '.$status['environment']);
         $this->line('App URL: '.$status['app_url']);

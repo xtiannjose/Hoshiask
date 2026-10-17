@@ -3,7 +3,7 @@
 namespace App\Support;
 
 /**
- * The SLA minute settings from config/helpdesk.php. A missing value, zero or a negative number falls back
+ * The SLA minute settings from config/hoshiask.php. A missing value, zero or a negative number falls back
  * to the default, so a typo in .env never turns a threshold into "0 minutes". The two super user reminder
  * thresholds are the exception: they have always treated zero as "as soon as possible" (one minute).
  */
@@ -45,12 +45,12 @@ final class SlaSettings
 
     private static function atLeastOneMinute(string $key, int $default): int
     {
-        return max(1, (int) config('helpdesk.sla.'.$key, $default));
+        return max(1, (int) config('hoshiask.sla.'.$key, $default));
     }
 
     private static function positive(string $key, int $default): int
     {
-        $value = (int) config('helpdesk.sla.'.$key, $default);
+        $value = (int) config('hoshiask.sla.'.$key, $default);
 
         return $value > 0 ? $value : $default;
     }

@@ -15,6 +15,6 @@ class PrivateStorageNotServedTest extends TestCase
 
     public function test_a_storage_url_is_not_found_rather_than_forbidden(): void
     {
-        $this->get('/storage/backups/helpdesk-20260101-000000.tar')->assertNotFound();
+        $this->get('/storage/backups/hoshiask-20260101-000000.tar')->assertNotFound();
     }
 }

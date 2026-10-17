@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Listeners\RecordQueueWorkerHeartbeat;
-use App\Services\Operations\HelpdeskOperationsStatusService;
+use App\Services\Operations\HoshiaskOperationsStatusService;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Queue\Events\JobFailed;
@@ -25,7 +25,7 @@ class QueueWorkerHeartbeatTest extends TestCase
         parent::setUp();
         Carbon::setTestNow(Carbon::create(2026, 10, 12, 9, 0, 0));
         RecordQueueWorkerHeartbeat::forgetLastWrite();
-        Cache::forget(HelpdeskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY);
+        Cache::forget(HoshiaskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY);
     }
 
     protected function tearDown(): void
@@ -47,25 +47,25 @@ class QueueWorkerHeartbeatTest extends TestCase
         $job = Mockery::mock(Job::class);
 
         $listener->handle(new JobProcessed('redis', $job));
-        $this->assertSame(now()->timestamp, Cache::get(HelpdeskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY));
+        $this->assertSame(now()->timestamp, Cache::get(HoshiaskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY));
 
         Carbon::setTestNow(now()->addSeconds(10));
         $listener->handle(new JobFailed('redis', $job, new RuntimeException('boom')));
-        $this->assertSame(now()->subSeconds(10)->timestamp, Cache::get(HelpdeskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY));
+        $this->assertSame(now()->subSeconds(10)->timestamp, Cache::get(HoshiaskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY));
 
         Carbon::setTestNow(now()->addSeconds(25));
         $listener->handle(new JobProcessed('redis', $job));
-        $this->assertSame(now()->timestamp, Cache::get(HelpdeskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY));
+        $this->assertSame(now()->timestamp, Cache::get(HoshiaskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY));
     }
 
     public function test_a_redis_queue_with_waiting_jobs_and_no_finished_job_for_a_while_is_an_advisory(): void
     {
         $this->useRedisLikeQueue();
-        Cache::forever(HelpdeskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY, now()->subMinutes(20)->timestamp);
+        Cache::forever(HoshiaskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY, now()->subMinutes(20)->timestamp);
         Queue::push('App\\Jobs\\Demo');
         Queue::push('App\\Jobs\\Demo');
 
-        $status = app(HelpdeskOperationsStatusService::class)->buildStatus(false);
+        $status = app(HoshiaskOperationsStatusService::class)->buildStatus(false);
 
         $this->assertSame(2, $status['pending_jobs']);
         $this->assertStringContainsString('2 queued jobs are waiting and no job has finished for 20 minutes', implode("\n", $status['advisories']));
@@ -77,21 +77,21 @@ class QueueWorkerHeartbeatTest extends TestCase
         $this->useRedisLikeQueue();
         Queue::push('App\\Jobs\\Demo');
 
-        $service = app(HelpdeskOperationsStatusService::class);
+        $service = app(HoshiaskOperationsStatusService::class);
 
         // Nothing has finished since the queue was switched: that proves nothing.
         $this->assertStringNotContainsString('no job has finished', implode("\n", $service->buildStatus(false)['advisories']));
 
-        Cache::forever(HelpdeskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY, now()->subMinutes(2)->timestamp);
+        Cache::forever(HoshiaskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY, now()->subMinutes(2)->timestamp);
         $this->assertStringNotContainsString('no job has finished', implode("\n", $service->buildStatus(false)['advisories']));
     }
 
     public function test_the_status_shows_when_the_last_job_finished(): void
     {
         $this->useRedisLikeQueue();
-        Cache::forever(HelpdeskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY, now()->subMinutes(3)->timestamp);
+        Cache::forever(HoshiaskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY, now()->subMinutes(3)->timestamp);
 
-        $status = app(HelpdeskOperationsStatusService::class)->buildStatus(false);
+        $status = app(HoshiaskOperationsStatusService::class)->buildStatus(false);
 
         $this->assertSame(now()->subMinutes(3)->toIso8601String(), $status['queue_last_job_finished_at']);
     }
@@ -101,7 +101,7 @@ class QueueWorkerHeartbeatTest extends TestCase
         app()->detectEnvironment(fn () => 'production');
         config()->set('queue.default', 'redis');
         config()->set('queue.connections.redis', ['driver' => 'redis', 'connection' => 'default', 'queue' => 'default']);
-        config()->set('helpdesk.ops.queue_worker_running', true);
+        config()->set('hoshiask.ops.queue_worker_running', true);
         Queue::fake();
     }
 }

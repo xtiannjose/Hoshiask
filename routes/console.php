@@ -25,20 +25,20 @@ Schedule::command('tickets:send-alert-emails')
     ->withoutOverlapping(10)
     ->onFailure($reportFailure('tickets:send-alert-emails'));
 
-Schedule::command('helpdesk:backup')
+Schedule::command('hoshiask:backup')
     ->dailyAt('02:40')
     ->withoutOverlapping()
-    ->onFailure($reportFailure('helpdesk:backup'));
+    ->onFailure($reportFailure('hoshiask:backup'));
 
-Schedule::command('helpdesk:backup-verify')
+Schedule::command('hoshiask:backup-verify')
     ->weeklyOn(0, '04:20')
     ->withoutOverlapping()
-    ->onFailure($reportFailure('helpdesk:backup-verify'));
+    ->onFailure($reportFailure('hoshiask:backup-verify'));
 
-Schedule::command('helpdesk:cleanup-runtime')
+Schedule::command('hoshiask:cleanup-runtime')
     ->dailyAt('03:10')
     ->withoutOverlapping()
-    ->onFailure($reportFailure('helpdesk:cleanup-runtime'));
+    ->onFailure($reportFailure('hoshiask:cleanup-runtime'));
 
 Schedule::command('tickets:auto-close-resolved')
     ->dailyAt('03:40')
@@ -50,7 +50,7 @@ Schedule::command('tickets:auto-cancel-pending')
     ->withoutOverlapping()
     ->onFailure($reportFailure('tickets:auto-cancel-pending'));
 
-Schedule::command('helpdesk:enforce-retention')
+Schedule::command('hoshiask:enforce-retention')
     ->dailyAt('03:55')
     ->withoutOverlapping()
-    ->onFailure($reportFailure('helpdesk:enforce-retention'));
+    ->onFailure($reportFailure('hoshiask:enforce-retention'));

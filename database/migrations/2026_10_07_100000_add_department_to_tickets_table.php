@@ -52,7 +52,7 @@ return new class extends Migration
             return;
         }
 
-        $support = trim((string) config('helpdesk.support_department', 'Hoshishi'));
+        $support = trim((string) config('hoshiask.support_department', 'Hoshishi'));
 
         DB::table('tickets')
             ->where('is_imported', true)

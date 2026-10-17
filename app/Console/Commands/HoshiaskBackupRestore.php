@@ -6,12 +6,12 @@ use App\Services\Backup\BackupBundle;
 use Illuminate\Console\Command;
 use Throwable;
 
-class HelpdeskBackupRestore extends Command
+class HoshiaskBackupRestore extends Command
 {
-    protected $signature = 'helpdesk:backup-restore
+    protected $signature = 'hoshiask:backup-restore
         {file : The backup file}
         {directory : An empty folder to unpack it into}
-        {--key= : The backup key, if it is not in HELPDESK_BACKUP_ENCRYPTION_KEY}';
+        {--key= : The backup key, if it is not in HOSHIASK_BACKUP_ENCRYPTION_KEY}';
 
     protected $description = 'Unpack a backup into an empty folder and print the commands that put it back. Changes nothing in the running system.';
 

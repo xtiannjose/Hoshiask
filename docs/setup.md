@@ -1,6 +1,6 @@
 # Set up a development machine
 
-How to get Helpdesk running on your own computer. It takes about 20 minutes. For a server, see [operations.md](operations.md).
+How to get Hoshiask running on your own computer. It takes about 20 minutes. For a server, see [operations.md](operations.md).
 
 ## What you need
 
@@ -18,8 +18,8 @@ How to get Helpdesk running on your own computer. It takes about 20 minutes. For
 **1. Get the code and install the packages**
 
 ```bash
-git clone https://github.com/xtiannjose/Helpdesk.git
-cd Helpdesk
+git clone https://github.com/xtiannjose/Hoshiask.git
+cd Hoshiask
 composer install
 npm install
 ```
@@ -49,16 +49,16 @@ php artisan key:generate
 - **PostgreSQL** (like production). Create a database and a user, then fill in the `DB_*` lines:
 
   ```bash
-  psql -U postgres -c "CREATE USER helpdesk WITH PASSWORD 'choose-a-password';"
-  psql -U postgres -c "CREATE DATABASE helpdesk OWNER helpdesk;"
+  psql -U postgres -c "CREATE USER hoshiask WITH PASSWORD 'choose-a-password';"
+  psql -U postgres -c "CREATE DATABASE hoshiask OWNER hoshiask;"
   ```
 
   ```text
   DB_CONNECTION=pgsql
   DB_HOST=127.0.0.1
   DB_PORT=5432
-  DB_DATABASE=helpdesk
-  DB_USERNAME=helpdesk
+  DB_DATABASE=hoshiask
+  DB_USERNAME=hoshiask
   DB_PASSWORD=choose-a-password
   ```
 
@@ -87,7 +87,7 @@ php artisan migrate --seed
 php artisan storage:link
 ```
 
-The seeder creates 6 accounts (see below), the 13 starter departments, 5 categories and 8 sample tickets. The departments and categories come from `StarterDataSeeder`, not from the migrations, and it only fills an empty table: on a database that was migrated without `--seed`, run `php artisan db:seed --class=StarterDataSeeder` (without departments every user form refuses the department, and `helpdesk:ops-status` says so). The knowledge base and the canned responses start empty: `php artisan db:seed --class=StarterContentSeeder` adds 7 starter articles and 7 canned responses, and is safe to run again.
+The seeder creates 6 accounts (see below), the 13 starter departments, 5 categories and 8 sample tickets. The departments and categories come from `StarterDataSeeder`, not from the migrations, and it only fills an empty table: on a database that was migrated without `--seed`, run `php artisan db:seed --class=StarterDataSeeder` (without departments every user form refuses the department, and `hoshiask:ops-status` says so). The knowledge base and the canned responses start empty: `php artisan db:seed --class=StarterContentSeeder` adds 7 starter articles and 7 canned responses, and is safe to run again.
 
 **5. Start the app**
 
@@ -115,7 +115,7 @@ You can sign in with the username or the email address.
 - With `CLIENT_PASSWORD_MODE=random` each client gets a random password instead. It is written once to a private file in `storage/app/private/seeded-client-credentials/`.
 - Staff land on `/admin/dashboard`, clients on `/client/dashboard`.
 - To put accounts back to the passwords in `.env`, run their seeders: `php artisan db:seed --class=ShadowSeeder`, `--class=AdminSeeder` or `--class=UserSeeder` (super user, technician and the clients). Do not run the plain `php artisan db:seed` again: it adds 8 more sample tickets each time.
-- Eight wrong passwords lock a login for 15 minutes. `php artisan helpdesk:unlock-login <username>` lifts the lock.
+- Eight wrong passwords lock a login for 15 minutes. `php artisan hoshiask:unlock-login <username>` lifts the lock.
 
 ## Emails, reminders and automatic jobs
 
@@ -156,4 +156,4 @@ More in [testing.md](testing.md).
 | `Missing required password configuration: ...` | Fill in the three passwords in `.env` (step 3), then run `php artisan db:seed`. |
 | `Vite manifest not found` | The front end is not built. Run `npm run build`. |
 | `SQLSTATE ... Connection refused`, or `Database file ... does not exist` | The database is not running, the `DB_*` lines are wrong, or the SQLite file was not created (step 3). |
-| `Too many sign-in attempts for this account` | Wait 15 minutes, or run `php artisan helpdesk:unlock-login <username>`. |
+| `Too many sign-in attempts for this account` | Wait 15 minutes, or run `php artisan hoshiask:unlock-login <username>`. |

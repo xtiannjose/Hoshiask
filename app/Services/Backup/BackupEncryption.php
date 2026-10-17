@@ -8,7 +8,7 @@ use RuntimeException;
 /**
  * Encrypts a backup in 1 MiB pieces with AES-256-GCM, so memory stays flat whatever the size.
  *
- * File format "HBK1" (scripts/helpdesk-backup-decrypt.php reads the same thing without Laravel):
+ * File format "HBK1" (scripts/hoshiask-backup-decrypt.php reads the same thing without Laravel):
  *
  *   "HBK1\n"
  *   records:  flag (1 byte: 0 = more follow, 1 = last)  length of ciphertext (4 bytes, big-endian)
@@ -52,7 +52,7 @@ class BackupEncryption
         $raw = str_starts_with($key, 'base64:') ? base64_decode(substr($key, 7), true) : false;
 
         if (! is_string($raw) || strlen($raw) !== 32) {
-            throw new RuntimeException('The backup key is not valid. It must look like base64:... and come from `php artisan helpdesk:backup-key`.');
+            throw new RuntimeException('The backup key is not valid. It must look like base64:... and come from `php artisan hoshiask:backup-key`.');
         }
 
         return $raw;
@@ -100,7 +100,7 @@ class BackupEncryption
     public function decrypt($input): Generator
     {
         if (self::readUpTo($input, strlen(self::MAGIC)) !== self::MAGIC) {
-            throw new RuntimeException('This is not an encrypted helpdesk backup (the file does not start with HBK1).');
+            throw new RuntimeException('This is not an encrypted Hoshiask backup (the file does not start with HBK1).');
         }
 
         for ($index = 0; ; $index++) {

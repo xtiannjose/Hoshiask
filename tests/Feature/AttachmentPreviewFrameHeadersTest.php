@@ -24,7 +24,7 @@ class AttachmentPreviewFrameHeadersTest extends TestCase
     {
         parent::setUp();
 
-        config(['legal.require_acceptance' => false, 'helpdesk.attachments_disk' => 'local']);
+        config(['legal.require_acceptance' => false, 'hoshiask.attachments_disk' => 'local']);
         Storage::fake('local');
     }
 

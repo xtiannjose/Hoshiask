@@ -93,7 +93,7 @@ class ClientLifecycleEmailsTest extends TestCase
 
     public function test_received_email_can_be_switched_off(): void
     {
-        config(['helpdesk.client_emails.received' => false]);
+        config(['hoshiask.client_emails.received' => false]);
         $client = $this->createClient();
         $ticket = $this->createTicket($client, $this->createCategory());
 
@@ -244,7 +244,7 @@ class ClientLifecycleEmailsTest extends TestCase
 
     public function test_closed_and_cancelled_emails_are_sent_when_enabled_and_carry_the_cancellation_reason(): void
     {
-        config(['helpdesk.client_emails.closed' => true]);
+        config(['hoshiask.client_emails.closed' => true]);
         $client = $this->createClient('Loud Client', 'loud-client@example.com');
         $category = $this->createCategory();
         $closeTicket = $this->createTicket($client, $category, ['status' => 'resolved', 'resolved_at' => now()]);
@@ -263,7 +263,7 @@ class ClientLifecycleEmailsTest extends TestCase
 
     public function test_resolving_or_closing_a_ticket_whose_dates_were_entered_in_the_past_emails_nobody(): void
     {
-        config(['helpdesk.client_emails.closed' => true]);
+        config(['hoshiask.client_emails.closed' => true]);
         $client = $this->createClient('Backlog Status Client', 'backlog-status@example.com');
         $category = $this->createCategory();
         $resolveTicket = $this->createTicket($client, $category, ['status' => 'in_progress']);
@@ -309,7 +309,7 @@ class ClientLifecycleEmailsTest extends TestCase
         $category = $this->createCategory();
         $cancelTicket = $this->createTicket($client, $category, ['status' => 'open']);
         $resolveTicket = $this->createTicket($client, $category, ['status' => 'open']);
-        config(['helpdesk.client_emails.closed' => true]);
+        config(['hoshiask.client_emails.closed' => true]);
 
         $this->actingAs($client)->post(route('client.tickets.cancel', $cancelTicket), ['cancel_reason' => 'Filed by mistake']);
         $this->actingAs($client)->post(route('client.tickets.resolve', $resolveTicket), [
@@ -407,7 +407,7 @@ class ClientLifecycleEmailsTest extends TestCase
 
     public function test_setting_the_window_to_zero_emails_each_reply_immediately(): void
     {
-        config(['helpdesk.client_emails.reply_batch_minutes' => 0]);
+        config(['hoshiask.client_emails.reply_batch_minutes' => 0]);
         $client = $this->createClient('Now Client', 'now-client@example.com');
         $ticket = $this->createTicket($client, $this->createCategory(), ['status' => 'in_progress']);
 
@@ -515,7 +515,7 @@ class ClientLifecycleEmailsTest extends TestCase
 
     public function test_switching_the_warning_off_restores_the_immediate_close(): void
     {
-        config(['helpdesk.client_emails.auto_close_warning' => false]);
+        config(['hoshiask.client_emails.auto_close_warning' => false]);
         $client = $this->createClient('NoWarn Client', 'nowarn-client@example.com');
         $ticket = $this->createTicket($client, $this->createCategory(), [
             'status' => 'resolved',
@@ -530,7 +530,7 @@ class ClientLifecycleEmailsTest extends TestCase
 
     public function test_a_past_ticket_entered_as_resolved_is_auto_closed_without_emailing_the_client(): void
     {
-        config(['helpdesk.client_emails.closed' => true]);
+        config(['hoshiask.client_emails.closed' => true]);
         $client = $this->createClient('Paper Client', 'paper-client@example.com');
 
         $this->actingAs($this->admin())->post(route('admin.tickets.store'), [
@@ -584,7 +584,7 @@ class ClientLifecycleEmailsTest extends TestCase
 
     public function test_follow_up_emails_reference_the_received_email_so_clients_see_one_conversation(): void
     {
-        config(['mail.default' => 'array', 'mail.from.address' => 'helpdesk@example.org']);
+        config(['mail.default' => 'array', 'mail.from.address' => 'hoshiask@example.org']);
         $client = $this->createClient('Thread Client', 'thread-client@example.com');
         $ticket = $this->createTicket($client, $this->createCategory());
         $rootId = TicketEmailThread::rootMessageId($ticket);

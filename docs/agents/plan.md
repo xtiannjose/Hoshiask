@@ -1,12 +1,12 @@
 # Improvement plan and status
 
-Where the work to improve Helpdesk with Claude Code stands, what was decided, and what comes next. Claude reads this at the start of a session (`CLAUDE.md` points here) and updates it when a step finishes, so the plan survives a new device or a new conversation.
+Where the work to improve Hoshiask with Claude Code stands, what was decided, and what comes next. Claude reads this at the start of a session (`CLAUDE.md` points here) and updates it when a step finishes, so the plan survives a new device or a new conversation.
 
-Last updated: 2026-10-11. Pull requests #4 (the third deep check) and #5 (the maintainer's decisions and the small gaps that followed) are merged into `main`, the local database was migrated, and the tooling inventory was added ([tooling.md](tooling.md)). Before that: the second deep check and a rewrite of the docs, and the first check, the audit by QA, security and senior developer reviewers.
+Last updated: 2026-10-17. The app was renamed to Hoshiask (see "Rename to Hoshiask (2026-10-17)" below). Before that, on 2026-10-11: pull requests #4 (the third deep check) and #5 (the maintainer's decisions and the small gaps that followed) are merged into `main`, the local database was migrated, and the tooling inventory was added ([tooling.md](tooling.md)). Before that: the second deep check and a rewrite of the docs, and the first check, the audit by QA, security and senior developer reviewers.
 
-**Waiting on the maintainer:** nothing right now. There is no live server (stated 2026-10-11), so everything in [pending-actions.md](pending-actions.md) that needs one (change the shadow password, install ClamAV, deploy `main`, the server settings, monitor and restore rehearsal that follow the decisions of 2026-10-11) is deferred until a server exists. Do not list server steps as pending; keep working on code, tests and docs. The maintainer merges every pull request.
+**Waiting on the maintainer:** only the optional GitHub clean-up after the rename ([pending-actions.md](pending-actions.md), section 6). There is no live server (stated 2026-10-11), so everything in [pending-actions.md](pending-actions.md) that needs one (change the shadow password, install ClamAV, deploy `main`, the server settings, monitor and restore rehearsal that follow the decisions of 2026-10-11) is deferred until a server exists. Do not list server steps as pending; keep working on code, tests and docs. The maintainer merges every pull request.
 
-**Issue and pull request numbers.** The numbers below (#190 to #246) belong to the repository's history before it was reset to a single "Initial commit" on 2026-10-10. The tracker on GitHub now starts again at #1 and has no open issues, so those numbers do not resolve there (the real pull requests #1 to #5 are all merged). The changes themselves are all in `main`: the deep check of 2026-10-10 found each of them in the code (the 10-file cap, the double-submit guard, `TicketSla`, `helpdesk:unlock-login`, the PDF preview, the 10-minute alert lock, the blank-`SESSION_SECURE_COOKIE` rule, `ThrottlePerLimit` and the two index migrations).
+**Issue and pull request numbers.** The numbers below (#190 to #246) belong to the repository's history before it was reset to a single "Initial commit" on 2026-10-10. The tracker on GitHub now starts again at #1 and has no open issues, so those numbers do not resolve there (the real pull requests #1 to #5 are all merged). The changes themselves are all in `main`: the deep check of 2026-10-10 found each of them in the code (the 10-file cap, the double-submit guard, `TicketSla`, `hoshiask:unlock-login`, the PDF preview, the 10-minute alert lock, the blank-`SESSION_SECURE_COOKIE` rule, `ThrottlePerLimit` and the two index migrations).
 
 ## The plan
 
@@ -23,9 +23,23 @@ Last updated: 2026-10-11. Pull requests #4 (the third deep check) and #5 (the ma
 
 1. **Nothing needs a server right now.** There is no live server (stated 2026-10-11), so every server step is deferred in [pending-actions.md](pending-actions.md) and is not reported as pending. They become live work when a server exists.
 2. **Before real people and real data go in**, revisit the gaps left open on purpose while this is a demo app: [docs/security.md](../security.md), "Left open on purpose while this is a demo app" (password length, no MFA, shared client password, unencrypted backups, example database password, upload scanning that fails open).
-3. **Nothing is waiting for a decision.** The small gaps are built or recorded as left on purpose (see "Small gaps" below).
+3. **Nothing is waiting for a decision** except whether to rewrite git history after the rename (recommended: no; see "Rename to Hoshiask" below). The small gaps are built or recorded as left on purpose (see "Small gaps" below).
 4. **New work** goes through the full loop: idea, `/grill-with-docs`, `/to-spec`, `/to-tickets`, `/triage`, fix, `/code-review`, PR.
 5. **Phase 5 habits**: run `/retro` at the end of a working session, and `/handoff` before a conversation gets too long.
+
+## Rename to Hoshiask (2026-10-17)
+
+The app, its GitHub repository and its local folder were renamed, and the former name is gone from every tracked file. It is a local project for now: no server, no deploy tooling.
+
+Done on branch `chore/rename-to-hoshiask` (not committed or pushed when this was written; run `git status`):
+
+- Env keys are `HOSHIASK_*`, artisan commands `hoshiask:*`, the config file `config/hoshiask.php`, the classes `Hoshiask*`, and backup files `hoshiask-*.tar.enc`. The old backup names are not recognised, because no backups existed. The weak-password list has the `hoshiask` words. A `.env` written before the rename needs its old env keys renamed to `HOSHIASK_*`; the app does not read the old ones.
+- Removed because nothing is deployed: the deploy scripts, the systemd unit example, the `hoshiask:migration-batch` command (only the deploy script used it) and the deploy section of `docs/operations.md`. The Windows queue-worker scripts stay. A future deploy script must take its host as a required parameter with no default, and must only work inside its own folder on the server (`/opt/hoshiask`), never another project's.
+- Regenerated the workflow PDF and the login screenshots. PHPUnit 1182 passed (2 skipped), Vitest 105, Playwright 20, Pint and ESLint clean.
+
+Still open, maintainer only and needing no server (steps in [pending-actions.md](pending-actions.md), section 6): the GitHub repository description, the descriptions of merged pull requests #3, #4 and #5, and the optional history rewrite. Claude is not allowed to force-push, and on 2026-10-17 the permission system also blocked `gh repo edit`, `gh pr edit` and `git filter-branch`, so the maintainer runs these or adds permission rules.
+
+History: 16 of 100 commit messages, and the file contents of old commits, still carry the former name, and GitHub keeps hidden refs for merged pull requests. Recommended: leave it. If history is ever rewritten for the old shadow password (section 1 of pending-actions.md), do both in one rewrite. A full backup of the repository from before the attempted rewrite is in `D:\Coding\backups\Hoshiask-before-history-rewrite.git`; delete it once decided.
 
 ## Second deep check (2026-10-10)
 
@@ -38,7 +52,7 @@ Fixed on branch `fix/deep-check-cleanup` (one commit per topic, not pushed yet),
 - The ticket page kept asking a failing or throttled reply feed every 5 seconds; it now backs off like an idle one.
 - A ticket with more than 200 replies silently dropped the oldest from the page and counted only the 200 shown. The page now says how many are hidden, shows the real count, and "Show all messages" (`?all_messages=1`) loads them all.
 - The new-ticket form listed only the first 500 clients and had no search, so the 501st client could not be picked. It now lists the first 50 and has a search box that asks the server (`GET /admin/tickets/requester-accounts`; name, email, username, phone or department).
-- The login screenshots in `tests/e2e/accessibility-visual.spec.js-snapshots` still showed the old iOne brand; they are regenerated.
+- The login screenshots in `tests/e2e/accessibility-visual.spec.js-snapshots` still showed the old brand; they are regenerated.
 
 Cleaned: auto-close loaded each client with its own query; the unused `laravel/sail` dependency (and `symfony/yaml` with it), `Ticket::slaElapsedMinutes` and an unneeded export; CI runs with a read-only token and replaces a superseded pull request run; ten environment variables were missing from `docs/configuration.md`. Added `brianium/paratest`, so `php artisan test --parallel` runs the suite in about 70 seconds instead of 165.
 
@@ -54,10 +68,10 @@ Looked at and left alone (decisions for the maintainer, not defects):
 
 ## Third deep check (2026-10-11)
 
-Read the whole app again as a senior developer, a QA tester and a security analyst, then measured it on PostgreSQL 17 with 60,000 tickets in a scratch database (`helpdesk_audit_test`, dropped afterwards). Fixed on branch `fix/third-deep-check`, one commit per topic, each with a test that fails without the fix (the search rewrite keeps what is found, so its tests are guards):
+Read the whole app again as a senior developer, a QA tester and a security analyst, then measured it on PostgreSQL 17 with 60,000 tickets in a scratch database (`hoshiask_audit_test`, dropped afterwards). Fixed on branch `fix/third-deep-check`, one commit per topic, each with a test that fails without the fix (the search rewrite keeps what is found, so its tests are guards):
 
 - **Reminder emails ignore imported tickets.** After an import the first scheduler run mailed every open legacy ticket (technicians once, super users twice per ticket).
-- **A technician added later no longer gets every new ticket.** The rotating counter now compares shares over the last 30 days (`HELPDESK_ASSIGNMENT_ROTATION_WINDOW_DAYS`), not all tickets ever.
+- **A technician added later no longer gets every new ticket.** The rotating counter now compares shares over the last 30 days (`HOSHIASK_ASSIGNMENT_ROTATION_WINDOW_DAYS`), not all tickets ever.
 - **A cancelled ticket shows "Cancelled"**, not "Unread" with the open-ticket dot.
 - **The Resolution Time bands read raw rows in chunks.** The all-time Reports page took 6.7 s and 174 MB more memory at 60,000 tickets; it now takes 1.8 s with flat memory (`TicketSla::minutesToCompletion` is the one rule for "done").
 - **The staff ticket search uses its indexes.** One set of ids per column joined with UNION, plus two new trigram indexes (description, department). 13.0 s to 0.3 s for a rare word and 10.1 s to 1.3 s for a common one, same results.
@@ -79,16 +93,16 @@ Measured and left alone: the first scheduler run on 60,000 open tickets sent 18,
 
 1. **Pending (waiting on the client) tickets.** The row badge says "Awaiting client" and never "Breached", but the SLA Breached tab, the Needs Attention count and the technician SLA reminders still include them. Recommended: leave Pending out of all three, as the badge does.
 2. **The deploy health check fails on any pending or failed job** (`docs/operations.md`, "Status and health checks") and rolls the deploy back, `migrate:rollback` included. One bounced email in `failed_jobs` blocks every later deploy. Recommended: make the two queue counts advisories, or warn only above a large number.
-3. **The deploy script keeps the site in maintenance while it audits and builds** (`scripts/deploy-helpdesk-remote.sh`), a new advisory fails the deploy in the middle, and reading the migration batch needs `php artisan tinker` (so `laravel/tinker` cannot move to `require-dev`). Recommended: audit and build before `php artisan down`, or build in CI; read the batch with a small command.
+3. **The deploy script keeps the site in maintenance while it audits and builds** (`scripts/deploy-hoshiask-remote.sh`), a new advisory fails the deploy in the middle, and reading the migration batch needs `php artisan tinker` (so `laravel/tinker` cannot move to `require-dev`). Recommended: audit and build before `php artisan down`, or build in CI; read the batch with a small command.
 4. **The sign-in limit is 5 a minute per address in production and counts successful sign-ins.** Several people behind one office address can lock each other out at the start of the day. The per-login lockout (8 tries) already guards guessing. Recommended: about 30 a minute.
-5. **Upload scanning fails open** (`HELPDESK_UPLOAD_SCAN_ON_ERROR=allow`), and `.doc` and `.xls` (macro-capable) are accepted. Recommended: `block` once ClamAV works, and consider dropping the two legacy formats.
+5. **Upload scanning fails open** (`HOSHIASK_UPLOAD_SCAN_ON_ERROR=allow`), and `.doc` and `.xls` (macro-capable) are accepted. Recommended: `block` once ClamAV works, and consider dropping the two legacy formats.
 6. **The bulk status form starts on "Open"**, so Apply without choosing reopens every selected ticket. Recommended: a "Choose a status" placeholder.
 7. **The SLA clock runs 24 hours a day** and does not pause on Pending, so a ticket filed on Friday at 5 pm is "breached" by 9 pm and alerts fire overnight. Business hours would also change the report numbers (`docs/report-metrics.md`).
 8. **Pending tickets never close or get a follow-up.** Only Resolved tickets auto-close. Possible: a client reminder after N days and a close or cancel after M.
 9. **Rotating assignment ignores availability** (leave, off hours) and open workload. Confirm the 30-day window.
 10. **Imported open tickets get no reminders at all.** Confirm that is wanted (the alternative is one reminder when a ticket is first worked).
 11. **Security posture to revisit (all recorded decisions):** staff passwords may be 8 characters (12 for staff?), no second factor for admin and shadow, client accounts can share one fixed password, backups are not encrypted unless a key is set, and `.env.example` ships `DB_PASSWORD=postgres`.
-12. **Legal text (needs the organisation's DPO):** the privacy notice does not say that backups keep removed data for `HELPDESK_BACKUP_RETENTION_DAYS`, nor the right to complain to the National Privacy Commission, and System Logs are kept 365 days.
+12. **Legal text (needs the organisation's DPO):** the privacy notice does not say that backups keep removed data for `HOSHIASK_BACKUP_RETENTION_DAYS`, nor the right to complain to the National Privacy Commission, and System Logs are kept 365 days.
 13. **Resilience:** sessions, cache, queue and data share one database (Redis for cache and queue is the first step), one maintainer, no stated recovery time or restore drill, and no external uptime monitor on `/health`.
 14. **Not worth doing without a reason:** export paging by id (it would change the CSV order), chunking the auto-close job (a backlog only after a long outage), and 24 dark-theme colour rules that nothing uses.
 
@@ -100,12 +114,12 @@ Branch `fix/after-third-check-decisions` (on top of `fix/third-deep-check`), one
 |---|---|---|
 | 1 | Yes | Pending tickets are left out of SLA Breached, Needs Attention and the SLA reminders (`Ticket::SLA_CLOCK_STATUSES`) |
 | 2 | Recommended fix | Waiting and failed queue jobs are advisories; a queue that has not moved for 15 minutes is named. A deploy no longer fails or rolls back on them |
-| 3 | Recommended fix | The deploy script audits and builds before `php artisan down`, deploys the exact audited commit, keeps the previous build for rollback, reads the migration batch with `helpdesk:migration-batch`; `laravel/tinker` is a dev dependency |
+| 3 | Recommended fix | The deploy script audits and builds before `php artisan down`, deploys the exact audited commit, keeps the previous build for rollback, reads the migration batch with `hoshiask:migration-batch`; `laravel/tinker` is a dev dependency |
 | 4 | Count only failures | The sign-in limit is 15 failed sign-ins a minute per address; successful sign-ins no longer count |
-| 5 | Left to Claude | `.doc` and `.xls` are no longer accepted (macro-capable; save as `.docx`/`.xlsx`). The scanner still fails open by default, because without ClamAV `block` would refuse every upload; the ClamAV steps now end with setting `HELPDESK_UPLOAD_SCAN_ON_ERROR=block` |
+| 5 | Left to Claude | `.doc` and `.xls` are no longer accepted (macro-capable; save as `.docx`/`.xlsx`). The scanner still fails open by default, because without ClamAV `block` would refuse every upload; the ClamAV steps now end with setting `HOSHIASK_UPLOAD_SCAN_ON_ERROR=block` |
 | 6 | Recommended fix | The bulk status form starts on "Choose a status" |
-| 7 | Business hours | `HELPDESK_SLA_BUSINESS_HOURS_*`, off by default (`App\Support\BusinessHours`); public holidays are not skipped |
-| 8 | Staff, not the client | One reminder email per staff member for Pending tickets quiet for 3 days (`HELPDESK_PENDING_FOLLOW_UP_DAYS`); no client email. Then 14 days: `tickets:auto-cancel-pending` cancels them (`HELPDESK_PENDING_AUTO_CANCEL_DAYS`, `--dry-run`, off at 0) |
+| 7 | Business hours | `HOSHIASK_SLA_BUSINESS_HOURS_*`, off by default (`App\Support\BusinessHours`); public holidays are not skipped |
+| 8 | Staff, not the client | One reminder email per staff member for Pending tickets quiet for 3 days (`HOSHIASK_PENDING_FOLLOW_UP_DAYS`); no client email. Then 14 days: `tickets:auto-cancel-pending` cancels them (`HOSHIASK_PENDING_AUTO_CANCEL_DAYS`, `--dry-run`, off at 0) |
 | 9 | No change | Rotating assignment stays as it is |
 | 10 | Confirmed | Imported tickets get no reminders or emails |
 | 11 | Left open, this is a demo app | Recorded with the exact change to make before real use in [docs/security.md](../security.md), "Left open on purpose while this is a demo app" |
@@ -120,7 +134,7 @@ Found by the third deep check and left alone at first; the maintainer chose the 
 | Gap | What was done |
 |---|---|
 | **Needs Attention** counted calendar hours with business hours on | The tab and the dashboard count use 16 *working* hours (`BusinessHours::cutoff(960)`) when business hours are on |
-| **Public holidays** were not skipped | `HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES` (comma-separated `YYYY-MM-DD`) counts like a weekend; an entry that is not a date is ignored and `helpdesk:ops-status` names it |
+| **Public holidays** were not skipped | `HOSHIASK_SLA_BUSINESS_HOURS_CLOSED_DATES` (comma-separated `YYYY-MM-DD`) counts like a weekend; an entry that is not a date is ignored and `hoshiask:ops-status` names it |
 | **Ticket page showed real time only** | With business hours on, the Resolution Time line reads "2d 18h (3h working)" for staff and client |
 | **Rotating assignment ignored leave** | `users.assignment_paused_until`, set as a "Back on" day on the Assignment Rules page (admin and shadow). Both distribution methods skip someone who is away; it ends by itself; manual assignment is unaffected. Workload balancing was built afterwards as a third distribution method, "Least workload" (Open and In Progress tickets held, divided by the rule weight) |
 | **The status check could not see a Redis queue** | A worker heartbeat (`RecordQueueWorkerHeartbeat`, written at most every 30 s) and `Queue::size()`: "jobs are waiting and no job has finished for 15 minutes" works for a non-database queue, and the status shows when the last job finished |
@@ -143,12 +157,12 @@ Mistakes found in the old text and fixed:
 
 - The deploy steps did not follow the order the deploy scripts use.
 - The guide said clients choose a severity (they do not; staff set it) and that saved views are for some staff only (every staff member has them).
-- `HELPDESK_QUEUE_WORKER_RUNNING` was described as a flag to set; leave it blank and the status check looks for a running `queue:work` (`.env.example` now says so).
+- `HOSHIASK_QUEUE_WORKER_RUNNING` was described as a flag to set; leave it blank and the status check looks for a running `queue:work` (`.env.example` now says so).
 - Setup did not say that the seeders need `STAFF_DEFAULT_PASSWORD`, `CLIENT_DEFAULT_PASSWORD` and `SHADOW_PASSWORD`, and offered `db:seed` as a way to reset accounts (it also adds 8 sample tickets).
 - Security, backup and glossary text said an admin or a new account gets temporary passwords; only the shadow account issues them, when it resets a password.
 - Some terms did not follow `GLOSSARY.md` (ITD staff, technical user, priority, open ticket, staff ticket).
 
-The staff guide gained a "who can do what" table and sections on signing in, the ticket list, bulk actions, merging, user accounts and departments. Its PDF was rebuilt (`php artisan helpdesk:build-workflow-pdf`).
+The staff guide gained a "who can do what" table and sections on signing in, the ticket list, bulk actions, merging, user accounts and departments. Its PDF was rebuilt (`php artisan hoshiask:build-workflow-pdf`).
 
 ## Decisions already made
 
@@ -188,8 +202,8 @@ Do the steps in order.
 1. **Install the tools.** PHP 8.3+, Composer, Node.js 22.12+, Git, the GitHub CLI (`gh auth login`), and Claude Code.
 2. **Get the code.**
    ```bash
-   git clone https://github.com/xtiannjose/Helpdesk.git
-   cd Helpdesk
+   git clone https://github.com/xtiannjose/Hoshiask.git
+   cd Hoshiask
    composer install
    npm ci
    cp .env.example .env          # PowerShell: Copy-Item .env.example .env

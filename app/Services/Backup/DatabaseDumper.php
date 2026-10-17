@@ -10,7 +10,7 @@ use Throwable;
 
 /**
  * Writes a database to one file: pg_dump (plain SQL) for PostgreSQL, mysqldump for MySQL/MariaDB, and the
- * database file itself for SQLite. Used by helpdesk:backup-database and helpdesk:backup.
+ * database file itself for SQLite. Used by hoshiask:backup-database and hoshiask:backup.
  */
 class DatabaseDumper
 {

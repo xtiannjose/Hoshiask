@@ -4,7 +4,7 @@ namespace App\Services\TicketImport;
 
 use Illuminate\Support\Carbon;
 
-class HelpdeskTrackerDescriptionFormatter
+class HoshiaskTrackerDescriptionFormatter
 {
     public function buildSubject(?string $projectName, ?string $issueDescription, ?string $issueVia = null): string
     {
@@ -17,7 +17,7 @@ class HelpdeskTrackerDescriptionFormatter
             $projectName !== null && $issueSummary !== null => $projectName.' - '.$issueSummary,
             $issueSummary !== null => $issueSummary,
             $projectName !== null => $projectName,
-            default => 'Imported Helpdesk Ticket',
+            default => 'Imported Hoshiask Ticket',
         };
     }
 

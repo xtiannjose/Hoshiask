@@ -1,4 +1,4 @@
-# Helpdesk
+# Hoshiask
 
 A ticketing system where clients from the field offices ask the support team for help, and staff track each request from receipt to closure.
 
@@ -33,7 +33,7 @@ A hidden top-level account for monitoring the system itself: audit trail, online
 _Avoid_: root, superadmin
 
 **Department**:
-The organisation unit a user belongs to. The support department is the team that runs the helpdesk.
+The organisation unit a user belongs to. The support department is the team that runs Hoshiask.
 
 **Field Office**:
 The department a ticket came from, fixed when the ticket is created so it survives the requester moving department.
@@ -68,7 +68,7 @@ A ticket entered with a date more than 24 hours in the past, or already finished
 _Avoid_: back-dated, historical ticket
 
 **Imported ticket**:
-A ticket brought in from a CSV export or the old helpdesk-tracker spreadsheet rather than filed in the app.
+A ticket brought in from a CSV export or the old tracker spreadsheet rather than filed in the app.
 _Avoid_: legacy ticket
 
 ## Lifecycle
@@ -153,7 +153,7 @@ _Avoid_: KB post, help page
 The time a ticket should take to be completed: 4 hours by default. SLA reminders and the SLA Breached tab measure against it.
 
 **Business hours** (SLA clock):
-The working days and hours that SLA minutes count when `HELPDESK_SLA_BUSINESS_HOURS_ENABLED` is on. Nights, weekends and the closed dates in `HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES` do not use up the SLA target. Off by default, when SLA minutes run around the clock.
+The working days and hours that SLA minutes count when `HOSHIASK_SLA_BUSINESS_HOURS_ENABLED` is on. Nights, weekends and the closed dates in `HOSHIASK_SLA_BUSINESS_HOURS_CLOSED_DATES` do not use up the SLA target. Off by default, when SLA minutes run around the clock.
 
 **Workload** (assignment):
 The `Open` and `In Progress` tickets a technician holds, as primary or shared assignee, in any category. The "Least workload" distribution method gives the next ticket to whoever has the least for their weight.

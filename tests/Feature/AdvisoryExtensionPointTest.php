@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Events\ProductionAdvisoriesRequested;
-use App\Services\Operations\HelpdeskOperationsStatusService;
+use App\Services\Operations\HoshiaskOperationsStatusService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
@@ -18,20 +18,20 @@ class AdvisoryExtensionPointTest extends TestCase
         app()->detectEnvironment(fn () => 'production');
         config([
             'app.debug' => false,
-            'app.url' => 'https://helpdesk.example.org',
+            'app.url' => 'https://hoshiask.example.org',
             'session.secure' => true,
-            'helpdesk.health.detail_token' => 'monitor-secret',
+            'hoshiask.health.detail_token' => 'monitor-secret',
             'queue.default' => 'sync',
             'mail.default' => 'smtp',
-            'mail.from.address' => 'helpdesk@example.org',
+            'mail.from.address' => 'hoshiask@example.org',
             'logging.default' => 'stack',
             'logging.channels.stack.channels' => ['daily'],
             'app.timezone' => 'Asia/Manila',
         ]);
-        Cache::forever(HelpdeskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY, now()->timestamp);
+        Cache::forever(HoshiaskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY, now()->timestamp);
         Event::listen(ProductionAdvisoriesRequested::class, fn (ProductionAdvisoriesRequested $request) => $request->add('A feature has something to say.'));
 
-        $status = (new HelpdeskOperationsStatusService)->buildStatus(false);
+        $status = (new HoshiaskOperationsStatusService)->buildStatus(false);
 
         $this->assertContains('A feature has something to say.', $status['advisories']);
         $this->assertSame([], $status['warnings']);
@@ -42,7 +42,7 @@ class AdvisoryExtensionPointTest extends TestCase
     {
         Event::listen(ProductionAdvisoriesRequested::class, fn (ProductionAdvisoriesRequested $request) => $request->add('Should not appear.'));
 
-        $status = (new HelpdeskOperationsStatusService)->buildStatus(false);
+        $status = (new HoshiaskOperationsStatusService)->buildStatus(false);
 
         $this->assertSame([], $status['advisories']);
     }

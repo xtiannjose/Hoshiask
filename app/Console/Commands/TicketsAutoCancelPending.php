@@ -13,7 +13,7 @@ class TicketsAutoCancelPending extends Command
 {
     protected $signature = 'tickets:auto-cancel-pending {--dry-run : List the tickets that would be cancelled and change nothing}';
 
-    protected $description = 'Cancel Pending tickets that have had no status change and no reply for HELPDESK_PENDING_AUTO_CANCEL_DAYS days.';
+    protected $description = 'Cancel Pending tickets that have had no status change and no reply for HOSHIASK_PENDING_AUTO_CANCEL_DAYS days.';
 
     public function __construct(private TicketStatusWorkflowService $ticketStatusWorkflow)
     {
@@ -22,9 +22,9 @@ class TicketsAutoCancelPending extends Command
 
     public function handle(): int
     {
-        $days = max(0, (int) config('helpdesk.pending_auto_cancel_days', 14));
+        $days = max(0, (int) config('hoshiask.pending_auto_cancel_days', 14));
         if ($days < 1) {
-            $this->info('Automatic cancelling of Pending tickets is switched off (HELPDESK_PENDING_AUTO_CANCEL_DAYS=0).');
+            $this->info('Automatic cancelling of Pending tickets is switched off (HOSHIASK_PENDING_AUTO_CANCEL_DAYS=0).');
 
             return self::SUCCESS;
         }

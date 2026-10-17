@@ -11,7 +11,7 @@ class TestDatabaseGuardTest extends TestCase
     public function test_in_memory_sqlite_and_a_database_ending_in_test_are_allowed(): void
     {
         TestDatabaseGuard::assertSafe('sqlite', ':memory:');
-        TestDatabaseGuard::assertSafe('pgsql', 'helpdesk_test');
+        TestDatabaseGuard::assertSafe('pgsql', 'hoshiask_test');
         $this->addToAssertionCount(2);
     }
 

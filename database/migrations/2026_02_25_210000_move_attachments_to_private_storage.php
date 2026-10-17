@@ -13,7 +13,7 @@ return new class extends Migration
             return;
         }
 
-        $targetDisk = (string) config('helpdesk.attachments_disk', 'local');
+        $targetDisk = (string) config('hoshiask.attachments_disk', 'local');
         $sourceDisk = 'public';
 
         DB::table('attachments')
@@ -50,7 +50,7 @@ return new class extends Migration
             return;
         }
 
-        $sourceDisk = (string) config('helpdesk.attachments_disk', 'local');
+        $sourceDisk = (string) config('hoshiask.attachments_disk', 'local');
         $targetDisk = 'public';
 
         DB::table('attachments')

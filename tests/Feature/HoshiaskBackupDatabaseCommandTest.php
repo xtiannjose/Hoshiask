@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
-class HelpdeskBackupDatabaseCommandTest extends TestCase
+class HoshiaskBackupDatabaseCommandTest extends TestCase
 {
     public function test_backup_command_exports_file_backed_sqlite_database(): void
     {
@@ -18,11 +18,11 @@ class HelpdeskBackupDatabaseCommandTest extends TestCase
 
         config()->set('database.default', 'sqlite');
         config()->set('database.connections.sqlite.database', $databasePath);
-        config()->set('helpdesk.backup.disk', 'local');
-        config()->set('helpdesk.backup.path', 'backup-command-test');
+        config()->set('hoshiask.backup.disk', 'local');
+        config()->set('hoshiask.backup.path', 'backup-command-test');
 
         try {
-            $this->artisan('helpdesk:backup-database')
+            $this->artisan('hoshiask:backup-database')
                 ->expectsOutput('Database backup created.')
                 ->assertSuccessful();
 

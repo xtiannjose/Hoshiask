@@ -1,7 +1,7 @@
 {
     "name": "hoshishi/ticketing-system",
     "type": "project",
-    "description": "Helpdesk Ticketing System",
+    "description": "Hoshiask Ticketing System",
     "keywords": ["framework", "laravel", "ticketing"],
     "license": "MIT",
     "require": {

@@ -82,7 +82,7 @@ class CannedResponseManagementTest extends TestCase
 
     public function test_feature_flag_disables_all_canned_response_routes(): void
     {
-        config(['helpdesk.features.canned_replies' => false]);
+        config(['hoshiask.features.canned_replies' => false]);
 
         $admin = $this->createUser('Disabled Admin', 'disabled-admin@example.com', User::ROLE_ADMIN);
         $cannedResponse = CannedResponse::create([
@@ -103,7 +103,7 @@ class CannedResponseManagementTest extends TestCase
     public function test_feature_flag_hides_the_navigation_link_and_reply_form_picker(): void
     {
         config(['legal.require_acceptance' => false]);
-        config(['helpdesk.features.canned_replies' => false]);
+        config(['hoshiask.features.canned_replies' => false]);
 
         $admin = $this->createUser('Nav Admin', 'nav-admin@example.com', User::ROLE_ADMIN);
 

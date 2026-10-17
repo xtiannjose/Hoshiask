@@ -125,13 +125,13 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: helpdesk
-          POSTGRES_PASSWORD: helpdesk
-          POSTGRES_DB: helpdesk_test
+          POSTGRES_USER: hoshiask
+          POSTGRES_PASSWORD: hoshiask
+          POSTGRES_DB: hoshiask_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U helpdesk -d helpdesk_test"
+          --health-cmd "pg_isready -U hoshiask -d hoshiask_test"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 12
@@ -140,9 +140,9 @@ jobs:
       DB_CONNECTION: pgsql
       DB_HOST: 127.0.0.1
       DB_PORT: "5432"
-      DB_DATABASE: helpdesk_test
-      DB_USERNAME: helpdesk
-      DB_PASSWORD: helpdesk
+      DB_DATABASE: hoshiask_test
+      DB_USERNAME: hoshiask
+      DB_PASSWORD: hoshiask
       # tests/Feature/DatabaseDriverTest.php fails the job if the suite is not really on PostgreSQL.
       CI_EXPECT_DB_DRIVER: pgsql
 

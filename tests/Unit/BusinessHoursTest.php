@@ -18,10 +18,10 @@ class BusinessHoursTest extends TestCase
 
         config([
             'app.timezone' => self::ZONE,
-            'helpdesk.sla.business_hours.enabled' => true,
-            'helpdesk.sla.business_hours.days' => '1,2,3,4,5',
-            'helpdesk.sla.business_hours.start' => '08:00',
-            'helpdesk.sla.business_hours.end' => '17:00',
+            'hoshiask.sla.business_hours.enabled' => true,
+            'hoshiask.sla.business_hours.days' => '1,2,3,4,5',
+            'hoshiask.sla.business_hours.start' => '08:00',
+            'hoshiask.sla.business_hours.end' => '17:00',
         ]);
     }
 
@@ -34,7 +34,7 @@ class BusinessHoursTest extends TestCase
 
     public function test_switched_off_every_minute_counts(): void
     {
-        config(['helpdesk.sla.business_hours.enabled' => false]);
+        config(['hoshiask.sla.business_hours.enabled' => false]);
 
         $this->assertFalse(BusinessHours::enabled());
         $this->assertSame(180, BusinessHours::elapsedMinutes($this->at('2026-10-09 22:00')->getTimestamp(), $this->at('2026-10-10 01:00')->getTimestamp()));
@@ -60,9 +60,9 @@ class BusinessHoursTest extends TestCase
     public function test_a_different_set_of_days_and_hours_is_followed(): void
     {
         config([
-            'helpdesk.sla.business_hours.days' => '1,3,6',
-            'helpdesk.sla.business_hours.start' => '09:30',
-            'helpdesk.sla.business_hours.end' => '12:00',
+            'hoshiask.sla.business_hours.days' => '1,3,6',
+            'hoshiask.sla.business_hours.start' => '09:30',
+            'hoshiask.sla.business_hours.end' => '12:00',
         ]);
 
         // Monday (working) 09:00 to Tuesday 12:00: only Monday 09:30-12:00 counts.
@@ -121,7 +121,7 @@ class BusinessHoursTest extends TestCase
 
         $this->assertSame(120, TicketSla::minutesToCompletion($created, $resolved, null));
 
-        config(['helpdesk.sla.business_hours.enabled' => false]);
+        config(['hoshiask.sla.business_hours.enabled' => false]);
         // The same ticket on the calendar clock: Friday 16:00 to Monday 09:00 is 65 hours.
         $this->assertSame(65 * 60, TicketSla::minutesToCompletion($created, $resolved, null));
     }
@@ -129,7 +129,7 @@ class BusinessHoursTest extends TestCase
     public function test_unusable_days_or_hours_fall_back_to_the_round_the_clock_clock(): void
     {
         foreach ([['days' => 'x', 'start' => '08:00', 'end' => '17:00'], ['days' => '1,2', 'start' => '17:00', 'end' => '08:00'], ['days' => '1,2', 'start' => 'soon', 'end' => '17:00'], ['days' => '8,0', 'start' => '08:00', 'end' => '17:00']] as $bad) {
-            config(['helpdesk.sla.business_hours.days' => $bad['days'], 'helpdesk.sla.business_hours.start' => $bad['start'], 'helpdesk.sla.business_hours.end' => $bad['end']]);
+            config(['hoshiask.sla.business_hours.days' => $bad['days'], 'hoshiask.sla.business_hours.start' => $bad['start'], 'hoshiask.sla.business_hours.end' => $bad['end']]);
 
             $this->assertFalse(BusinessHours::enabled());
             $this->assertTrue(BusinessHours::misconfigured());
@@ -140,18 +140,18 @@ class BusinessHoursTest extends TestCase
     public function test_closed_dates_count_like_a_weekend(): void
     {
         // Monday 12 October 2026 is closed: Friday 16:00 to Tuesday 10:00 is one hour on Friday and two on Tuesday.
-        config(['helpdesk.sla.business_hours.closed_dates' => '2026-10-12']);
+        config(['hoshiask.sla.business_hours.closed_dates' => '2026-10-12']);
 
         $this->assertSame(180, $this->between('2026-10-09 16:00', '2026-10-13 10:00'));
         $this->assertSame(0, $this->between('2026-10-12 08:00', '2026-10-12 17:00'));
         // The same span without the closed date is a whole day longer.
-        config(['helpdesk.sla.business_hours.closed_dates' => '']);
+        config(['hoshiask.sla.business_hours.closed_dates' => '']);
         $this->assertSame(180 + 9 * 60, $this->between('2026-10-09 16:00', '2026-10-13 10:00'));
     }
 
     public function test_the_cutoff_skips_a_closed_date_and_still_agrees_with_the_elapsed_minutes(): void
     {
-        config(['helpdesk.sla.business_hours.closed_dates' => '2026-10-12, 2026-10-14']);
+        config(['hoshiask.sla.business_hours.closed_dates' => '2026-10-12, 2026-10-14']);
 
         // Tuesday 13 October 10:00, four hours back: two on Tuesday, then Friday (Monday is closed).
         $this->assertSame('2026-10-09 15:00:00', $this->cutoff(240, '2026-10-13 10:00'));
@@ -170,7 +170,7 @@ class BusinessHoursTest extends TestCase
     public function test_a_closed_date_on_a_day_that_is_not_worked_changes_nothing_and_a_bad_entry_is_named(): void
     {
         // Saturday 10 October is not a working day anyway; the other two entries are not dates.
-        config(['helpdesk.sla.business_hours.closed_dates' => '2026-10-10, soon, 2026-02-30, 2026-10-13']);
+        config(['hoshiask.sla.business_hours.closed_dates' => '2026-10-10, soon, 2026-02-30, 2026-10-13']);
 
         $this->assertSame(['soon', '2026-02-30'], BusinessHours::unreadableClosedDates());
         $this->assertSame(180, $this->between('2026-10-09 16:00', '2026-10-12 10:00'));
@@ -181,9 +181,9 @@ class BusinessHoursTest extends TestCase
     public function test_the_example_environment_file_lists_the_nationwide_holidays_as_readable_dates(): void
     {
         $env = (string) file_get_contents(base_path('.env.example'));
-        $this->assertSame(1, preg_match('/^HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES=(.+)$/m', $env, $match));
+        $this->assertSame(1, preg_match('/^HOSHIASK_SLA_BUSINESS_HOURS_CLOSED_DATES=(.+)$/m', $env, $match));
 
-        config(['helpdesk.sla.business_hours.closed_dates' => trim($match[1])]);
+        config(['hoshiask.sla.business_hours.closed_dates' => trim($match[1])]);
 
         $this->assertSame([], BusinessHours::unreadableClosedDates());
         $this->assertCount(18, array_unique(array_map('trim', explode(',', trim($match[1])))));

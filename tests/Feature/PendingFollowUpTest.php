@@ -27,7 +27,7 @@ class PendingFollowUpTest extends TestCase
         parent::setUp();
         Carbon::setTestNow(Carbon::create(2026, 10, 12, 8, 0, 0));
         Mail::fake();
-        config(['helpdesk.pending_follow_up_days' => 3]);
+        config(['hoshiask.pending_follow_up_days' => 3]);
 
         $this->client = $this->createUser('Client Pending', 'client-pending@example.com', User::ROLE_CLIENT, 'Hoshishi');
         $this->technical = $this->createUser('Tech Pending', 'tech-pending@example.com', User::ROLE_TECHNICAL);
@@ -134,7 +134,7 @@ class PendingFollowUpTest extends TestCase
 
     public function test_setting_the_days_to_zero_switches_the_reminder_off(): void
     {
-        config(['helpdesk.pending_follow_up_days' => 0]);
+        config(['hoshiask.pending_follow_up_days' => 0]);
         $this->pendingTicket(daysQuiet: 20, assignedTo: $this->technical);
 
         $this->artisan('tickets:send-alert-emails')->assertSuccessful();

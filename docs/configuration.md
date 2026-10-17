@@ -3,7 +3,7 @@
 Every setting is an environment variable in the `.env` file. `.env.example` lists all of them with safe starting values: copy it to `.env` and change what you need.
 
 - After you change `.env` on a running server, run `php artisan config:clear`, then `php artisan queue:restart` so the queue worker also sees the change.
-- The code reads settings through `config/helpdesk.php`, `security.php`, `retention.php`, `legal.php`, `observability.php` and Laravel's own config files. It never calls `env()` anywhere else.
+- The code reads settings through `config/hoshiask.php`, `security.php`, `retention.php`, `legal.php`, `observability.php` and Laravel's own config files. It never calls `env()` anywhere else.
 - A new setting is added in three places: `.env.example`, its config file, and this page.
 - Never put `.env` in git. It holds passwords.
 
@@ -23,8 +23,8 @@ For a production server also read the checklist in [operations.md](operations.md
 
 | Setting | Example | What it does |
 |---|---|---|
-| `APP_NAME` | `"Helpdesk"` | The product name in page titles, the sign-in page and emails. |
-| `APP_ENV` | `local` | `local` or `production`. **Production switches on** the enforced Content-Security-Policy, Secure cookies, the 5-a-minute sign-in limit (100 elsewhere), virus scanning by default, the production advisories in `helpdesk:ops-status`, and turns `mail:test` off. |
+| `APP_NAME` | `"Hoshiask"` | The product name in page titles, the sign-in page and emails. |
+| `APP_ENV` | `local` | `local` or `production`. **Production switches on** the enforced Content-Security-Policy, Secure cookies, the 5-a-minute sign-in limit (100 elsewhere), virus scanning by default, the production advisories in `hoshiask:ops-status`, and turns `mail:test` off. |
 | `APP_KEY` | blank | See above. |
 | `APP_DEBUG` | `false` | Shows error details in the browser. Never `true` on a server. |
 | `APP_TIMEZONE` | `Asia/Manila` | The time zone for every date shown and for the daily jobs (backup 02:40, auto-close 03:40, and so on). |
@@ -40,11 +40,11 @@ What people see as the name and logo of the support team.
 
 | Setting | Example | What it does |
 |---|---|---|
-| `HELPDESK_SUPPORT_DEPARTMENT` | `"Hoshishi"` | The department that is the support team. New staff accounts start in it. |
-| `HELPDESK_SUPPORT_BRAND_NAME` | `"Hoshishi"` | The brand name used in support-facing text. |
-| `HELPDESK_SUPPORT_ORGANIZATION_NAME` | `"Hoshishi Corporation"` | The organisation name. It is also the default for `LEGAL_ORGANIZATION_NAME`. |
-| `HELPDESK_SUPPORT_TEAM_NAME` | `"Hoshishi Technical Team"` | The name clients see instead of the hidden shadow account. |
-| `HELPDESK_SUPPORT_LOGO_PATH` | `"images/Hoshishi Logo.png"` | A file under `public/`. When it does not exist the default logo is used. |
+| `HOSHIASK_SUPPORT_DEPARTMENT` | `"Hoshishi"` | The department that is the support team. New staff accounts start in it. |
+| `HOSHIASK_SUPPORT_BRAND_NAME` | `"Hoshishi"` | The brand name used in support-facing text. |
+| `HOSHIASK_SUPPORT_ORGANIZATION_NAME` | `"Hoshishi Corporation"` | The organisation name. It is also the default for `LEGAL_ORGANIZATION_NAME`. |
+| `HOSHIASK_SUPPORT_TEAM_NAME` | `"Hoshishi Technical Team"` | The name clients see instead of the hidden shadow account. |
+| `HOSHIASK_SUPPORT_LOGO_PATH` | `"images/Hoshishi Logo.png"` | A file under `public/`. When it does not exist the default logo is used. |
 
 ## Database
 
@@ -82,7 +82,7 @@ What people see as the name and logo of the support team.
 | `MAIL_USERNAME`, `MAIL_PASSWORD` | placeholders | Its login. |
 | `MAIL_ENCRYPTION` | `tls` | `tls`, `ssl`, or blank for none. |
 | `MAIL_URL`, `MAIL_EHLO_DOMAIN`, `MAIL_LOG_CHANNEL` | blank | Rarely needed. `MAIL_URL` replaces the host, port and login lines with one address. |
-| `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | `"helpdesk@yourdomain.com"` | The sender shown on every email. Change the placeholder: `helpdesk:ops-status` warns while it is still there. |
+| `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | `"hoshiask@yourdomain.com"` | The sender shown on every email. Change the placeholder: `hoshiask:ops-status` warns while it is still there. |
 | `MAIL_REPLY_TO_ADDRESS`, `MAIL_REPLY_TO_NAME` | `"support@yourdomain.com"` | Where a client's emailed reply goes. The app does not read incoming mail, so replies never enter the ticket. |
 
 Emails are queued, so a queue worker must run (see [operations.md](operations.md)).
@@ -104,7 +104,7 @@ Emails are queued, so a queue worker must run (see [operations.md](operations.md
 | `CACHE_STORE`, `CACHE_PREFIX` | `database`, blank | Where the cache lives and a prefix for its keys. |
 | `FILESYSTEM_DISK` | `local` | The default disk. `local` is the private folder `storage/app/private`. |
 | `BROADCAST_CONNECTION` | `log` | Not used by this app. |
-| `HELPDESK_QUEUE_WORKER_RUNNING` | blank | Leave blank: `helpdesk:ops-status` looks for a running `queue:work` process. Set `true` or `false` only when it cannot see your worker, for example one that runs in another container. |
+| `HOSHIASK_QUEUE_WORKER_RUNNING` | blank | Leave blank: `hoshiask:ops-status` looks for a running `queue:work` process. Set `true` or `false` only when it cannot see your worker, for example one that runs in another container. |
 
 ## Accounts and seeding
 
@@ -116,32 +116,32 @@ These are used by `php artisan db:seed` and by account management. The seeder re
 | `SHADOW_PASSWORD` | blank | Password of the hidden `shadow` account. Use a long, unique one. |
 | `CLIENT_PASSWORD_MODE` | `fixed` | `fixed`: every seeded client gets `CLIENT_DEFAULT_PASSWORD`. `random`: each gets a random password written once to a private file. |
 | `CLIENT_DEFAULT_PASSWORD` | blank | Needed when the mode is `fixed`. |
-| `SEED_CLIENT_CREDENTIALS_DISK`, `SEED_CLIENT_CREDENTIALS_PATH` | `local`, `seeded-client-credentials` | Where the random client passwords are written. (The old name `HELPDESK_SEEDED_CLIENT_CREDENTIALS_PATH` still works.) |
-| `HELPDESK_SEEDED_CLIENT_CREDENTIAL_RETENTION_DAYS` | `14` | Days the daily clean-up keeps that file. |
-| `HELPDESK_PASSWORD_HELP_CONTACT` | blank | An email, phone number or name shown as "Forgot your password? Contact your administrator at ...". Blank shows only "Contact your administrator". |
+| `SEED_CLIENT_CREDENTIALS_DISK`, `SEED_CLIENT_CREDENTIALS_PATH` | `local`, `seeded-client-credentials` | Where the random client passwords are written. (The old name `HOSHIASK_SEEDED_CLIENT_CREDENTIALS_PATH` still works.) |
+| `HOSHIASK_SEEDED_CLIENT_CREDENTIAL_RETENTION_DAYS` | `14` | Days the daily clean-up keeps that file. |
+| `HOSHIASK_PASSWORD_HELP_CONTACT` | blank | An email, phone number or name shown as "Forgot your password? Contact your administrator at ...". Blank shows only "Contact your administrator". |
 
 ## Tickets and SLA
 
 | Setting | Example | What it does |
 |---|---|---|
-| `HELPDESK_REPLY_EDIT_WINDOW_MINUTES` | `180` | How long a client can edit or delete their own message. |
-| `HELPDESK_SLA_BUSINESS_HOURS_ENABLED` | `false` | `true` makes every SLA minute count only inside the working days and hours below, in the application time zone (`APP_TIMEZONE`). A ticket logged on Friday evening then starts its target on Monday morning, and no SLA reminder goes out overnight or at the weekend. The Needs Attention tab then counts 16 working hours. Off by default: SLA minutes run around the clock. |
-| `HELPDESK_SLA_BUSINESS_HOURS_DAYS` | `1,2,3,4,5` | Working days as ISO weekdays: 1 = Monday to 7 = Sunday. |
-| `HELPDESK_SLA_BUSINESS_HOURS_START` | `08:00` | Opening time (`HH:MM`). |
-| `HELPDESK_SLA_BUSINESS_HOURS_END` | `17:00` | Closing time (`HH:MM`), after the opening time. If the days or times cannot be read the setting is ignored and `helpdesk:ops-status` says so. |
-| `HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES` | the 2026 nationwide holidays in `.env.example`; empty in the code | Public holidays or other closed days, comma-separated `YYYY-MM-DD`. They count like a weekend. `.env.example` carries the 18 regular and special non-working holidays of 2026 from [the Official Gazette](https://www.officialgazette.gov.ph/nationwide-holidays/2026/); Eid'l Fitr and Eid'l Adha are proclaimed later and are not in it. Replace the list each year and add a holiday when it is proclaimed. An entry that is not a date is ignored and `helpdesk:ops-status` names it. |
-| `HELPDESK_SLA_RESOLUTION_TARGET_MINUTES` | `240` | The time a ticket should take. The SLA Breached tab and the reminders measure against it. |
-| `HELPDESK_SLA_ASSIGNMENT_REMINDER_MINUTES` | `210` | The assigned technicians are reminded this long after a ticket was assigned to them, if it is still active. |
-| `HELPDESK_SLA_SUPER_USER_NEW_TICKET_NOTIFY` | `true` | Email super users, admins and the shadow account when a new ticket arrives. |
-| `HELPDESK_SLA_SUPER_USER_UNCHECKED_MINUTES` | `120` | Super users, admins and the shadow account get an "unchecked ticket" alert when an active ticket stays unassigned this long. |
-| `HELPDESK_SLA_SUPER_USER_UNASSIGNED_SLA_MINUTES` | `180` | The "unassigned SLA warning" for the same situation, at a later point. |
-| `HELPDESK_SLA_RESOLUTION_UNDER_ONE_HOUR_MINUTES` | `60` | The first band limit of the Resolution Time chart on the Reports page. |
-| `HELPDESK_SLA_RESOLUTION_UNDER_FOUR_HOURS_MINUTES` | `240` | The second band limit of that chart. |
-| `HELPDESK_SLA_RESOLUTION_UNDER_TWENTY_FOUR_HOURS_MINUTES` | `1440` | The third band limit of that chart. |
-| `HELPDESK_PENDING_FOLLOW_UP_DAYS` | `3` | A Pending ticket with no status change and no reply for this many days is listed in one reminder email to its assignees (the super users when nobody is assigned), and again after the same number of days while it stays quiet. `0` switches the reminder off. The client is not emailed. |
-| `HELPDESK_PENDING_AUTO_CANCEL_DAYS` | `14` | A Pending ticket with no status change and no reply for this many days is cancelled by the daily `tickets:auto-cancel-pending`, with the reason written in its notes. `0` switches it off. The client is not emailed. Keep it above `HELPDESK_PENDING_FOLLOW_UP_DAYS`, or staff are not reminded first (`helpdesk:ops-status` says so). |
-| `HELPDESK_ASSIGNMENT_ROTATION_WINDOW_DAYS` | `30` | The "rotating counter" assignment compares each technician's share of a category over this many days. |
-| `HELPDESK_CANNED_REPLIES_ENABLED` | `true` | `false` hides canned responses everywhere without touching the database. |
+| `HOSHIASK_REPLY_EDIT_WINDOW_MINUTES` | `180` | How long a client can edit or delete their own message. |
+| `HOSHIASK_SLA_BUSINESS_HOURS_ENABLED` | `false` | `true` makes every SLA minute count only inside the working days and hours below, in the application time zone (`APP_TIMEZONE`). A ticket logged on Friday evening then starts its target on Monday morning, and no SLA reminder goes out overnight or at the weekend. The Needs Attention tab then counts 16 working hours. Off by default: SLA minutes run around the clock. |
+| `HOSHIASK_SLA_BUSINESS_HOURS_DAYS` | `1,2,3,4,5` | Working days as ISO weekdays: 1 = Monday to 7 = Sunday. |
+| `HOSHIASK_SLA_BUSINESS_HOURS_START` | `08:00` | Opening time (`HH:MM`). |
+| `HOSHIASK_SLA_BUSINESS_HOURS_END` | `17:00` | Closing time (`HH:MM`), after the opening time. If the days or times cannot be read the setting is ignored and `hoshiask:ops-status` says so. |
+| `HOSHIASK_SLA_BUSINESS_HOURS_CLOSED_DATES` | the 2026 nationwide holidays in `.env.example`; empty in the code | Public holidays or other closed days, comma-separated `YYYY-MM-DD`. They count like a weekend. `.env.example` carries the 18 regular and special non-working holidays of 2026 from [the Official Gazette](https://www.officialgazette.gov.ph/nationwide-holidays/2026/); Eid'l Fitr and Eid'l Adha are proclaimed later and are not in it. Replace the list each year and add a holiday when it is proclaimed. An entry that is not a date is ignored and `hoshiask:ops-status` names it. |
+| `HOSHIASK_SLA_RESOLUTION_TARGET_MINUTES` | `240` | The time a ticket should take. The SLA Breached tab and the reminders measure against it. |
+| `HOSHIASK_SLA_ASSIGNMENT_REMINDER_MINUTES` | `210` | The assigned technicians are reminded this long after a ticket was assigned to them, if it is still active. |
+| `HOSHIASK_SLA_SUPER_USER_NEW_TICKET_NOTIFY` | `true` | Email super users, admins and the shadow account when a new ticket arrives. |
+| `HOSHIASK_SLA_SUPER_USER_UNCHECKED_MINUTES` | `120` | Super users, admins and the shadow account get an "unchecked ticket" alert when an active ticket stays unassigned this long. |
+| `HOSHIASK_SLA_SUPER_USER_UNASSIGNED_SLA_MINUTES` | `180` | The "unassigned SLA warning" for the same situation, at a later point. |
+| `HOSHIASK_SLA_RESOLUTION_UNDER_ONE_HOUR_MINUTES` | `60` | The first band limit of the Resolution Time chart on the Reports page. |
+| `HOSHIASK_SLA_RESOLUTION_UNDER_FOUR_HOURS_MINUTES` | `240` | The second band limit of that chart. |
+| `HOSHIASK_SLA_RESOLUTION_UNDER_TWENTY_FOUR_HOURS_MINUTES` | `1440` | The third band limit of that chart. |
+| `HOSHIASK_PENDING_FOLLOW_UP_DAYS` | `3` | A Pending ticket with no status change and no reply for this many days is listed in one reminder email to its assignees (the super users when nobody is assigned), and again after the same number of days while it stays quiet. `0` switches the reminder off. The client is not emailed. |
+| `HOSHIASK_PENDING_AUTO_CANCEL_DAYS` | `14` | A Pending ticket with no status change and no reply for this many days is cancelled by the daily `tickets:auto-cancel-pending`, with the reason written in its notes. `0` switches it off. The client is not emailed. Keep it above `HOSHIASK_PENDING_FOLLOW_UP_DAYS`, or staff are not reminded first (`hoshiask:ops-status` says so). |
+| `HOSHIASK_ASSIGNMENT_ROTATION_WINDOW_DAYS` | `30` | The "rotating counter" assignment compares each technician's share of a category over this many days. |
+| `HOSHIASK_CANNED_REPLIES_ENABLED` | `true` | `false` hides canned responses everywhere without touching the database. |
 
 ## Emails to clients
 
@@ -149,11 +149,11 @@ One email per milestone, all in one conversation in the client's inbox. See "Ema
 
 | Setting | Example | What it does |
 |---|---|---|
-| `HELPDESK_CLIENT_EMAIL_RECEIVED` | `true` | "We received your ticket". |
-| `HELPDESK_CLIENT_EMAIL_RESOLVED` | `true` | "Your ticket has been resolved". |
-| `HELPDESK_CLIENT_EMAIL_AUTO_CLOSE_WARNING` | `true` | The reminder two days before an automatic close. |
-| `HELPDESK_CLIENT_EMAIL_CLOSED` | `false` | "Closed" or "cancelled" notices. |
-| `HELPDESK_CLIENT_EMAIL_REPLY_BATCH_MINUTES` | `5` | Replies that staff post within this many minutes become one email per ticket. `0` sends every reply at once. Needs the scheduler and a queue worker. |
+| `HOSHIASK_CLIENT_EMAIL_RECEIVED` | `true` | "We received your ticket". |
+| `HOSHIASK_CLIENT_EMAIL_RESOLVED` | `true` | "Your ticket has been resolved". |
+| `HOSHIASK_CLIENT_EMAIL_AUTO_CLOSE_WARNING` | `true` | The reminder two days before an automatic close. |
+| `HOSHIASK_CLIENT_EMAIL_CLOSED` | `false` | "Closed" or "cancelled" notices. |
+| `HOSHIASK_CLIENT_EMAIL_REPLY_BATCH_MINUTES` | `5` | Replies that staff post within this many minutes become one email per ticket. `0` sends every reply at once. Needs the scheduler and a queue worker. |
 
 ## Uploads and virus scanning
 
@@ -162,19 +162,19 @@ Details and the ClamAV set-up are in [security.md](security.md).
 | Setting | Example | What it does |
 |---|---|---|
 | `ATTACHMENTS_DISK` | `local` | Where attachments are stored. `local` is private: files are only sent after a permission check. |
-| `HELPDESK_UPLOAD_SCAN` | blank | `clamav` scans every upload. `off` does not. Blank means `clamav` in production and `off` elsewhere. Scanning only works once ClamAV is installed. |
-| `HELPDESK_CLAMAV_SOCKET` | blank | The ClamAV socket file, for example `/var/run/clamav/clamd.ctl`. It wins over host and port. |
-| `HELPDESK_CLAMAV_HOST`, `HELPDESK_CLAMAV_PORT` | `127.0.0.1`, `3310` | Where ClamAV listens when you use the network instead of a socket. |
-| `HELPDESK_UPLOAD_SCAN_TIMEOUT` | `10` | Seconds to wait for the scanner. |
-| `HELPDESK_UPLOAD_SCAN_ON_ERROR` | `allow` | What to do while the scanner cannot be reached: `allow` the upload (and log it) or `block` it. |
+| `HOSHIASK_UPLOAD_SCAN` | blank | `clamav` scans every upload. `off` does not. Blank means `clamav` in production and `off` elsewhere. Scanning only works once ClamAV is installed. |
+| `HOSHIASK_CLAMAV_SOCKET` | blank | The ClamAV socket file, for example `/var/run/clamav/clamd.ctl`. It wins over host and port. |
+| `HOSHIASK_CLAMAV_HOST`, `HOSHIASK_CLAMAV_PORT` | `127.0.0.1`, `3310` | Where ClamAV listens when you use the network instead of a socket. |
+| `HOSHIASK_UPLOAD_SCAN_TIMEOUT` | `10` | Seconds to wait for the scanner. |
+| `HOSHIASK_UPLOAD_SCAN_ON_ERROR` | `allow` | What to do while the scanner cannot be reached: `allow` the upload (and log it) or `block` it. |
 
 ## Monitoring
 
 | Setting | Example | What it does |
 |---|---|---|
-| `HELPDESK_HEALTH_DETAIL_TOKEN` | blank | Without it `/health` answers only `ok`, `degraded` or `failed`. With it, a request that sends the token gets the details. |
-| `HELPDESK_PRESENCE_ONLINE_WINDOW_MINUTES` | `5` | The Online Users page lists people who were active in the last this many minutes. |
-| `HELPDESK_PRESENCE_ACTIVE_WINDOW_MINUTES` | `2` | Online people quieter than this are shown as idle. |
+| `HOSHIASK_HEALTH_DETAIL_TOKEN` | blank | Without it `/health` answers only `ok`, `degraded` or `failed`. With it, a request that sends the token gets the details. |
+| `HOSHIASK_PRESENCE_ONLINE_WINDOW_MINUTES` | `5` | The Online Users page lists people who were active in the last this many minutes. |
+| `HOSHIASK_PRESENCE_ACTIVE_WINDOW_MINUTES` | `2` | Online people quieter than this are shown as idle. |
 | `OBSERVABILITY_SLOW_QUERY_ENABLED` | blank | Log slow database queries. Blank means on in `staging` and `production`, off elsewhere. |
 | `OBSERVABILITY_SLOW_QUERY_THRESHOLD_MS` | `250` | How many milliseconds make a query slow. |
 | `OBSERVABILITY_SLOW_QUERY_INCLUDE_BINDINGS` | `false` | Also log the values in the query. These can contain personal data, so leave it off. |
@@ -187,11 +187,11 @@ Step by step in [backup-and-restore.md](backup-and-restore.md).
 
 | Setting | Example | What it does |
 |---|---|---|
-| `HELPDESK_BACKUP_DISK`, `HELPDESK_BACKUP_PATH` | `local`, `backups` | Where backups are written (`storage/app/private/backups`). |
-| `HELPDESK_BACKUP_ENCRYPTION_KEY` | blank | From `php artisan helpdesk:backup-key`. Without it backups are not encrypted and never copied away. Keep a copy **outside** the server. |
-| `HELPDESK_BACKUP_RETENTION_DAYS` | `14` | The daily clean-up removes backups older than this. The newest three are always kept. |
-| `HELPDESK_BACKUP_COPY_PATH` | blank | A folder on a second disk or mounted drive. Each encrypted backup is copied there and checked. |
-| `HELPDESK_BACKUP_OFFSITE_CONFIRMED` | `false` | Set `true` when your own job (rsync, rclone) copies backups off the server, so the status check stops warning. |
+| `HOSHIASK_BACKUP_DISK`, `HOSHIASK_BACKUP_PATH` | `local`, `backups` | Where backups are written (`storage/app/private/backups`). |
+| `HOSHIASK_BACKUP_ENCRYPTION_KEY` | blank | From `php artisan hoshiask:backup-key`. Without it backups are not encrypted and never copied away. Keep a copy **outside** the server. |
+| `HOSHIASK_BACKUP_RETENTION_DAYS` | `14` | The daily clean-up removes backups older than this. The newest three are always kept. |
+| `HOSHIASK_BACKUP_COPY_PATH` | blank | A folder on a second disk or mounted drive. Each encrypted backup is copied there and checked. |
+| `HOSHIASK_BACKUP_OFFSITE_CONFIRMED` | `false` | Set `true` when your own job (rsync, rclone) copies backups off the server, so the status check stops warning. |
 
 ## Data retention
 
@@ -199,8 +199,8 @@ Details in [data-retention.md](data-retention.md).
 
 | Setting | Example | What it does |
 |---|---|---|
-| `HELPDESK_RETENTION_ENABLED` | `false` | The clean-up that removes personal details from old tickets does nothing until this is `true`. |
-| `HELPDESK_RETENTION_YEARS` | `3` | Years after a ticket was closed or cancelled before its personal details are removed. Keep it in step with `LEGAL_RETENTION_PERIOD`. |
+| `HOSHIASK_RETENTION_ENABLED` | `false` | The clean-up that removes personal details from old tickets does nothing until this is `true`. |
+| `HOSHIASK_RETENTION_YEARS` | `3` | Years after a ticket was closed or cancelled before its personal details are removed. Keep it in step with `LEGAL_RETENTION_PERIOD`. |
 
 ## Legal text
 
@@ -223,9 +223,9 @@ Details in [ticket-import.md](ticket-import.md).
 
 | Setting | Example | What it does |
 |---|---|---|
-| `TICKET_IMPORT_DISK`, `TICKET_IMPORT_PATH` | `local`, `imports` | Where import files are put. (The old name `HELPDESK_IMPORT_RETENTION_PATH` still works.) |
+| `TICKET_IMPORT_DISK`, `TICKET_IMPORT_PATH` | `local`, `imports` | Where import files are put. (The old name `HOSHIASK_IMPORT_RETENTION_PATH` still works.) |
 | `TICKET_IMPORT_TIMEZONE` | `Asia/Manila` | The time zone of dates in import files that have none. |
-| `HELPDESK_IMPORT_RETENTION_DAYS` | `7` | Days the daily clean-up keeps uploaded import files. |
+| `HOSHIASK_IMPORT_RETENTION_DAYS` | `7` | Days the daily clean-up keeps uploaded import files. |
 
 ## Optional drivers
 

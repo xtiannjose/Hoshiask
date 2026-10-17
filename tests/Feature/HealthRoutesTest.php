@@ -16,7 +16,7 @@ class HealthRoutesTest extends TestCase
     public function test_health_endpoint_returns_minimal_public_payload(): void
     {
         config()->set('queue.default', 'sync');
-        config()->set('helpdesk.health.detail_token', null);
+        config()->set('hoshiask.health.detail_token', null);
 
         $response = $this->getJson('/health');
 
@@ -29,7 +29,7 @@ class HealthRoutesTest extends TestCase
     public function test_health_endpoint_returns_details_with_valid_token(): void
     {
         config()->set('queue.default', 'sync');
-        config()->set('helpdesk.health.detail_token', 'monitor-secret');
+        config()->set('hoshiask.health.detail_token', 'monitor-secret');
 
         $response = $this->withHeader('X-Health-Token', 'monitor-secret')
             ->getJson('/health');
@@ -43,7 +43,7 @@ class HealthRoutesTest extends TestCase
     public function test_health_endpoint_no_longer_accepts_the_token_via_query_string(): void
     {
         config()->set('queue.default', 'sync');
-        config()->set('helpdesk.health.detail_token', 'monitor-secret');
+        config()->set('hoshiask.health.detail_token', 'monitor-secret');
 
         $response = $this->getJson('/health?token=monitor-secret');
 

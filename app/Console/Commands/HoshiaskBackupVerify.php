@@ -6,12 +6,12 @@ use App\Services\Backup\BackupBundle;
 use App\Services\SystemLogService;
 use Illuminate\Console\Command;
 
-class HelpdeskBackupVerify extends Command
+class HoshiaskBackupVerify extends Command
 {
-    protected $signature = 'helpdesk:backup-verify
+    protected $signature = 'hoshiask:backup-verify
         {file? : A backup file (path, or a name in the backup folder). Default: the newest backup}
-        {--key= : The backup key, if it is not in HELPDESK_BACKUP_ENCRYPTION_KEY}
-        {--copy : Check the newest backup in HELPDESK_BACKUP_COPY_PATH instead}';
+        {--key= : The backup key, if it is not in HOSHIASK_BACKUP_ENCRYPTION_KEY}
+        {--copy : Check the newest backup in HOSHIASK_BACKUP_COPY_PATH instead}';
 
     protected $description = 'Open a backup and check that everything in it is complete and usable. Needs no database server.';
 
@@ -65,9 +65,9 @@ class HelpdeskBackupVerify extends Command
             return null;
         }
 
-        $directory = $this->option('copy') ? trim((string) config('helpdesk.backup.copy_path')) : $bundles->directory();
+        $directory = $this->option('copy') ? trim((string) config('hoshiask.backup.copy_path')) : $bundles->directory();
         if ($directory === '') {
-            $this->error('HELPDESK_BACKUP_COPY_PATH is not set.');
+            $this->error('HOSHIASK_BACKUP_COPY_PATH is not set.');
 
             return null;
         }

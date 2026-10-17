@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 
-class HelpdeskOperationsStatusService
+class HoshiaskOperationsStatusService
 {
     /** Written by the five-minute scheduled command, so the status check can tell whether cron is running. */
-    public const SCHEDULER_HEARTBEAT_CACHE_KEY = 'helpdesk:scheduler:heartbeat';
+    public const SCHEDULER_HEARTBEAT_CACHE_KEY = 'hoshiask:scheduler:heartbeat';
 
     /** Written by a queue worker when it finishes a job, whatever the queue driver. */
-    public const QUEUE_HEARTBEAT_CACHE_KEY = 'helpdesk:queue:last-job-finished-at';
+    public const QUEUE_HEARTBEAT_CACHE_KEY = 'hoshiask:queue:last-job-finished-at';
 
     /** Three missed runs of the five-minute command. */
     private const SCHEDULER_STALE_AFTER_MINUTES = 15;
@@ -73,9 +73,9 @@ class HelpdeskOperationsStatusService
                 $warnings[] = 'SESSION_SECURE_COOKIE must be true in production.';
             }
 
-            $healthDetailToken = config('helpdesk.health.detail_token');
+            $healthDetailToken = config('hoshiask.health.detail_token');
             if (! is_string($healthDetailToken) || trim($healthDetailToken) === '') {
-                $warnings[] = 'Set HELPDESK_HEALTH_DETAIL_TOKEN before exposing detailed health checks.';
+                $warnings[] = 'Set HOSHIASK_HEALTH_DETAIL_TOKEN before exposing detailed health checks.';
             }
         }
 
@@ -275,7 +275,7 @@ class HelpdeskOperationsStatusService
             return true;
         }
 
-        $configuredStatus = config('helpdesk.ops.queue_worker_running');
+        $configuredStatus = config('hoshiask.ops.queue_worker_running');
         if (is_bool($configuredStatus)) {
             return $configuredStatus;
         }

@@ -87,7 +87,7 @@ class TicketReply extends Model
 
     public static function editWindowMinutes(): int
     {
-        $minutes = (int) config('helpdesk.reply_edit_window_minutes', 180);
+        $minutes = (int) config('hoshiask.reply_edit_window_minutes', 180);
 
         return $minutes > 0 ? $minutes : 180;
     }

@@ -4,7 +4,7 @@ Things only the maintainer can do (they need the live server or the GitHub merge
 
 Status on 2026-10-10: **none of this is done yet.** The maintainer could not do it that day.
 
-**Update 2026-10-11: there is no live server for now.** Sections 1 to 4 all need one, so they are **deferred**, not forgotten: nobody is expected to do them until a server exists, and status reports and decision lists leave them out. The steps stay here so they are ready when a server does exist. Section 5 is optional.
+**Update 2026-10-11: there is no live server for now.** Sections 1 to 4 all need one, so they are **deferred**, not forgotten: nobody is expected to do them until a server exists, and status reports and decision lists leave them out. The steps stay here so they are ready when a server does exist. Sections 5 and 6 are optional, and section 6 needs no server.
 
 ## 1. Change the shadow account password (most urgent)
 
@@ -16,20 +16,20 @@ Steps:
 2. Open **Account Settings**, then the **Password** section.
 3. Type the current password, then a new one twice (12 or more characters, not used anywhere else). Save. Other signed-in sessions are ended.
 4. Save the new password in the password manager.
-5. On the server, open `/opt/helpdesk/.env`. If `SHADOW_PASSWORD=` holds the old password, put the new one there. Otherwise re-running the seeder would reset the shadow account to the old password.
-6. Run `cd /opt/helpdesk && php artisan config:clear`.
+5. On the server, open `/opt/hoshiask/.env`. If `SHADOW_PASSWORD=` holds the old password, put the new one there. Otherwise re-running the seeder would reset the shadow account to the old password.
+6. Run `cd /opt/hoshiask && php artisan config:clear`.
 7. Sign out and back in as `shadow`, and unlock System Logs with the new password.
-8. If locked out of `shadow` (the command exists in `main` and must be deployed first): `php artisan helpdesk:unlock-login shadow`.
+8. If locked out of `shadow` (the command exists in `main` and must be deployed first): `php artisan hoshiask:unlock-login shadow`.
 
 Optional and not recommended: erasing the old password from the history means rewriting history with a force push. It breaks every clone and open pull request, and Claude is not allowed to force-push, so the maintainer would run it. Changing the password is enough for a private repository with two collaborators.
 
 ## 2. Install ClamAV on the server (virus scanning)
 
-Why: `main` turns virus scanning on by default in production (earlier pull request #239), but it only works once ClamAV is installed. Until then uploads are allowed as before, and `php artisan helpdesk:ops-status` shows an advisory. ClamAV is free and needs about 1 GB of free memory.
+Why: `main` turns virus scanning on by default in production (earlier pull request #239), but it only works once ClamAV is installed. Until then uploads are allowed as before, and `php artisan hoshiask:ops-status` shows an advisory. ClamAV is free and needs about 1 GB of free memory.
 
 Steps (Ubuntu or Debian):
 
-1. Connect to the server and go to the app: `cd /opt/helpdesk`.
+1. Connect to the server and go to the app: `cd /opt/hoshiask`.
 2. Check the system and memory: `cat /etc/os-release` and `free -m`.
 3. Install it: `sudo apt update && sudo apt install -y clamav-daemon`.
 4. Start it and keep it running after reboots: `sudo systemctl enable --now clamav-freshclam clamav-daemon`.
@@ -37,14 +37,14 @@ Steps (Ubuntu or Debian):
 6. Let the website use it. Replace `www-data` if PHP runs as another user:
    - `sudo usermod -aG clamav www-data`
    - Restart PHP. The name depends on the version, for example `sudo systemctl restart php8.3-fpm`.
-7. Edit `/opt/helpdesk/.env`:
-   - Delete the line `HELPDESK_UPLOAD_SCAN=off` if it is there (otherwise scanning stays off).
-   - Add `HELPDESK_UPLOAD_SCAN=clamav`.
-   - Add `HELPDESK_CLAMAV_SOCKET=/var/run/clamav/clamd.ctl`.
+7. Edit `/opt/hoshiask/.env`:
+   - Delete the line `HOSHIASK_UPLOAD_SCAN=off` if it is there (otherwise scanning stays off).
+   - Add `HOSHIASK_UPLOAD_SCAN=clamav`.
+   - Add `HOSHIASK_CLAMAV_SOCKET=/var/run/clamav/clamd.ctl`.
 8. Reload the settings: `php artisan optimize:clear && php artisan optimize && php artisan queue:restart`.
-9. Test: `php artisan helpdesk:upload-scan-check`. It must end with "Virus scanning works."
-10. Add `HELPDESK_UPLOAD_SCAN_ON_ERROR=block` to `.env` so that a scanner that is down refuses uploads instead of letting them through, then `php artisan optimize`.
-11. Final check: `php artisan helpdesk:ops-status` shows no scanning warning.
+9. Test: `php artisan hoshiask:upload-scan-check`. It must end with "Virus scanning works."
+10. Add `HOSHIASK_UPLOAD_SCAN_ON_ERROR=block` to `.env` so that a scanner that is down refuses uploads instead of letting them through, then `php artisan optimize`.
+11. Final check: `php artisan hoshiask:ops-status` shows no scanning warning.
 
 If step 9 cannot reach the scanner, wait a few more minutes, or look for the socket with `ls /var/run/clamav/`. Until it works, uploads are still allowed. The longer reference is in [docs/security.md](../security.md).
 
@@ -61,7 +61,7 @@ Every change in the table below is already in `main` (checked in the code on 202
 | #242 | The old text of an edited or deleted reply is kept in the shadow account's System Logs only |
 | #243 | PDF and text attachment previews work in the ticket page |
 | #244 | A time-sensitive test no longer flakes |
-| #245 | A stranger cannot lock the real admin out; new command `php artisan helpdesk:unlock-login` |
+| #245 | A stranger cannot lock the real admin out; new command `php artisan hoshiask:unlock-login` |
 | #246 | Route protection and client journey tests; fixes the shared rate-limit counter and the "mark as resolved" button that needed a comment at any rating; the PostgreSQL job fails if it is not really on PostgreSQL |
 
 Deploy as usual ([docs/operations.md](../operations.md)); the deploy runs the migration for the new database indexes. The branch `fix/third-deep-check` adds one more migration (two search indexes on `tickets`; a few seconds at 10,000 tickets).
@@ -70,15 +70,15 @@ After deploying:
 
 1. Open one PDF attachment on a ticket. The preview must show the file. This was only tested with a text file.
 2. As a client, upload one Word (`.docx`) and one Excel (`.xlsx`) file made in Microsoft Office to a ticket. Older `.doc` and `.xls` files are refused on purpose.
-3. Run `php artisan helpdesk:ops-status` and read the advisories.
+3. Run `php artisan hoshiask:ops-status` and read the advisories.
 
 ## 4. After deploying the decisions of 2026-10-11
 
 The answers to the third deep check ([plan.md](plan.md)) were merged into `main` on 2026-10-11 as pull requests #4 and #5. Deploy `main` as usual; the deploy runs their three migrations (search indexes, a nullable column on `tickets`, one on `users`). The maintainer's own database was migrated on 2026-10-11.
 
 1. **Privacy notice.** The text changed (backup and log retention, complaints to the National Privacy Commission) and its version moved to `2026-10-11`. On the server `.env`, set `LEGAL_PRIVACY_VERSION=2026-10-11` and `LEGAL_EFFECTIVE_DATE="October 11, 2026"`, then `php artisan config:clear`. Everyone accepts the new notice at their next sign-in. Have the data protection officer read the new paragraphs first.
-2. **Quiet Pending tickets** are handled on their own: a staff reminder after 3 days (`HELPDESK_PENDING_FOLLOW_UP_DAYS`) and an automatic cancel after 14 days (`HELPDESK_PENDING_AUTO_CANCEL_DAYS`); `0` switches either off. Staff, not clients, get the email. The first run cancels every Pending ticket already older than 14 days with no activity: run `php artisan tickets:auto-cancel-pending --dry-run` first to see which.
-3. **Business hours SLA** is off. To switch it on, set `HELPDESK_SLA_BUSINESS_HOURS_ENABLED=true` (and `_DAYS`, `_START`, `_END` if the office hours differ, and `_CLOSED_DATES`, which `.env.example` already fills with the 2026 nationwide holidays; replace it each January), then `php artisan config:clear`. Report numbers for the Resolution Time bands change from that day on ([report-metrics.md](../report-metrics.md)).
+2. **Quiet Pending tickets** are handled on their own: a staff reminder after 3 days (`HOSHIASK_PENDING_FOLLOW_UP_DAYS`) and an automatic cancel after 14 days (`HOSHIASK_PENDING_AUTO_CANCEL_DAYS`); `0` switches either off. Staff, not clients, get the email. The first run cancels every Pending ticket already older than 14 days with no activity: run `php artisan tickets:auto-cancel-pending --dry-run` first to see which.
+3. **Business hours SLA** is off. To switch it on, set `HOSHIASK_SLA_BUSINESS_HOURS_ENABLED=true` (and `_DAYS`, `_START`, `_END` if the office hours differ, and `_CLOSED_DATES`, which `.env.example` already fills with the 2026 nationwide holidays; replace it each January), then `php artisan config:clear`. Report numbers for the Resolution Time bands change from that day on ([report-metrics.md](../report-metrics.md)).
 4. **Resilience** ([resilience.md](../resilience.md)): set up the outside monitor on `/health`, fill in the "where it is kept" table with a second person, do one timed restore and write it in the restore log, and confirm or change the two recovery targets.
 
 ## 5. Still open, only if wanted
@@ -86,3 +86,11 @@ The answers to the third deep check ([plan.md](plan.md)) were merged into `main`
 - Issue #233: measured on 2026-10-11 with 60,000 tickets. The all-time report and the ticket search were fixed (see the third deep check in [plan.md](plan.md)); the first auto-close and reminder runs after a long outage are slow but one-off, and PDFs are built while the user waits (the detailed custom report takes about 3 s).
 - Issue #229: what is left of the larger list (MFA and client password changes were decided against; see [docs/security.md](../security.md)).
 - Popups (issue #202): not built, reasons are on the issue.
+
+## 6. After the rename: GitHub clean-up (optional, no server needed)
+
+Why: the repository was renamed to Hoshiask on 2026-10-17 and no tracked file carries the former name, but three things on GitHub still do. Claude could not change them (the permission system blocked it, and Claude is not allowed to force-push).
+
+1. **Repository description.** On the repository page, click the gear next to "About", set the description to `Hoshiask personal project`, save.
+2. **Pull request descriptions #3, #4 and #5.** Open each pull request, click the three dots on the first comment, choose Edit, replace the former name with `Hoshiask`, and update the comment.
+3. **Git history (optional, not recommended).** 16 of 100 commit messages carry the former name, and so do the file contents of old commits. A rewrite changes every commit ID, restarts the two open Dependabot pull requests, and a message-only rewrite leaves the name in the file contents and in the hidden refs GitHub keeps for merged pull requests. If you ever rewrite history for the old shadow password (section 1), do it once for both. A full backup of the repository from before the attempted rewrite is in `D:\Coding\backups\Hoshiask-before-history-rewrite.git`; delete the folder when you decide.

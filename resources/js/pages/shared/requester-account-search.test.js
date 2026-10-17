@@ -88,7 +88,7 @@ describe('fetchRequesterAccounts', function () {
     });
 
     it('asks the search url for the group and the query and reads accounts and total', async function () {
-        vi.stubGlobal('window', { location: { origin: 'https://helpdesk.test' } });
+        vi.stubGlobal('window', { location: { origin: 'https://hoshiask.test' } });
         const fetchMock = vi.fn().mockResolvedValue({
             ok: true,
             json: async () => ({ accounts: [option('7')], total: 12 }),
@@ -110,7 +110,7 @@ describe('fetchRequesterAccounts', function () {
     });
 
     it('rejects when the server answers with an error status', async function () {
-        vi.stubGlobal('window', { location: { origin: 'https://helpdesk.test' } });
+        vi.stubGlobal('window', { location: { origin: 'https://hoshiask.test' } });
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 429 }));
 
         await expect(fetchRequesterAccounts({ url: '/search', group: 'client', query: 'a' }))
@@ -118,7 +118,7 @@ describe('fetchRequesterAccounts', function () {
     });
 
     it('treats a malformed body as no accounts', async function () {
-        vi.stubGlobal('window', { location: { origin: 'https://helpdesk.test' } });
+        vi.stubGlobal('window', { location: { origin: 'https://hoshiask.test' } });
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
 
         await expect(fetchRequesterAccounts({ url: '/search', group: 'support', query: 'a' }))

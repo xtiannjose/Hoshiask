@@ -22,7 +22,7 @@ use Tests\Traits\CreatesTestData;
 /**
  * Runs the real backup against a small file-backed SQLite database with real files on (fake) disks.
  */
-class HelpdeskBackupTest extends TestCase
+class HoshiaskBackupTest extends TestCase
 {
     use CreatesTestData;
 
@@ -44,9 +44,9 @@ class HelpdeskBackupTest extends TestCase
 
         Storage::fake('local');
         Storage::fake('department-logos');
-        config(['helpdesk.attachments_disk' => 'local', 'helpdesk.backup.disk' => 'local', 'helpdesk.backup.path' => 'backups']);
+        config(['hoshiask.attachments_disk' => 'local', 'hoshiask.backup.disk' => 'local', 'hoshiask.backup.path' => 'backups']);
         $this->key = BackupEncryption::generateKey();
-        config(['helpdesk.backup.encryption_key' => $this->key, 'helpdesk.backup.copy_path' => null]);
+        config(['hoshiask.backup.encryption_key' => $this->key, 'hoshiask.backup.copy_path' => null]);
 
         $this->createTicket($this->createClient(), $this->createCategory(), ['subject' => 'Backed up ticket']);
         Storage::disk('local')->put('attachments/report.pdf', random_bytes(70000));
@@ -62,25 +62,25 @@ class HelpdeskBackupTest extends TestCase
         parent::tearDown();
     }
 
-    private function backups(string $pattern = 'helpdesk-*'): array
+    private function backups(string $pattern = 'hoshiask-*'): array
     {
         return glob(Storage::disk('local')->path('backups').'/'.$pattern) ?: [];
     }
 
     public function test_an_encrypted_backup_holds_the_database_and_every_file_and_restores_exactly(): void
     {
-        $this->artisan('helpdesk:backup')
+        $this->artisan('hoshiask:backup')
             ->expectsOutputToContain('Checked: the backup opens and every part matches.')
             ->expectsOutputToContain('Backup complete.')
             ->assertSuccessful();
 
-        $bundles = $this->backups('helpdesk-*.tar.enc');
+        $bundles = $this->backups('hoshiask-*.tar.enc');
         $this->assertCount(1, $bundles);
         $this->assertStringStartsWith(BackupEncryption::MAGIC, (string) file_get_contents($bundles[0], length: 5));
         $this->assertSame([], glob(Storage::disk('local')->path('backups').'/.work-*') ?: [], 'The work folder is removed.');
 
         $restored = $this->work.'/restored';
-        $this->artisan('helpdesk:backup-restore', ['file' => $bundles[0], 'directory' => $restored])
+        $this->artisan('hoshiask:backup-restore', ['file' => $bundles[0], 'directory' => $restored])
             ->expectsOutputToContain('Nothing in the running system was changed.')
             ->assertSuccessful();
 
@@ -113,61 +113,61 @@ class HelpdeskBackupTest extends TestCase
 
     public function test_verify_checks_the_newest_backup_and_logs_the_result(): void
     {
-        $this->artisan('helpdesk:backup')->assertSuccessful();
+        $this->artisan('hoshiask:backup')->assertSuccessful();
 
-        $this->artisan('helpdesk:backup-verify')
+        $this->artisan('hoshiask:backup-verify')
             ->expectsOutputToContain('This backup is complete and usable.')
             ->assertSuccessful();
-        $this->artisan('helpdesk:backup-verify', ['file' => basename($this->backups()[0])])->assertSuccessful();
+        $this->artisan('hoshiask:backup-verify', ['file' => basename($this->backups()[0])])->assertSuccessful();
         $this->assertSame(2, SystemLog::query()->where('event_type', 'backup.verified')->count());
 
-        $this->artisan('helpdesk:backup-verify', ['--key' => BackupEncryption::generateKey()])
+        $this->artisan('hoshiask:backup-verify', ['--key' => BackupEncryption::generateKey()])
             ->expectsOutputToContain('the key is wrong')
             ->expectsOutputToContain('This backup is NOT usable.')
             ->assertFailed();
         $this->assertSame(1, SystemLog::query()->where('event_type', 'backup.verify_failed')->count());
 
-        $this->artisan('helpdesk:backup-verify', ['file' => 'helpdesk-nope.tar.enc'])->expectsOutputToContain('No backup file named')->assertFailed();
+        $this->artisan('hoshiask:backup-verify', ['file' => 'hoshiask-nope.tar.enc'])->expectsOutputToContain('No backup file named')->assertFailed();
     }
 
     public function test_a_changed_file_inside_an_unencrypted_backup_is_detected(): void
     {
-        config(['helpdesk.backup.encryption_key' => null]);
-        $this->artisan('helpdesk:backup')->expectsOutputToContain('is NOT encrypted')->assertSuccessful();
-        $bundle = $this->backups('helpdesk-*.tar')[0];
+        config(['hoshiask.backup.encryption_key' => null]);
+        $this->artisan('hoshiask:backup')->expectsOutputToContain('is NOT encrypted')->assertSuccessful();
+        $bundle = $this->backups('hoshiask-*.tar')[0];
 
         $bytes = (string) file_get_contents($bundle);
         $at = strpos($bytes, 'png bytes');
         $bytes[$at] = 'P';
         file_put_contents($bundle, $bytes);
 
-        $this->artisan('helpdesk:backup-verify')
+        $this->artisan('hoshiask:backup-verify')
             ->expectsOutputToContain('files/department-logos/juniper-logo.png does not match')
             ->assertFailed();
     }
 
     public function test_a_damaged_encrypted_backup_is_detected(): void
     {
-        $this->artisan('helpdesk:backup')->assertSuccessful();
+        $this->artisan('hoshiask:backup')->assertSuccessful();
         $bundle = $this->backups()[0];
         $bytes = (string) file_get_contents($bundle);
         $bytes[100] = chr(ord($bytes[100]) ^ 1);
         file_put_contents($bundle, $bytes);
 
-        $this->artisan('helpdesk:backup-verify')->expectsOutputToContain('changed or damaged')->assertFailed();
+        $this->artisan('hoshiask:backup-verify')->expectsOutputToContain('changed or damaged')->assertFailed();
     }
 
     public function test_an_unencrypted_backup_is_made_with_a_warning_and_never_copied_away(): void
     {
-        config(['helpdesk.backup.encryption_key' => null, 'helpdesk.backup.copy_path' => $this->work.'/copies']);
+        config(['hoshiask.backup.encryption_key' => null, 'hoshiask.backup.copy_path' => $this->work.'/copies']);
         File::ensureDirectoryExists($this->work.'/copies');
 
-        $this->artisan('helpdesk:backup')
+        $this->artisan('hoshiask:backup')
             ->expectsOutputToContain('is NOT encrypted')
             ->expectsOutputToContain('an unencrypted backup is never copied away')
             ->assertSuccessful();
 
-        $this->assertCount(1, $this->backups('helpdesk-*.tar'));
+        $this->assertCount(1, $this->backups('hoshiask-*.tar'));
         $this->assertSame([], glob($this->work.'/copies/*') ?: []);
         $this->assertFalse(SystemLog::query()->where('event_type', 'backup.completed')->firstOrFail()->metadata['encrypted']);
     }
@@ -176,27 +176,27 @@ class HelpdeskBackupTest extends TestCase
     {
         $copies = $this->work.'/copies';
         File::ensureDirectoryExists($copies);
-        config(['helpdesk.backup.copy_path' => $copies]);
-        foreach (['helpdesk-20200101-024000.tar.enc', 'helpdesk-20200102-024000.tar', 'someone-elses-file.tar.enc'] as $old) {
+        config(['hoshiask.backup.copy_path' => $copies]);
+        foreach (['hoshiask-20200101-024000.tar.enc', 'hoshiask-20200102-024000.tar', 'someone-elses-file.tar.enc'] as $old) {
             file_put_contents($copies.'/'.$old, 'old');
             touch($copies.'/'.$old, now()->subDays(30)->getTimestamp());
         }
 
-        $this->artisan('helpdesk:backup')->expectsOutputToContain('removed 2 old copies')->assertSuccessful();
+        $this->artisan('hoshiask:backup')->expectsOutputToContain('removed 2 old copies')->assertSuccessful();
 
         $bundle = $this->backups()[0];
         $this->assertFileEquals($bundle, $copies.'/'.basename($bundle));
         $this->assertSame([basename($bundle), 'someone-elses-file.tar.enc'], array_map('basename', glob($copies.'/*') ?: []));
         $this->assertTrue(SystemLog::query()->where('event_type', 'backup.completed')->firstOrFail()->metadata['copied']);
 
-        $this->artisan('helpdesk:backup-verify', ['--copy' => true])->assertSuccessful();
+        $this->artisan('hoshiask:backup-verify', ['--copy' => true])->assertSuccessful();
     }
 
     public function test_a_missing_copy_folder_fails_the_run_but_keeps_the_backup(): void
     {
-        config(['helpdesk.backup.copy_path' => $this->work.'/not-mounted']);
+        config(['hoshiask.backup.copy_path' => $this->work.'/not-mounted']);
 
-        $this->artisan('helpdesk:backup')->expectsOutputToContain('does not exist (is the drive mounted?)')->assertFailed();
+        $this->artisan('hoshiask:backup')->expectsOutputToContain('does not exist (is the drive mounted?)')->assertFailed();
 
         $this->assertCount(1, $this->backups());
         $this->assertSame(1, SystemLog::query()->where('event_type', 'backup.failed')->count());
@@ -204,9 +204,9 @@ class HelpdeskBackupTest extends TestCase
 
     public function test_files_on_a_remote_disk_are_skipped_and_named(): void
     {
-        config(['filesystems.disks.remote-attachments' => ['driver' => 's3', 'bucket' => 'x', 'region' => 'x'], 'helpdesk.attachments_disk' => 'remote-attachments']);
+        config(['filesystems.disks.remote-attachments' => ['driver' => 's3', 'bucket' => 'x', 'region' => 'x'], 'hoshiask.attachments_disk' => 'remote-attachments']);
 
-        $this->artisan('helpdesk:backup')->expectsOutputToContain('Skipped attachments')->assertSuccessful();
+        $this->artisan('hoshiask:backup')->expectsOutputToContain('Skipped attachments')->assertSuccessful();
 
         $result = app(BackupBundle::class)->verify($this->backups()[0], $this->key);
         $this->assertSame(['attachments'], $result['manifest']['files']['skipped_disks']);
@@ -217,7 +217,7 @@ class HelpdeskBackupTest extends TestCase
     {
         config(['database.connections.sqlite.database' => $this->work.'/missing.sqlite']);
 
-        $this->artisan('helpdesk:backup')->expectsOutputToContain('Backup failed: SQLite backup requires a file-backed database.')->assertFailed();
+        $this->artisan('hoshiask:backup')->expectsOutputToContain('Backup failed: SQLite backup requires a file-backed database.')->assertFailed();
 
         config(['database.connections.sqlite.database' => $this->work.'/db.sqlite']);
         $this->assertSame('SQLite backup requires a file-backed database.', SystemLog::query()->where('event_type', 'backup.failed')->firstOrFail()->metadata['message']);
@@ -226,10 +226,10 @@ class HelpdeskBackupTest extends TestCase
 
     public function test_two_backups_cannot_run_at_once(): void
     {
-        $lock = Cache::lock('helpdesk:backup', 60);
+        $lock = Cache::lock('hoshiask:backup', 60);
         $lock->get();
 
-        $this->artisan('helpdesk:backup')->expectsOutputToContain('Another backup is still running')->assertFailed();
+        $this->artisan('hoshiask:backup')->expectsOutputToContain('Another backup is still running')->assertFailed();
         $lock->release();
 
         $this->assertSame([], $this->backups());
@@ -237,11 +237,11 @@ class HelpdeskBackupTest extends TestCase
 
     public function test_restore_refuses_a_folder_that_is_not_empty(): void
     {
-        $this->artisan('helpdesk:backup')->assertSuccessful();
+        $this->artisan('hoshiask:backup')->assertSuccessful();
         File::ensureDirectoryExists($this->work.'/busy');
         file_put_contents($this->work.'/busy/keep.txt', 'mine');
 
-        $this->artisan('helpdesk:backup-restore', ['file' => $this->backups()[0], 'directory' => $this->work.'/busy'])
+        $this->artisan('hoshiask:backup-restore', ['file' => $this->backups()[0], 'directory' => $this->work.'/busy'])
             ->expectsOutputToContain('is not empty')
             ->assertFailed();
         $this->assertSame(['keep.txt'], array_map('basename', glob($this->work.'/busy/*') ?: []));
@@ -249,9 +249,9 @@ class HelpdeskBackupTest extends TestCase
 
     public function test_the_key_command_prints_a_32_byte_key_and_the_rules_for_keeping_it(): void
     {
-        $this->artisan('helpdesk:backup-key')
+        $this->artisan('hoshiask:backup-key')
             ->expectsOutputToContain('Store this key OUTSIDE this server')
-            ->expectsOutputToContain('HELPDESK_BACKUP_ENCRYPTION_KEY')
+            ->expectsOutputToContain('HOSHIASK_BACKUP_ENCRYPTION_KEY')
             ->assertSuccessful();
 
         $this->assertSame(32, strlen(BackupEncryption::parseKey(BackupEncryption::generateKey())));
@@ -259,11 +259,11 @@ class HelpdeskBackupTest extends TestCase
 
     public function test_the_cleanup_command_removes_old_bundles(): void
     {
-        $this->artisan('helpdesk:backup')->assertSuccessful();
+        $this->artisan('hoshiask:backup')->assertSuccessful();
         $bundle = $this->backups()[0];
         touch($bundle, now()->subDays(20)->getTimestamp());
 
-        $this->artisan('helpdesk:cleanup-runtime')->assertSuccessful();
+        $this->artisan('hoshiask:cleanup-runtime')->assertSuccessful();
 
         $this->assertFileDoesNotExist($bundle);
     }
@@ -273,9 +273,9 @@ class HelpdeskBackupTest extends TestCase
         $events = collect(app(Schedule::class)->events());
         $find = fn (string $command): ?ScheduledEvent => $events->first(fn (ScheduledEvent $event) => preg_match('/artisan["\']? '.preg_quote($command, '/').'$/', (string) $event->command) === 1);
 
-        $this->assertSame('40 2 * * *', $find('helpdesk:backup')?->expression);
-        $this->assertSame('20 4 * * 0', $find('helpdesk:backup-verify')?->expression);
-        $this->assertNull($find('helpdesk:backup-database'), 'The nightly job now makes the full backup.');
+        $this->assertSame('40 2 * * *', $find('hoshiask:backup')?->expression);
+        $this->assertSame('20 4 * * 0', $find('hoshiask:backup-verify')?->expression);
+        $this->assertNull($find('hoshiask:backup-database'), 'The nightly job now makes the full backup.');
     }
 
     public function test_the_status_check_names_every_backup_problem(): void
@@ -306,10 +306,10 @@ class HelpdeskBackupTest extends TestCase
         $this->assertStringContainsString('The last backup check FAILED', $advisories());
 
         $log('backup.verified');
-        config(['helpdesk.backup.copy_path' => '/mnt/backups']);
+        config(['hoshiask.backup.copy_path' => '/mnt/backups']);
         $this->assertSame('', $advisories());
 
-        config(['helpdesk.backup.copy_path' => null, 'helpdesk.backup.offsite_confirmed' => true]);
+        config(['hoshiask.backup.copy_path' => null, 'hoshiask.backup.offsite_confirmed' => true]);
         $this->assertSame('', $advisories());
     }
 

@@ -11,7 +11,7 @@ final class PasswordHelp
 {
     public static function contact(): ?string
     {
-        $contact = trim((string) config('helpdesk.password_help_contact', ''));
+        $contact = trim((string) config('hoshiask.password_help_contact', ''));
 
         return $contact === '' ? null : $contact;
     }

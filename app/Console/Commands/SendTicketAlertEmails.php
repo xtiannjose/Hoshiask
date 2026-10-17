@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\Operations\HelpdeskOperationsStatusService;
+use App\Services\Operations\HoshiaskOperationsStatusService;
 use App\Services\TicketEmailAlertService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -15,8 +15,8 @@ class SendTicketAlertEmails extends Command
 
     public function handle(TicketEmailAlertService $alerts): int
     {
-        // Tells helpdesk:ops-status that cron is running the scheduler.
-        Cache::forever(HelpdeskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY, now()->timestamp);
+        // Tells hoshiask:ops-status that cron is running the scheduler.
+        Cache::forever(HoshiaskOperationsStatusService::SCHEDULER_HEARTBEAT_CACHE_KEY, now()->timestamp);
 
         $summary = $alerts->sendScheduledReminders();
 

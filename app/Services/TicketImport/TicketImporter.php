@@ -168,7 +168,7 @@ class TicketImporter
             'default_status' => $this->references->statusValue($rawStatus)
                 ?? throw new InvalidArgumentException('Unsupported default status: '.$rawStatus),
             'source_timezone' => $this->references->nullableString($options['source_timezone'] ?? null)
-                ?? (string) config('helpdesk.ticket_import_timezone', config('app.timezone', 'UTC')),
+                ?? (string) config('hoshiask.ticket_import_timezone', config('app.timezone', 'UTC')),
             'delimiter' => mb_substr($delimiter, 0, 1),
             'dry_run' => (bool) ($options['dry_run'] ?? false),
             'update_existing' => (bool) ($options['update_existing'] ?? false),

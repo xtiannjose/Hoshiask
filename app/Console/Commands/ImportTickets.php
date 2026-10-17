@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 class ImportTickets extends Command
 {
     protected $signature = 'tickets:import
-        {paths* : CSV or helpdesk-tracker .xlsx files. Relative paths resolve from storage/app/private/imports.}
+        {paths* : CSV or tracker .xlsx files. Relative paths resolve from storage/app/private/imports.}
         {--default-user= : Requester (user id, email or username) for rows without one. Required for .xlsx files}
         {--default-category=Other : Category id or name for rows without one}
         {--default-priority=medium : Severity for rows without one}
@@ -27,7 +27,7 @@ class ImportTickets extends Command
      */
     protected $aliases = ['tickets:import-csv', 'tickets:import-xlsx'];
 
-    protected $description = 'Import tickets from CSV or helpdesk-tracker XLSX files, keeping their original dates.';
+    protected $description = 'Import tickets from CSV or tracker XLSX files, keeping their original dates.';
 
     public function handle(TicketImporter $importer, SystemLogService $systemLogs): int
     {

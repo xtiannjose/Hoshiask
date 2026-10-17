@@ -6,7 +6,7 @@ use RuntimeException;
 use Traversable;
 use ZipArchive;
 
-class HelpdeskTrackerXlsxParser
+class HoshiaskTrackerXlsxParser
 {
     /**
      * @var array<string, list<string>>
@@ -314,7 +314,7 @@ class HelpdeskTrackerXlsxParser
         }
 
         $serial = (float) $rawValue;
-        $formatter = app(HelpdeskTrackerDescriptionFormatter::class);
+        $formatter = app(HoshiaskTrackerDescriptionFormatter::class);
 
         return match ($formatType) {
             'date' => $formatter->formatExcelDate($serial),

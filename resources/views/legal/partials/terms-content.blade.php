@@ -6,7 +6,7 @@
 
 <div class="space-y-4 text-sm text-slate-700">
     <p>
-        These Terms of Service govern the use of the Helpdesk Ticketing System operated by {{ $organization }}
+        These Terms of Service govern the use of the Hoshiask Ticketing System operated by {{ $organization }}
         (the "Platform"). By accessing or using the Platform, you agree to these Terms.
     </p>
 

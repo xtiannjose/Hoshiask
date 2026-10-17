@@ -19,7 +19,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Helpdesk'),
+    'name' => env('APP_NAME', 'Hoshiask'),
 
     // Single source of truth is the VERSION file in the project root.
     'version' => trim((string) @file_get_contents(dirname(__DIR__).'/VERSION')) ?: 'unknown',

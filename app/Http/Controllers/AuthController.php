@@ -29,7 +29,7 @@ class AuthController extends Controller
      * Set at sign-in and cleared at sign-out. It carries no data: its presence on a
      * signed-out visit means the session ran out rather than the person never signing in.
      */
-    public const SIGNED_IN_HINT_COOKIE = 'helpdesk_signed_in';
+    public const SIGNED_IN_HINT_COOKIE = 'hoshiask_signed_in';
 
     /** How long "stay signed in" lasts for staff: about two months, then they sign in again. Clients keep Laravel's default. */
     private const STAFF_REMEMBER_MINUTES = 60 * 24 * 60;

@@ -1,6 +1,5 @@
 # Starts this project's Laravel queue worker (sends the queued ticket emails) on a
-# Windows PC, for local testing. Production (Linux) runs the worker as a systemd
-# service instead: see docs/helpdesk-queue-worker.service.example.
+# Windows PC, for local testing.
 param(
     [switch]$Foreground
 )
@@ -23,7 +22,7 @@ $ExistingWorker = Get-CimInstance Win32_Process |
     Select-Object -First 1
 
 if ($ExistingWorker) {
-    Write-Host "Helpdesk queue worker already running with PID $($ExistingWorker.ProcessId)."
+    Write-Host "Hoshiask queue worker already running with PID $($ExistingWorker.ProcessId)."
     exit 0
 }
 
@@ -40,4 +39,4 @@ $Process = Start-Process `
     -WindowStyle Hidden `
     -PassThru
 
-Write-Host "Started helpdesk queue worker with PID $($Process.Id)."
+Write-Host "Started Hoshiask queue worker with PID $($Process.Id)."

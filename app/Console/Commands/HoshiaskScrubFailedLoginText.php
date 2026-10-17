@@ -9,9 +9,9 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class HelpdeskScrubFailedLoginText extends Command
+class HoshiaskScrubFailedLoginText extends Command
 {
-    protected $signature = 'helpdesk:scrub-failed-login-text
+    protected $signature = 'hoshiask:scrub-failed-login-text
         {--dry-run : Show how many entries would change without changing anything}';
 
     protected $description = 'Mask text typed into the sign-in box in old failed sign-in log entries, unless it names a real account.';

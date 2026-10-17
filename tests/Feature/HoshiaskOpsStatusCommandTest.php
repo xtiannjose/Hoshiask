@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Services\Operations\HelpdeskOperationsStatusService;
+use App\Services\Operations\HoshiaskOperationsStatusService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
-class HelpdeskOpsStatusCommandTest extends TestCase
+class HoshiaskOpsStatusCommandTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -16,7 +16,7 @@ class HelpdeskOpsStatusCommandTest extends TestCase
     {
         config()->set('queue.default', 'database');
         config()->set('mail.default', 'smtp');
-        config()->set('helpdesk.ops.queue_worker_running', false);
+        config()->set('hoshiask.ops.queue_worker_running', false);
 
         DB::table('jobs')->insert([
             'queue' => 'default',
@@ -36,8 +36,8 @@ class HelpdeskOpsStatusCommandTest extends TestCase
             'failed_at' => now(),
         ]);
 
-        $this->artisan('helpdesk:ops-status')
-            ->expectsOutput('Helpdesk operations status')
+        $this->artisan('hoshiask:ops-status')
+            ->expectsOutput('Hoshiask operations status')
             ->expectsOutput('Queue connection: database')
             ->expectsOutput('Queue worker required: yes')
             ->expectsOutput('Queue worker status: not detected')
@@ -51,7 +51,7 @@ class HelpdeskOpsStatusCommandTest extends TestCase
     public function test_waiting_and_failed_jobs_alone_do_not_fail_a_deploy(): void
     {
         config()->set('queue.default', 'database');
-        config()->set('helpdesk.ops.queue_worker_running', true);
+        config()->set('hoshiask.ops.queue_worker_running', true);
 
         DB::table('jobs')->insert([
             'queue' => 'default',
@@ -71,7 +71,7 @@ class HelpdeskOpsStatusCommandTest extends TestCase
         ]);
 
         // The deploy runs exactly this command.
-        $this->artisan('helpdesk:ops-status', ['--fail-on-warning' => true])
+        $this->artisan('hoshiask:ops-status', ['--fail-on-warning' => true])
             ->expectsOutput('Warnings: none')
             ->assertSuccessful();
     }
@@ -80,7 +80,7 @@ class HelpdeskOpsStatusCommandTest extends TestCase
     {
         app()->detectEnvironment(fn () => 'production');
         config()->set('queue.default', 'database');
-        config()->set('helpdesk.ops.queue_worker_running', true);
+        config()->set('hoshiask.ops.queue_worker_running', true);
 
         DB::table('jobs')->insert([
             'queue' => 'default',
@@ -99,7 +99,7 @@ class HelpdeskOpsStatusCommandTest extends TestCase
             'failed_at' => now(),
         ]);
 
-        $status = app(HelpdeskOperationsStatusService::class)->buildStatus(false);
+        $status = app(HoshiaskOperationsStatusService::class)->buildStatus(false);
 
         $advisories = implode('
 ', $status['advisories']);
@@ -112,10 +112,10 @@ class HelpdeskOpsStatusCommandTest extends TestCase
     public function test_ops_status_reports_running_queue_worker_without_warning(): void
     {
         config()->set('queue.default', 'database');
-        config()->set('helpdesk.ops.queue_worker_running', true);
+        config()->set('hoshiask.ops.queue_worker_running', true);
 
-        $this->artisan('helpdesk:ops-status')
-            ->expectsOutput('Helpdesk operations status')
+        $this->artisan('hoshiask:ops-status')
+            ->expectsOutput('Hoshiask operations status')
             ->expectsOutput('Queue connection: database')
             ->expectsOutput('Queue worker required: yes')
             ->expectsOutput('Queue worker status: running')
@@ -128,10 +128,10 @@ class HelpdeskOpsStatusCommandTest extends TestCase
     public function test_ops_status_can_fail_on_warnings(): void
     {
         config()->set('queue.default', 'database');
-        config()->set('helpdesk.ops.queue_worker_running', false);
+        config()->set('hoshiask.ops.queue_worker_running', false);
 
-        $this->artisan('helpdesk:ops-status --fail-on-warning')
-            ->expectsOutput('Helpdesk operations status')
+        $this->artisan('hoshiask:ops-status --fail-on-warning')
+            ->expectsOutput('Hoshiask operations status')
             ->expectsOutput('Warnings:')
             ->expectsOutput('- Queue connection "database" requires a running queue worker for queued mail and jobs.')
             ->assertFailed();
@@ -140,9 +140,9 @@ class HelpdeskOpsStatusCommandTest extends TestCase
     public function test_ops_status_can_output_json(): void
     {
         config()->set('queue.default', 'database');
-        config()->set('helpdesk.ops.queue_worker_running', true);
+        config()->set('hoshiask.ops.queue_worker_running', true);
 
-        Artisan::call('helpdesk:ops-status', ['--json' => true]);
+        Artisan::call('hoshiask:ops-status', ['--json' => true]);
         $payload = json_decode(Artisan::output(), true, flags: JSON_THROW_ON_ERROR);
 
         $this->assertSame('ok', $payload['status']);

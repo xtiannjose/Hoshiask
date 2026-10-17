@@ -1166,7 +1166,7 @@ class AdminReportsPageTest extends TestCase
     {
         config([
             'legal.require_acceptance' => false,
-            'helpdesk.sla.resolution_buckets.under_one_hour_minutes' => 120,
+            'hoshiask.sla.resolution_buckets.under_one_hour_minutes' => 120,
         ]);
 
         $superUser = $this->createUser('Config SLA Super', 'config-sla-super@example.com', User::ROLE_SUPER_USER);

@@ -1,6 +1,6 @@
 # Ticket System Workflow
 
-This guide explains how the helpdesk is used, from the moment a client files a ticket until it is closed. It is written in plain language so that clients, technicians, super users and admins all follow the same process.
+This guide explains how Hoshiask is used, from the moment a client files a ticket until it is closed. It is written in plain language so that clients, technicians, super users and admins all follow the same process.
 
 ## What the system is for
 
@@ -49,8 +49,8 @@ Every staff member can use canned responses, save ticket list views, receive not
 - Sign in with your **username or email address** and your password. Clients land on their dashboard, staff on the staff dashboard.
 - The first time (and again whenever the terms change) you are asked to accept the **Terms of Service**, the **Privacy Notice** and a statement that you are authorised to use the platform.
 - A session ends after **2 hours without activity**. Staff who tick "stay signed in" stay signed in for 60 days. After a session ends the sign-in page says so.
-- **Forgotten passwords:** there is no self-service reset. The sign-in page says "Forgot your password? Contact your administrator", followed by the contact set in `HELPDESK_PASSWORD_HELP_CONTACT` (an email address, phone number or name) when one is configured. The same advice is added to the message people see after too many wrong passwords.
-- **Too many wrong passwords:** eight wrong passwords lock that login for 15 minutes for the address that typed them. The shadow account can lift the lock early from the Online Users page, and anyone with server access can with `php artisan helpdesk:unlock-login` (see [operations.md](operations.md)).
+- **Forgotten passwords:** there is no self-service reset. The sign-in page says "Forgot your password? Contact your administrator", followed by the contact set in `HOSHIASK_PASSWORD_HELP_CONTACT` (an email address, phone number or name) when one is configured. The same advice is added to the message people see after too many wrong passwords.
+- **Too many wrong passwords:** eight wrong passwords lock that login for 15 minutes for the address that typed them. The shadow account can lift the lock early from the Online Users page, and anyone with server access can with `php artisan hoshiask:unlock-login` (see [operations.md](operations.md)).
 - **The bell** in the top bar lists tickets with news since you last looked. Opening a ticket clears its entry, and clearing the list removes them all.
 - **Appearance:** every account has the sun/moon button in the top bar to switch between light and dark. Staff can also choose **System** (follow the device) under Account Settings → Appearance. The choice is remembered per browser.
 
@@ -222,7 +222,7 @@ When the same problem was filed more than once, an admin-level staff member (sup
 
 ### Editing and deleting replies
 
-- **Clients** can edit or delete their own messages for 3 hours after sending (the time is `HELPDESK_REPLY_EDIT_WINDOW_MINUTES`).
+- **Clients** can edit or delete their own messages for 3 hours after sending (the time is `HOSHIASK_REPLY_EDIT_WINDOW_MINUTES`).
 - **Staff** can edit or delete their own replies from the conversation.
 - A deleted message stays in the thread as "This message was deleted." The old text of an edited or deleted message is kept in the shadow account's System Logs only, and is never shown in a conversation.
 
@@ -262,16 +262,16 @@ Deleting cannot be undone, except from a backup. Cancelling or closing is usuall
 
 ### SLA reminders and the SLA Breached tab
 
-The SLA target is how long a ticket should take: **240 minutes** by default (`HELPDESK_SLA_RESOLUTION_TARGET_MINUTES`). Staff are reminded by email:
+The SLA target is how long a ticket should take: **240 minutes** by default (`HOSHIASK_SLA_RESOLUTION_TARGET_MINUTES`). Staff are reminded by email:
 
 - the assigned technicians, 210 minutes after the assignment, if the ticket is still Open or In Progress (a Pending ticket waits on the client)
 - super users, admins and the shadow account, when an active ticket stays unassigned: once at 120 minutes ("Unchecked Ticket Alert") and once at 180 minutes ("Unassigned SLA Warning"), counted from when the ticket was created
 
-**Business hours.** By default SLA minutes run around the clock. With `HELPDESK_SLA_BUSINESS_HOURS_ENABLED=true` they count only inside the working days and hours (Monday to Friday, 08:00 to 17:00 unless changed), so a ticket logged at 16:00 on Friday has used one hour of its four by Monday at 08:00 and no reminder goes out overnight or over the weekend. This applies to the SLA badge, the SLA Breached tab, the Needs Attention tab (16 working hours instead of 16 hours on the clock), the SLA reminders and the Resolution Time report. Public holidays and other closed days listed in `HELPDESK_SLA_BUSINESS_HOURS_CLOSED_DATES` (`YYYY-MM-DD`, comma-separated) count like a weekend; the list is kept up to date by hand (the example settings carry the 2026 nationwide holidays from the Official Gazette). The ticket page shows the real time a ticket took, and next to it the working time ("2d 18h (3h working)").
+**Business hours.** By default SLA minutes run around the clock. With `HOSHIASK_SLA_BUSINESS_HOURS_ENABLED=true` they count only inside the working days and hours (Monday to Friday, 08:00 to 17:00 unless changed), so a ticket logged at 16:00 on Friday has used one hour of its four by Monday at 08:00 and no reminder goes out overnight or over the weekend. This applies to the SLA badge, the SLA Breached tab, the Needs Attention tab (16 working hours instead of 16 hours on the clock), the SLA reminders and the Resolution Time report. Public holidays and other closed days listed in `HOSHIASK_SLA_BUSINESS_HOURS_CLOSED_DATES` (`YYYY-MM-DD`, comma-separated) count like a weekend; the list is kept up to date by hand (the example settings carry the 2026 nationwide holidays from the Official Gazette). The ticket page shows the real time a ticket took, and next to it the working time ("2d 18h (3h working)").
 
-A **Pending** ticket gets its own, gentler reminder. When a Pending ticket has had no status change and no reply for 3 days (`HELPDESK_PENDING_FOLLOW_UP_DAYS`, `0` switches it off), its assignees get one email that lists all of their quiet Pending tickets, with a link to each. Nobody assigned: the super users get it. The email asks staff to check whether the ticket is still waiting, contact the client if needed, or resolve or cancel it. The client is not emailed, and a ticket that stays quiet is listed again after another 3 days.
+A **Pending** ticket gets its own, gentler reminder. When a Pending ticket has had no status change and no reply for 3 days (`HOSHIASK_PENDING_FOLLOW_UP_DAYS`, `0` switches it off), its assignees get one email that lists all of their quiet Pending tickets, with a link to each. Nobody assigned: the super users get it. The email asks staff to check whether the ticket is still waiting, contact the client if needed, or resolve or cancel it. The client is not emailed, and a ticket that stays quiet is listed again after another 3 days.
 
-**Pending tickets are cancelled automatically** when they stay quiet for **14 days** (`HELPDESK_PENDING_AUTO_CANCEL_DAYS`, `0` switches it off). The daily job `tickets:auto-cancel-pending` (03:45) cancels them and writes "Automatically cancelled after 14 days with no activity while Pending." in the ticket's notes and as its cancellation reason. Any reply or change before then, internal notes included, starts the count again. The client is not emailed about it, and imported tickets are never cancelled this way. A cancelled ticket can still be reopened by staff like any other. The reminder emails say how many days are left.
+**Pending tickets are cancelled automatically** when they stay quiet for **14 days** (`HOSHIASK_PENDING_AUTO_CANCEL_DAYS`, `0` switches it off). The daily job `tickets:auto-cancel-pending` (03:45) cancels them and writes "Automatically cancelled after 14 days with no activity while Pending." in the ticket's notes and as its cancellation reason. Any reply or change before then, internal notes included, starts the count again. The client is not emailed about it, and imported tickets are never cancelled this way. A cancelled ticket can still be reopened by staff like any other. The reminder emails say how many days are left.
 
 Imported tickets (see [ticket-import.md](ticket-import.md)) never get these reminders: they are old records, and a reminder for every open one would flood the inboxes on the first run after an import.
 
@@ -303,15 +303,15 @@ A client is emailed only at moments that need their attention, and every email a
 | Staff move it to Resolved | "Your ticket has been resolved": confirm or reopen, and the automatic close date. Sent once per resolution. A ticket that is reopened and resolved again emails again. |
 | 5 days after the resolution | One reminder that it closes automatically in 2 days. |
 | Staff reply publicly | One email per ticket with all the replies of the last few minutes merged (5 minutes by default). |
-| Closed or cancelled by staff, or closed automatically | Off by default (`HELPDESK_CLIENT_EMAIL_CLOSED=true` turns it on). |
+| Closed or cancelled by staff, or closed automatically | Off by default (`HOSHIASK_CLIENT_EMAIL_CLOSED=true` turns it on). |
 
 **Tickets logged after the fact.** When staff enter a past ticket (a date more than 24 hours back, or a ticket that is already resolved, closed or cancelled when saved), the client is not told: there is no "We received your ticket" email, and no resolved, closed or cancelled email when that date is more than 24 hours old. The auto-close reminder only follows a "resolved" email that was really sent.
 
-Clients are never emailed about their own actions, internal notes, assignment changes or status shuffles, and no email goes to the requester of an internal ticket. Each moment can be switched off with the `HELPDESK_CLIENT_EMAIL_*` settings. The app does not read incoming mail: a client's emailed reply goes to the reply-to mailbox (`MAIL_REPLY_TO_ADDRESS`) and never into the ticket, and each email tells the client to use the Open Ticket button instead.
+Clients are never emailed about their own actions, internal notes, assignment changes or status shuffles, and no email goes to the requester of an internal ticket. Each moment can be switched off with the `HOSHIASK_CLIENT_EMAIL_*` settings. The app does not read incoming mail: a client's emailed reply goes to the reply-to mailbox (`MAIL_REPLY_TO_ADDRESS`) and never into the ticket, and each email tells the client to use the Open Ticket button instead.
 
 ### Canned responses
 
-Staff can insert saved reply templates when replying. Super users, admins and the shadow account write and manage them (Canned Responses in the menu). The red trash icon on a row deletes it, after a confirmation pop-up. The whole feature can be switched off with `HELPDESK_CANNED_REPLIES_ENABLED=false`: the menu link, the management page and the picker in the reply form disappear, and nothing in the database is touched.
+Staff can insert saved reply templates when replying. Super users, admins and the shadow account write and manage them (Canned Responses in the menu). The red trash icon on a row deletes it, after a confirmation pop-up. The whole feature can be switched off with `HOSHIASK_CANNED_REPLIES_ENABLED=false`: the menu link, the management page and the picker in the reply form disappear, and nothing in the database is touched.
 
 ### Knowledge base
 
@@ -354,7 +354,7 @@ Every ticket stores the department it came from at the moment it was created: th
 
 - **System Logs** (Admin → System Logs) is the audit trail: sign-ins and failures, password and role changes, exports, file downloads, ticket actions and system events. It sits behind a password lock: the shadow account enters its password once to unlock the monitoring tools, and can lock them again. **Export Audit Trail (CSV)** exports every entry that matches the current filters.
 - **Online Users** (Admin → Online Users, behind the same lock) shows who is using the system right now:
-  - People active in the last few minutes (`HELPDESK_PRESENCE_ONLINE_WINDOW_MINUTES`, 5 by default), split into All, Staff and Clients, with their role, status and number of sessions. The list refreshes itself every 20 seconds.
+  - People active in the last few minutes (`HOSHIASK_PRESENCE_ONLINE_WINDOW_MINUTES`, 5 by default), split into All, Staff and Clients, with their role, status and number of sessions. The list refreshes itself every 20 seconds.
   - Accounts are **flagged** when they have sessions from several addresses at once, or were deactivated but are still signed in.
   - Recent failed sign-ins and lockouts are shown alongside, and a lockout can be cleared from the page.
   - **Sign out of all devices:** the shadow account can force any other user out everywhere, including browsers with "Remember me". They can sign in again with their password. To keep them out, deactivate the account or reset its password.

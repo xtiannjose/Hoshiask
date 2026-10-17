@@ -69,7 +69,7 @@ class Attachment extends Model
 
     public function resolvedDisk(): string
     {
-        return (string) config('helpdesk.attachments_disk', 'local');
+        return (string) config('hoshiask.attachments_disk', 'local');
     }
 
     public function isPreviewableMime(?string $mimeType = null): bool

@@ -200,7 +200,7 @@ class QaDecisionsRoundTest extends TestCase
 
     public function test_the_login_page_tells_people_to_contact_the_administrator(): void
     {
-        config(['helpdesk.password_help_contact' => null]);
+        config(['hoshiask.password_help_contact' => null]);
 
         $this->get(route('login'))
             ->assertOk()
@@ -209,12 +209,12 @@ class QaDecisionsRoundTest extends TestCase
 
     public function test_the_contact_is_shown_as_an_email_link_or_plain_text(): void
     {
-        config(['helpdesk.password_help_contact' => 'itsupport@example.org']);
+        config(['hoshiask.password_help_contact' => 'itsupport@example.org']);
         $this->get(route('login'))
             ->assertSee('Contact your administrator at', false)
             ->assertSee('href="mailto:itsupport@example.org"', false);
 
-        config(['helpdesk.password_help_contact' => 'Local 123 (IT desk)']);
+        config(['hoshiask.password_help_contact' => 'Local 123 (IT desk)']);
         $page = $this->get(route('login'))->assertSee('Local 123 (IT desk)');
         // (The page's legal pop-up has its own mailto links; only this contact must not become one.)
         $this->assertStringNotContainsString('mailto:Local', $page->getContent());
@@ -222,14 +222,14 @@ class QaDecisionsRoundTest extends TestCase
 
     public function test_the_contact_is_escaped(): void
     {
-        config(['helpdesk.password_help_contact' => '<script>alert(1)</script>']);
+        config(['hoshiask.password_help_contact' => '<script>alert(1)</script>']);
 
         $this->get(route('login'))->assertDontSee('<script>alert(1)</script>', false);
     }
 
     public function test_the_lockout_message_says_how_to_get_help(): void
     {
-        config(['helpdesk.password_help_contact' => 'itsupport@example.org']);
+        config(['hoshiask.password_help_contact' => 'itsupport@example.org']);
         $key = LoginThrottle::accountKey('locked.user', '127.0.0.1');
         for ($i = 0; $i < LoginThrottle::MAX_ATTEMPTS; $i++) {
             RateLimiter::hit($key, LoginThrottle::LOCKOUT_SECONDS);
@@ -278,7 +278,7 @@ class QaDecisionsRoundTest extends TestCase
             'one repeated letter' => ['aaaaaaaa', true],
             'keyboard row' => ['qwertyuiop', true],
             'welcome plus digit' => ['Welcome1', true],
-            'helpdesk based' => ['Helpdesk2026', true],
+            'hoshiask based' => ['Hoshiask2026', true],
             'passw0rd leetspeak' => ['P@ssw0rd', true],
             'a phrase' => ['purple-giraffe-lamp', false],
             'a mixed password' => ['T7#kqLw9vR', false],

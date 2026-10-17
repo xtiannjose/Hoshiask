@@ -86,7 +86,7 @@ class TicketEmailAlertService
      */
     public function notifyClientOfTicketReceived(Ticket $ticket): bool
     {
-        if (! (bool) config('helpdesk.client_emails.received', true) || $ticket->client_notified_received_at !== null) {
+        if (! (bool) config('hoshiask.client_emails.received', true) || $ticket->client_notified_received_at !== null) {
             return false;
         }
 
@@ -135,7 +135,7 @@ class TicketEmailAlertService
      */
     public function notifyClientOfAutoCloseWarning(Ticket $ticket, Carbon $closesAt): bool
     {
-        if (! (bool) config('helpdesk.client_emails.auto_close_warning', true)
+        if (! (bool) config('hoshiask.client_emails.auto_close_warning', true)
             || $ticket->status !== 'resolved'
             || $ticket->client_notified_auto_close_warning_at !== null
             || $this->resolutionWasNotAnnounced($ticket)
@@ -169,14 +169,14 @@ class TicketEmailAlertService
      */
     public function shouldWarnClientBeforeAutoClose(Ticket $ticket): bool
     {
-        return (bool) config('helpdesk.client_emails.auto_close_warning', true)
+        return (bool) config('hoshiask.client_emails.auto_close_warning', true)
             && ! $this->resolutionWasNotAnnounced($ticket)
             && $this->clientRecipientForTicket($ticket) !== null;
     }
 
     private function notifyClientOfResolution(Ticket $ticket): bool
     {
-        if (! (bool) config('helpdesk.client_emails.resolved', true)
+        if (! (bool) config('hoshiask.client_emails.resolved', true)
             || $ticket->client_notified_resolved_at !== null
             || $this->isAfterTheFact($ticket->resolved_at)
         ) {
@@ -207,7 +207,7 @@ class TicketEmailAlertService
 
     private function notifyClientOfClosure(Ticket $ticket): bool
     {
-        if (! (bool) config('helpdesk.client_emails.closed', false) || $ticket->client_notified_closed_at !== null) {
+        if (! (bool) config('hoshiask.client_emails.closed', false) || $ticket->client_notified_closed_at !== null) {
             return false;
         }
 
@@ -331,7 +331,7 @@ class TicketEmailAlertService
 
     private function clientReplyBatchMinutes(): int
     {
-        return max(0, (int) config('helpdesk.client_emails.reply_batch_minutes', 5));
+        return max(0, (int) config('hoshiask.client_emails.reply_batch_minutes', 5));
     }
 
     private function clientRecipientForTicket(Ticket $ticket): ?User
@@ -374,7 +374,7 @@ class TicketEmailAlertService
      */
     private function resolutionWasNotAnnounced(Ticket $ticket): bool
     {
-        return (bool) config('helpdesk.client_emails.resolved', true) && $ticket->client_notified_resolved_at === null;
+        return (bool) config('hoshiask.client_emails.resolved', true) && $ticket->client_notified_resolved_at === null;
     }
 
     private function stampWhenSent(int $sentCount, Ticket $ticket, string $column): bool
@@ -390,7 +390,7 @@ class TicketEmailAlertService
 
     public function notifySuperUsersAboutNewTicket(Ticket $ticket): bool
     {
-        if (! (bool) config('helpdesk.sla.super_user_new_ticket_notify', true)) {
+        if (! (bool) config('hoshiask.sla.super_user_new_ticket_notify', true)) {
             return false;
         }
 
@@ -459,7 +459,7 @@ class TicketEmailAlertService
      */
     private function sendPendingFollowUps(): int
     {
-        $days = max(0, (int) config('helpdesk.pending_follow_up_days', 3));
+        $days = max(0, (int) config('hoshiask.pending_follow_up_days', 3));
         if ($days < 1) {
             return 0;
         }
@@ -516,7 +516,7 @@ class TicketEmailAlertService
                     tickets: $rows,
                     total: count($waiting),
                     days: $days,
-                    cancelAfterDays: max(0, (int) config('helpdesk.pending_auto_cancel_days', 0)),
+                    cancelAfterDays: max(0, (int) config('hoshiask.pending_auto_cancel_days', 0)),
                 ));
             } catch (\Throwable $exception) {
                 Log::warning('Pending follow-up email failed.', [
@@ -558,7 +558,7 @@ class TicketEmailAlertService
         $days = max(1, (int) floor(($lastActivity ?? now())->diffInDays(now(), true)));
         $label = $days.' '.($days === 1 ? 'day' : 'days').' with no activity';
 
-        $cancelAfter = max(0, (int) config('helpdesk.pending_auto_cancel_days', 0));
+        $cancelAfter = max(0, (int) config('hoshiask.pending_auto_cancel_days', 0));
         if ($cancelAfter > 0) {
             $left = max(0, $cancelAfter - $days);
             $label .= $left === 0

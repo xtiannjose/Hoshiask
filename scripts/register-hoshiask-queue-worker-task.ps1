@@ -1,15 +1,15 @@
 # Makes the queue worker start automatically when you log in to this Windows PC
-# (local testing). Production (Linux) uses docs/helpdesk-queue-worker.service.example.
+# (local testing).
 # Reminder emails, backups and auto-close also need the scheduler: run
 # `php artisan schedule:work` in a terminal while testing.
 param(
-    [string]$TaskName = "Helpdesk Queue Worker"
+    [string]$TaskName = "Hoshiask Queue Worker"
 )
 
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$StartScript = Join-Path $ProjectRoot "scripts\start-helpdesk-queue-worker.ps1"
+$StartScript = Join-Path $ProjectRoot "scripts\start-hoshiask-queue-worker.ps1"
 $PowerShell = (Get-Command powershell.exe -ErrorAction Stop).Source
 $StartupDirectory = [Environment]::GetFolderPath("Startup")
 
@@ -42,7 +42,7 @@ try {
 
     Write-Host "Registered scheduled task: $TaskName"
 } catch {
-    $LauncherPath = Join-Path $StartupDirectory "start-helpdesk-queue-worker.cmd"
+    $LauncherPath = Join-Path $StartupDirectory "start-hoshiask-queue-worker.cmd"
     $Launcher = @(
         "@echo off",
         "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$StartScript`""

@@ -119,7 +119,7 @@ class TechnicianReadOnlyViewTest extends TestCase
     public function test_the_conversation_and_attachments_can_be_read(): void
     {
         Storage::fake('local');
-        config()->set('helpdesk.attachments_disk', 'local');
+        config()->set('hoshiask.attachments_disk', 'local');
         TicketReply::create(['ticket_id' => $this->ticket->id, 'user_id' => $this->client->id, 'message' => 'It prints blank pages', 'is_internal' => false]);
         Storage::disk('local')->put('attachments/blank.txt', 'sample');
         $attachment = Attachment::create([

@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
-class HelpdeskCleanupRuntimeCommandTest extends TestCase
+class HoshiaskCleanupRuntimeCommandTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -38,8 +38,8 @@ class HelpdeskCleanupRuntimeCommandTest extends TestCase
 
     public function test_cleanup_runtime_always_keeps_the_newest_three_backups_even_when_all_are_old(): void
     {
-        config()->set('helpdesk.cleanup.backup_retention_days', 14);
-        config()->set('helpdesk.backup.disk', 'cleanup-backups');
+        config()->set('hoshiask.cleanup.backup_retention_days', 14);
+        config()->set('hoshiask.backup.disk', 'cleanup-backups');
         config()->set('filesystems.disks.cleanup-backups', [
             'driver' => 'local',
             'root' => storage_path('app/cleanup-backups'),
@@ -48,28 +48,28 @@ class HelpdeskCleanupRuntimeCommandTest extends TestCase
 
         // Backups have been failing for weeks: every file is older than the retention period.
         foreach (['a' => 60, 'b' => 50, 'c' => 40, 'd' => 30, 'e' => 20] as $name => $daysOld) {
-            Storage::disk('cleanup-backups')->put("backups/helpdesk-{$name}.tar.enc", 'x');
-            touch(Storage::disk('cleanup-backups')->path("backups/helpdesk-{$name}.tar.enc"), now()->subDays($daysOld)->getTimestamp());
+            Storage::disk('cleanup-backups')->put("backups/hoshiask-{$name}.tar.enc", 'x');
+            touch(Storage::disk('cleanup-backups')->path("backups/hoshiask-{$name}.tar.enc"), now()->subDays($daysOld)->getTimestamp());
         }
 
-        $this->artisan('helpdesk:cleanup-runtime')->assertSuccessful();
+        $this->artisan('hoshiask:cleanup-runtime')->assertSuccessful();
 
-        $this->assertFalse(Storage::disk('cleanup-backups')->exists('backups/helpdesk-a.tar.enc'));
-        $this->assertFalse(Storage::disk('cleanup-backups')->exists('backups/helpdesk-b.tar.enc'));
-        $this->assertTrue(Storage::disk('cleanup-backups')->exists('backups/helpdesk-c.tar.enc'));
-        $this->assertTrue(Storage::disk('cleanup-backups')->exists('backups/helpdesk-d.tar.enc'));
-        $this->assertTrue(Storage::disk('cleanup-backups')->exists('backups/helpdesk-e.tar.enc'));
+        $this->assertFalse(Storage::disk('cleanup-backups')->exists('backups/hoshiask-a.tar.enc'));
+        $this->assertFalse(Storage::disk('cleanup-backups')->exists('backups/hoshiask-b.tar.enc'));
+        $this->assertTrue(Storage::disk('cleanup-backups')->exists('backups/hoshiask-c.tar.enc'));
+        $this->assertTrue(Storage::disk('cleanup-backups')->exists('backups/hoshiask-d.tar.enc'));
+        $this->assertTrue(Storage::disk('cleanup-backups')->exists('backups/hoshiask-e.tar.enc'));
     }
 
     public function test_cleanup_runtime_removes_transient_artifacts_prunes_stale_handoffs_and_deletes_zero_byte_orphans(): void
     {
         config()->set('observability.system_logs.retention_days', 30);
-        config()->set('helpdesk.cleanup.backup_retention_days', 30);
-        config()->set('helpdesk.cleanup.seeded_client_credentials_retention_days', 14);
-        config()->set('helpdesk.cleanup.import_retention_days', 7);
-        config()->set('helpdesk.backup.disk', 'cleanup-backups');
-        config()->set('helpdesk.seed_client_credentials_disk', 'cleanup-seeded-credentials');
-        config()->set('helpdesk.ticket_import_disk', 'cleanup-imports');
+        config()->set('hoshiask.cleanup.backup_retention_days', 30);
+        config()->set('hoshiask.cleanup.seeded_client_credentials_retention_days', 14);
+        config()->set('hoshiask.cleanup.import_retention_days', 7);
+        config()->set('hoshiask.backup.disk', 'cleanup-backups');
+        config()->set('hoshiask.seed_client_credentials_disk', 'cleanup-seeded-credentials');
+        config()->set('hoshiask.ticket_import_disk', 'cleanup-imports');
         config()->set('filesystems.disks.cleanup-backups', [
             'driver' => 'local',
             'root' => storage_path('app/cleanup-backups'),
@@ -92,7 +92,7 @@ class HelpdeskCleanupRuntimeCommandTest extends TestCase
         File::ensureDirectoryExists(storage_path('framework/testing/disks/demo'));
         File::put(storage_path('framework/testing/disks/demo/stale.txt'), 'stale');
 
-        config()->set('helpdesk.attachments_disk', 'cleanup-local');
+        config()->set('hoshiask.attachments_disk', 'cleanup-local');
         config()->set('filesystems.disks.cleanup-local', [
             'driver' => 'local',
             'root' => storage_path('app/cleanup-local'),
@@ -195,8 +195,8 @@ class HelpdeskCleanupRuntimeCommandTest extends TestCase
         touch(Storage::disk('cleanup-imports')->path('imports/old-import.csv'), now()->subDays(10)->getTimestamp());
         touch(Storage::disk('cleanup-imports')->path('imports/recent-import.csv'), now()->subDays(2)->getTimestamp());
 
-        $this->artisan('helpdesk:cleanup-runtime')
-            ->expectsOutput('Helpdesk runtime cleanup complete.')
+        $this->artisan('hoshiask:cleanup-runtime')
+            ->expectsOutput('Hoshiask runtime cleanup complete.')
             ->assertSuccessful();
 
         $this->assertFileDoesNotExist(base_path('.phpunit.result.cache'));
@@ -227,15 +227,15 @@ class HelpdeskCleanupRuntimeCommandTest extends TestCase
         // Rows for keys that are never read again (a search, a filter combination) are not removed by the cache itself.
         config()->set('cache.default', 'database');
         DB::table('cache')->insert([
-            ['key' => 'helpdesk-cache-expired', 'value' => 's:1:"x";', 'expiration' => now()->subMinute()->getTimestamp()],
-            ['key' => 'helpdesk-cache-live', 'value' => 's:1:"x";', 'expiration' => now()->addHour()->getTimestamp()],
+            ['key' => 'hoshiask-cache-expired', 'value' => 's:1:"x";', 'expiration' => now()->subMinute()->getTimestamp()],
+            ['key' => 'hoshiask-cache-live', 'value' => 's:1:"x";', 'expiration' => now()->addHour()->getTimestamp()],
         ]);
 
-        $this->artisan('helpdesk:cleanup-runtime')
+        $this->artisan('hoshiask:cleanup-runtime')
             ->expectsOutputToContain('Expired cache entries pruned: 1')
             ->assertSuccessful();
 
-        $this->assertDatabaseMissing('cache', ['key' => 'helpdesk-cache-expired']);
-        $this->assertDatabaseHas('cache', ['key' => 'helpdesk-cache-live']);
+        $this->assertDatabaseMissing('cache', ['key' => 'hoshiask-cache-expired']);
+        $this->assertDatabaseHas('cache', ['key' => 'hoshiask-cache-live']);
     }
 }

@@ -8,7 +8,7 @@ use App\Models\SystemLog;
 use App\Models\Ticket;
 use App\Models\TicketReply;
 use App\Models\User;
-use App\Services\Operations\HelpdeskOperationsStatusService;
+use App\Services\Operations\HoshiaskOperationsStatusService;
 use App\Services\Retention\TicketRetentionService;
 use App\Services\SystemLogService;
 use Illuminate\Console\Scheduling\Event;
@@ -33,7 +33,7 @@ class TicketRetentionTest extends TestCase
         parent::setUp();
 
         Storage::fake('local');
-        config(['helpdesk.attachments_disk' => 'local', 'retention.enabled' => true, 'retention.years' => 3]);
+        config(['hoshiask.attachments_disk' => 'local', 'retention.enabled' => true, 'retention.years' => 3]);
         $this->client = $this->createClient();
         $this->category = $this->createCategory();
     }
@@ -233,9 +233,9 @@ class TicketRetentionTest extends TestCase
             $this->oldClosedTicket();
         }
 
-        $this->artisan('helpdesk:enforce-retention')->expectsOutputToContain('Removed the personal details from 5 ticket(s).')->assertSuccessful();
+        $this->artisan('hoshiask:enforce-retention')->expectsOutputToContain('Removed the personal details from 5 ticket(s).')->assertSuccessful();
         $this->assertSame(5, Ticket::query()->whereNotNull('anonymized_at')->count());
-        $this->artisan('helpdesk:enforce-retention')->expectsOutputToContain('Removed the personal details from 0 ticket(s).')->assertSuccessful();
+        $this->artisan('hoshiask:enforce-retention')->expectsOutputToContain('Removed the personal details from 0 ticket(s).')->assertSuccessful();
         $this->assertSame(1, SystemLog::query()->where('event_type', 'retention.enforced')->count());
     }
 
@@ -243,7 +243,7 @@ class TicketRetentionTest extends TestCase
     {
         $ticket = $this->oldClosedTicket();
 
-        $this->artisan('helpdesk:enforce-retention')->assertSuccessful();
+        $this->artisan('hoshiask:enforce-retention')->assertSuccessful();
 
         $entry = SystemLog::query()->where('event_type', 'retention.enforced')->firstOrFail();
         $this->assertSame(1, $entry->metadata['tickets_cleaned']);
@@ -260,7 +260,7 @@ class TicketRetentionTest extends TestCase
             $this->oldClosedTicket();
         }
 
-        $this->artisan('helpdesk:enforce-retention')->assertSuccessful();
+        $this->artisan('hoshiask:enforce-retention')->assertSuccessful();
 
         $entry = SystemLog::query()->where('event_type', 'retention.enforced')->firstOrFail();
         $this->assertSame(103, $entry->metadata['tickets_cleaned']);
@@ -269,7 +269,7 @@ class TicketRetentionTest extends TestCase
 
     public function test_nothing_is_logged_when_nothing_was_cleaned(): void
     {
-        $this->artisan('helpdesk:enforce-retention')->assertSuccessful();
+        $this->artisan('hoshiask:enforce-retention')->assertSuccessful();
 
         $this->assertSame(0, SystemLog::query()->where('event_type', 'retention.enforced')->count());
     }
@@ -278,7 +278,7 @@ class TicketRetentionTest extends TestCase
     {
         $ticket = $this->oldClosedTicket();
 
-        $this->artisan('helpdesk:enforce-retention --dry-run')
+        $this->artisan('hoshiask:enforce-retention --dry-run')
             ->expectsOutputToContain('Tickets past it that still hold personal details: 1.')
             ->expectsOutputToContain('would clean '.$ticket->ticket_number)
             ->expectsOutputToContain('Dry run: nothing was changed.')
@@ -293,9 +293,9 @@ class TicketRetentionTest extends TestCase
         config(['retention.enabled' => false]);
         $ticket = $this->oldClosedTicket();
 
-        $this->artisan('helpdesk:enforce-retention')
+        $this->artisan('hoshiask:enforce-retention')
             ->expectsOutputToContain('Tickets past it that still hold personal details: 1.')
-            ->expectsOutputToContain('HELPDESK_RETENTION_ENABLED=false')
+            ->expectsOutputToContain('HOSHIASK_RETENTION_ENABLED=false')
             ->assertSuccessful();
 
         $this->assertNull($ticket->fresh()->anonymized_at);
@@ -306,7 +306,7 @@ class TicketRetentionTest extends TestCase
     {
         $recent = $this->oldClosedTicket([], 1);
 
-        $this->artisan('helpdesk:enforce-retention --years=1')->assertSuccessful();
+        $this->artisan('hoshiask:enforce-retention --years=1')->assertSuccessful();
 
         $this->assertNotNull($recent->fresh()->anonymized_at);
     }
@@ -315,14 +315,14 @@ class TicketRetentionTest extends TestCase
     {
         $ticket = $this->oldClosedTicket();
 
-        $this->artisan('helpdesk:retention-hold '.$ticket->ticket_number.' --reason="Complaint 14"')->expectsOutputToContain('is on legal hold')->assertSuccessful();
-        $this->artisan('helpdesk:enforce-retention')->assertSuccessful();
+        $this->artisan('hoshiask:retention-hold '.$ticket->ticket_number.' --reason="Complaint 14"')->expectsOutputToContain('is on legal hold')->assertSuccessful();
+        $this->artisan('hoshiask:enforce-retention')->assertSuccessful();
         $this->assertNull($ticket->fresh()->anonymized_at);
         $held = SystemLog::query()->where('event_type', 'retention.hold_set')->firstOrFail();
         $this->assertSame('Complaint 14', $held->metadata['reason']);
 
-        $this->artisan('helpdesk:retention-hold '.strtolower($ticket->ticket_number).' --release')->expectsOutputToContain('no longer on legal hold')->assertSuccessful();
-        $this->artisan('helpdesk:enforce-retention')->assertSuccessful();
+        $this->artisan('hoshiask:retention-hold '.strtolower($ticket->ticket_number).' --release')->expectsOutputToContain('no longer on legal hold')->assertSuccessful();
+        $this->artisan('hoshiask:enforce-retention')->assertSuccessful();
         $this->assertNotNull($ticket->fresh()->anonymized_at);
         $this->assertSame(1, SystemLog::query()->where('event_type', 'retention.hold_released')->count());
     }
@@ -332,8 +332,8 @@ class TicketRetentionTest extends TestCase
         $ticket = $this->oldClosedTicket();
         app(TicketRetentionService::class)->anonymize($ticket);
 
-        $this->artisan('helpdesk:retention-hold '.$ticket->ticket_number)->expectsOutputToContain('already cleaned')->assertFailed();
-        $this->artisan('helpdesk:retention-hold TK-NOPE0000')->expectsOutputToContain('No ticket has the number')->assertFailed();
+        $this->artisan('hoshiask:retention-hold '.$ticket->ticket_number)->expectsOutputToContain('already cleaned')->assertFailed();
+        $this->artisan('hoshiask:retention-hold TK-NOPE0000')->expectsOutputToContain('No ticket has the number')->assertFailed();
     }
 
     public function test_a_ticket_that_fails_is_reported_and_tried_again_next_time(): void
@@ -349,7 +349,7 @@ class TicketRetentionTest extends TestCase
             });
         });
 
-        $this->artisan('helpdesk:enforce-retention')->expectsOutputToContain('1 ticket(s) could not be cleaned')->assertFailed();
+        $this->artisan('hoshiask:enforce-retention')->expectsOutputToContain('1 ticket(s) could not be cleaned')->assertFailed();
 
         $this->assertNull($failing->fresh()->anonymized_at);
         $this->assertNotNull($fine->fresh()->anonymized_at);
@@ -360,7 +360,7 @@ class TicketRetentionTest extends TestCase
 
     public function test_the_clean_up_is_scheduled_daily_after_the_other_night_jobs(): void
     {
-        $event = collect(app(Schedule::class)->events())->first(fn (Event $event) => str_contains((string) $event->command, 'helpdesk:enforce-retention'));
+        $event = collect(app(Schedule::class)->events())->first(fn (Event $event) => str_contains((string) $event->command, 'hoshiask:enforce-retention'));
 
         $this->assertNotNull($event);
         $this->assertSame('55 3 * * *', $event->expression);
@@ -370,7 +370,7 @@ class TicketRetentionTest extends TestCase
     public function test_the_status_check_advises_in_each_state_and_never_warns(): void
     {
         app()->detectEnvironment(fn () => 'production');
-        $service = new HelpdeskOperationsStatusService;
+        $service = new HoshiaskOperationsStatusService;
         $advisories = fn () => implode("\n", $service->buildStatus(false)['advisories']);
 
         $this->assertStringNotContainsString('retention period', $advisories());
@@ -380,8 +380,8 @@ class TicketRetentionTest extends TestCase
         $this->assertStringContainsString('has not removed anything in the last 3 days', $advisories());
 
         config(['retention.enabled' => false]);
-        $this->assertStringContainsString('switched off (HELPDESK_RETENTION_ENABLED=false)', $advisories());
-        $this->assertStringContainsString('helpdesk:enforce-retention --dry-run', $advisories());
+        $this->assertStringContainsString('switched off (HOSHIASK_RETENTION_ENABLED=false)', $advisories());
+        $this->assertStringContainsString('hoshiask:enforce-retention --dry-run', $advisories());
         $this->assertStringNotContainsString('retention period', implode("\n", $service->buildStatus(false)['warnings']));
 
         config(['retention.enabled' => true]);

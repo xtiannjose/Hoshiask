@@ -34,6 +34,6 @@ class TicketEmailThread
             $domain = (string) parse_url((string) config('app.url'), PHP_URL_HOST);
         }
 
-        return preg_match('/^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$/', $domain) ? $domain : 'helpdesk.invalid';
+        return preg_match('/^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$/', $domain) ? $domain : 'hoshiask.invalid';
     }
 }

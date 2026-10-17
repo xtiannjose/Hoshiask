@@ -126,7 +126,7 @@
                     This ticket is {{ $ticket->isCancelled() ? 'cancelled' : 'closed' }}. Anything you post here is saved as an internal note and is not shown to the client.
                 </div>
             @endif
-            <form id="admin-ticket-reply-form" action="{{ route('admin.tickets.reply', $ticket) }}" method="POST" enctype="multipart/form-data" class="space-y-3" data-ticket-id="{{ (int) $ticket->id }}" data-client-logo="{{ $clientCompanyLogo }}" data-support-logo="{{ $supportCompanyLogo }}" data-replies-url="{{ route('admin.tickets.replies.feed', $ticket) }}" data-seen-url="{{ route('admin.notifications.seen', $ticket) }}" data-replies-cursor="{{ $replyFeedCursor }}" data-update-url-template="{{ route('admin.tickets.replies.update', ['ticket' => $ticket, 'reply' => '__REPLY__']) }}" data-delete-url-template="{{ route('admin.tickets.replies.delete', ['ticket' => $ticket, 'reply' => '__REPLY__']) }}" @if(config('helpdesk.features.canned_replies')) data-canned-responses-url="{{ route('admin.canned-responses.list') }}" @endif>
+            <form id="admin-ticket-reply-form" action="{{ route('admin.tickets.reply', $ticket) }}" method="POST" enctype="multipart/form-data" class="space-y-3" data-ticket-id="{{ (int) $ticket->id }}" data-client-logo="{{ $clientCompanyLogo }}" data-support-logo="{{ $supportCompanyLogo }}" data-replies-url="{{ route('admin.tickets.replies.feed', $ticket) }}" data-seen-url="{{ route('admin.notifications.seen', $ticket) }}" data-replies-cursor="{{ $replyFeedCursor }}" data-update-url-template="{{ route('admin.tickets.replies.update', ['ticket' => $ticket, 'reply' => '__REPLY__']) }}" data-delete-url-template="{{ route('admin.tickets.replies.delete', ['ticket' => $ticket, 'reply' => '__REPLY__']) }}" @if(config('hoshiask.features.canned_replies')) data-canned-responses-url="{{ route('admin.canned-responses.list') }}" @endif>
                 @csrf
                 <p id="admin-reply-error" class="hidden text-xs font-medium text-red-600"></p>
                 <input type="hidden" id="admin_reply_to_id" name="reply_to_id" value="">
@@ -142,7 +142,7 @@
                     <textarea name="message" id="message" rows="1" aria-label="Your reply" class="block max-h-48 min-h-[44px] w-full resize-none overflow-hidden rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder-slate-500 focus:border-hoshishi-primary focus:outline-none focus:ring-2 focus:ring-hoshishi-primary/20" placeholder="Write your reply..."></textarea>
                 </div>
 
-                @if(config('helpdesk.features.canned_replies'))
+                @if(config('hoshiask.features.canned_replies'))
                     <div id="canned-response-picker" class="hidden rounded-xl border border-slate-200 bg-white shadow-lg">
                         <div class="border-b border-slate-200 px-3 py-2.5">
                             <input type="text" id="canned-response-search" aria-label="Search canned responses" placeholder="Search canned responses..." class="block w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-800 placeholder-slate-500 focus:border-hoshishi-primary focus:outline-none focus:ring-2 focus:ring-[#2c3d63]/20" autocomplete="off">
@@ -157,7 +157,7 @@
                         <label for="attachments" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 transition hover:bg-slate-100">Attach</label>
                         <input type="file" name="attachments[]" id="attachments" multiple class="hidden" accept=".jpg,.jpeg,.png,.pdf,.docx,.txt,.xlsx">
                         <span id="admin-attachment-count" class="text-xs text-slate-500">No files selected</span>
-                        @if(config('helpdesk.features.canned_replies'))
+                        @if(config('hoshiask.features.canned_replies'))
                             <button type="button" id="canned-response-btn" class="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 transition hover:bg-slate-100" aria-label="Insert canned response">
                                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8M8 14h5m-9 7h16a2 2 0 002-2V7a2 2 0 00-2-2H7L3 9v10a2 2 0 002 2z"/></svg>
                                 Canned

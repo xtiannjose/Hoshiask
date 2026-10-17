@@ -12,11 +12,11 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Finder\SplFileInfo;
 
-class HelpdeskCleanupRuntime extends Command
+class HoshiaskCleanupRuntime extends Command
 {
-    protected $signature = 'helpdesk:cleanup-runtime';
+    protected $signature = 'hoshiask:cleanup-runtime';
 
-    protected $description = 'Clean transient runtime artifacts and prune stale helpdesk handoff data.';
+    protected $description = 'Clean transient runtime artifacts and prune stale Hoshiask handoff data.';
 
     private const HANDOFF_CACHE_KEY_PREFIX = 'managed-user-password-handoff:';
 
@@ -31,20 +31,20 @@ class HelpdeskCleanupRuntime extends Command
         $prunedCacheEntries = $this->pruneExpiredCacheEntries();
         $deletedOrphanAttachments = $this->deleteZeroByteOrphanAttachments();
         $deletedBackupExports = $this->pruneStorageFilesOlderThan(
-            (string) config('helpdesk.backup.disk', config('filesystems.default', 'local')),
-            (string) config('helpdesk.backup.path', 'backups'),
-            (int) config('helpdesk.cleanup.backup_retention_days', 14),
+            (string) config('hoshiask.backup.disk', config('filesystems.default', 'local')),
+            (string) config('hoshiask.backup.path', 'backups'),
+            (int) config('hoshiask.cleanup.backup_retention_days', 14),
             keepNewest: self::BACKUPS_ALWAYS_KEPT
         );
         $deletedSeededCredentialExports = $this->pruneStorageFilesOlderThan(
-            (string) config('helpdesk.seed_client_credentials_disk', config('filesystems.default', 'local')),
-            (string) config('helpdesk.seed_client_credentials_path', 'seeded-client-credentials'),
-            (int) config('helpdesk.cleanup.seeded_client_credentials_retention_days', 14)
+            (string) config('hoshiask.seed_client_credentials_disk', config('filesystems.default', 'local')),
+            (string) config('hoshiask.seed_client_credentials_path', 'seeded-client-credentials'),
+            (int) config('hoshiask.cleanup.seeded_client_credentials_retention_days', 14)
         );
         $deletedImportExports = $this->pruneStorageFilesOlderThan(
-            (string) config('helpdesk.ticket_import_disk', config('filesystems.default', 'local')),
-            (string) config('helpdesk.ticket_import_path', 'imports'),
-            (int) config('helpdesk.cleanup.import_retention_days', 7)
+            (string) config('hoshiask.ticket_import_disk', config('filesystems.default', 'local')),
+            (string) config('hoshiask.ticket_import_path', 'imports'),
+            (int) config('hoshiask.cleanup.import_retention_days', 7)
         );
 
         if (File::delete(base_path('.phpunit.result.cache'))) {
@@ -59,7 +59,7 @@ class HelpdeskCleanupRuntime extends Command
         $deletedRuntimeFiles += $testingFiles;
         $deletedRuntimeDirectories += $testingDirectories;
 
-        $this->info('Helpdesk runtime cleanup complete.');
+        $this->info('Hoshiask runtime cleanup complete.');
         $this->line('Runtime files deleted: '.$deletedRuntimeFiles);
         $this->line('Runtime directories deleted: '.$deletedRuntimeDirectories);
         $this->line('Stale credential handoffs pruned: '.$prunedHandoffs);
@@ -154,7 +154,7 @@ class HelpdeskCleanupRuntime extends Command
 
     private function deleteZeroByteOrphanAttachments(): int
     {
-        $disk = (string) config('helpdesk.attachments_disk', 'local');
+        $disk = (string) config('hoshiask.attachments_disk', 'local');
         $attachmentRoot = Storage::disk($disk)->path('attachments');
 
         if (! File::isDirectory($attachmentRoot)) {

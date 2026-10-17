@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\Operations\HelpdeskOperationsStatusService;
+use App\Services\Operations\HoshiaskOperationsStatusService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class HealthCheckController extends Controller
 {
-    public function __invoke(Request $request, HelpdeskOperationsStatusService $opsStatus): JsonResponse
+    public function __invoke(Request $request, HoshiaskOperationsStatusService $opsStatus): JsonResponse
     {
         $showDetails = $this->shouldShowDetails($request);
         $status = $opsStatus->buildStatus($showDetails);
@@ -43,7 +43,7 @@ class HealthCheckController extends Controller
 
     private function shouldShowDetails(Request $request): bool
     {
-        $configuredToken = config('helpdesk.health.detail_token');
+        $configuredToken = config('hoshiask.health.detail_token');
         if (! is_string($configuredToken) || trim($configuredToken) === '') {
             return false;
         }

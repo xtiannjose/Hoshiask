@@ -245,7 +245,7 @@ class QaAccountsAndErrorsTest extends TestCase
 
         $this->actingAs($client)->get(route('legal.acceptance.show'))
             ->assertOk()
-            ->assertSee('Accept the terms on this page to start using the helpdesk.')
+            ->assertSee('Accept the terms on this page to start using the hoshiask.')
             ->assertDontSee(route('client.tickets.create'), false)
             ->assertDontSee(route('client.tickets.index'), false)
             ->assertDontSee('Search my tickets');

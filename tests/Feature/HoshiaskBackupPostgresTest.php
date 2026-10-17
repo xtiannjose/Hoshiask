@@ -18,7 +18,7 @@ use Tests\Traits\CreatesTestData;
  * Production runs on PostgreSQL: one real pg_dump, bundled and checked. Runs where tests use PostgreSQL and
  * pg_dump is installed (the CI postgres job); skipped elsewhere.
  */
-class HelpdeskBackupPostgresTest extends TestCase
+class HoshiaskBackupPostgresTest extends TestCase
 {
     use CreatesTestData;
 
@@ -34,7 +34,7 @@ class HelpdeskBackupPostgresTest extends TestCase
 
         Storage::fake('local');
         Storage::fake('department-logos');
-        config(['helpdesk.attachments_disk' => 'local', 'helpdesk.backup.encryption_key' => null]);
+        config(['hoshiask.attachments_disk' => 'local', 'hoshiask.backup.encryption_key' => null]);
         $client = $this->createClient('Pg Backup Client', 'pg-backup-client@example.com');
         $category = $this->createCategory('Pg Backup Category');
         $ticket = $this->createTicket($client, $category, ['subject' => "Tab\tand new\nline survive"]);

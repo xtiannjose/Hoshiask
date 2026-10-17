@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * The clock the SLA minutes run on. Off (the default) every minute counts, day and night. On, only the working
- * days and hours in `helpdesk.sla.business_hours` count, in the application time zone: a ticket logged at 17:30 on
+ * days and hours in `hoshiask.sla.business_hours` count, in the application time zone: a ticket logged at 17:30 on
  * Friday starts its four hours on Monday at the opening time. Dates listed as closed (public holidays) count like a
  * weekend.
  *
@@ -147,7 +147,7 @@ final class BusinessHours
 
     private static function flagOn(): bool
     {
-        return (bool) config('helpdesk.sla.business_hours.enabled', false);
+        return (bool) config('hoshiask.sla.business_hours.enabled', false);
     }
 
     private static function timezone(): DateTimeZone
@@ -161,10 +161,10 @@ final class BusinessHours
      */
     private static function schedule(): ?array
     {
-        $days = config('helpdesk.sla.business_hours.days', '1,2,3,4,5');
-        $start = (string) config('helpdesk.sla.business_hours.start', '08:00');
-        $end = (string) config('helpdesk.sla.business_hours.end', '17:00');
-        $closed = config('helpdesk.sla.business_hours.closed_dates', '');
+        $days = config('hoshiask.sla.business_hours.days', '1,2,3,4,5');
+        $start = (string) config('hoshiask.sla.business_hours.start', '08:00');
+        $end = (string) config('hoshiask.sla.business_hours.end', '17:00');
+        $closed = config('hoshiask.sla.business_hours.closed_dates', '');
         $key = json_encode([$days, $start, $end, $closed]);
 
         if (! array_key_exists($key, self::$schedules)) {

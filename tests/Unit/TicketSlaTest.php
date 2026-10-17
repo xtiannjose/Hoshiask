@@ -14,7 +14,7 @@ class TicketSlaTest extends TestCase
         parent::setUp();
 
         Carbon::setTestNow(Carbon::create(2026, 3, 2, 12, 0, 0));
-        config(['helpdesk.sla.resolution_target_minutes' => 240, 'helpdesk.sla.assignment_reminder_minutes' => 210]);
+        config(['hoshiask.sla.resolution_target_minutes' => 240, 'hoshiask.sla.assignment_reminder_minutes' => 210]);
     }
 
     protected function tearDown(): void

@@ -13,7 +13,7 @@ final class ImportFiles
     /** The root of the "import-tests" disk. */
     public static function root(): string
     {
-        return sys_get_temp_dir().DIRECTORY_SEPARATOR.'helpdesk-import-tests';
+        return sys_get_temp_dir().DIRECTORY_SEPARATOR.'hoshiask-import-tests';
     }
 
     public static function path(string $name): string

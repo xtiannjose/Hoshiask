@@ -26,7 +26,7 @@
             $menuItems[] = ['label' => 'Reports', 'icon' => 'chart', 'href' => route('admin.reports.index'), 'active' => request()->routeIs('admin.reports.*'), 'disabled' => false];
         }
 
-        if ($canManageConsole && config('helpdesk.features.canned_replies')) {
+        if ($canManageConsole && config('hoshiask.features.canned_replies')) {
             $menuItems[] = ['label' => 'Canned Responses', 'icon' => 'canned', 'href' => route('admin.canned-responses.index'), 'active' => request()->routeIs('admin.canned-responses.*'), 'disabled' => false];
         }
 
@@ -100,7 +100,7 @@
 
         <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label="Main">
             @if($consentPending)
-                <p class="px-3 py-2 text-sm text-slate-300">Accept the terms on this page to start using the helpdesk.</p>
+                <p class="px-3 py-2 text-sm text-slate-300">Accept the terms on this page to start using the hoshiask.</p>
             @endif
             @foreach($menuItems as $item)
                 <a

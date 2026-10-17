@@ -9,7 +9,7 @@ use RuntimeException;
 use Traversable;
 
 /**
- * The old helpdesk tracker workbook (.xlsx): Date/Time Received, Requestor Details,
+ * The old tracker workbook (.xlsx): Date/Time Received, Requestor Details,
  * Project Name, Issue Description, Resolution, Attended By, ...
  *
  * @phpstan-import-type ImportSettings from TicketRowReader
@@ -19,8 +19,8 @@ use Traversable;
 class TrackerXlsxTicketRowReader implements TicketRowReader
 {
     public function __construct(
-        private readonly HelpdeskTrackerXlsxParser $parser,
-        private readonly HelpdeskTrackerDescriptionFormatter $formatter,
+        private readonly HoshiaskTrackerXlsxParser $parser,
+        private readonly HoshiaskTrackerDescriptionFormatter $formatter,
         private readonly ImportedTicketService $importedTickets,
         private readonly ImportEntityLookupCache $lookupCache,
         private readonly TicketImportReferenceResolver $references,

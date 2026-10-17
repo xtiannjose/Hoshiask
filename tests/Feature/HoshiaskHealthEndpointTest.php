@@ -5,13 +5,13 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class HelpdeskHealthEndpointTest extends TestCase
+class HoshiaskHealthEndpointTest extends TestCase
 {
     use RefreshDatabase;
 
     public function test_health_endpoint_reports_ok_status(): void
     {
-        config()->set('helpdesk.health.detail_token', 'monitor-secret');
+        config()->set('hoshiask.health.detail_token', 'monitor-secret');
 
         $response = $this->withHeader('X-Health-Token', 'monitor-secret')
             ->getJson(route('health'));
@@ -37,8 +37,8 @@ class HelpdeskHealthEndpointTest extends TestCase
     public function test_the_public_answer_does_not_call_an_unchecked_queue_worker_a_problem(): void
     {
         config()->set('queue.default', 'database');
-        config()->set('helpdesk.ops.queue_worker_running', null);
-        config()->set('helpdesk.health.detail_token', 'monitor-secret');
+        config()->set('hoshiask.ops.queue_worker_running', null);
+        config()->set('hoshiask.health.detail_token', 'monitor-secret');
 
         // No token: the process list is not read, so the worker state is unknown, not "not running".
         $this->getJson(route('health'))
@@ -50,8 +50,8 @@ class HelpdeskHealthEndpointTest extends TestCase
     public function test_the_public_answer_still_reports_a_worker_that_was_declared_stopped(): void
     {
         config()->set('queue.default', 'database');
-        config()->set('helpdesk.ops.queue_worker_running', false);
-        config()->set('helpdesk.health.detail_token', 'monitor-secret');
+        config()->set('hoshiask.ops.queue_worker_running', false);
+        config()->set('hoshiask.health.detail_token', 'monitor-secret');
 
         $this->getJson(route('health'))->assertOk()->assertJson(['status' => 'degraded']);
     }
@@ -59,8 +59,8 @@ class HelpdeskHealthEndpointTest extends TestCase
     public function test_health_endpoint_reports_degraded_status_for_queue_warning(): void
     {
         config()->set('queue.default', 'database');
-        config()->set('helpdesk.ops.queue_worker_running', false);
-        config()->set('helpdesk.health.detail_token', 'monitor-secret');
+        config()->set('hoshiask.ops.queue_worker_running', false);
+        config()->set('hoshiask.health.detail_token', 'monitor-secret');
 
         $response = $this->withHeader('X-Health-Token', 'monitor-secret')
             ->getJson(route('health'));

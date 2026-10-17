@@ -7,9 +7,9 @@ use App\Services\Admin\SignInActivityService;
 use App\Services\SystemLogService;
 use Illuminate\Console\Command;
 
-class HelpdeskUnlockLogin extends Command
+class HoshiaskUnlockLogin extends Command
 {
-    protected $signature = 'helpdesk:unlock-login {login : The username or email address that is locked out}';
+    protected $signature = 'hoshiask:unlock-login {login : The username or email address that is locked out}';
 
     protected $description = 'Lift the sign-in lockout of a login name from every address, for example when the shadow account itself is locked.';
 

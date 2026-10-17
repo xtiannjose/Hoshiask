@@ -143,12 +143,12 @@ class BackupEncryptionTest extends TestCase
         file_put_contents($encryptedPath, $this->encrypt($plain));
 
         try {
-            $process = new Process([PHP_BINARY, base_path('scripts/helpdesk-backup-decrypt.php'), $encryptedPath, $outputPath, $this->key()]);
+            $process = new Process([PHP_BINARY, base_path('scripts/hoshiask-backup-decrypt.php'), $encryptedPath, $outputPath, $this->key()]);
             $process->run();
             $this->assertTrue($process->isSuccessful(), $process->getErrorOutput());
             $this->assertSame($plain, file_get_contents($outputPath));
 
-            $wrongKey = new Process([PHP_BINARY, base_path('scripts/helpdesk-backup-decrypt.php'), $encryptedPath, $outputPath, BackupEncryption::generateKey()]);
+            $wrongKey = new Process([PHP_BINARY, base_path('scripts/hoshiask-backup-decrypt.php'), $encryptedPath, $outputPath, BackupEncryption::generateKey()]);
             $wrongKey->run();
             $this->assertFalse($wrongKey->isSuccessful());
             $this->assertStringContainsString('the key is wrong', $wrongKey->getErrorOutput());

@@ -69,7 +69,7 @@ class LoginLockoutPerSourceTest extends TestCase
             $this->assertTrue(RateLimiter::tooManyAttempts(LoginThrottle::accountKey('lock.admin', $ip), LoginThrottle::MAX_ATTEMPTS));
         }
 
-        $this->artisan('helpdesk:unlock-login', ['login' => 'lock.admin'])->expectsOutputToContain('Unlocked')->assertSuccessful();
+        $this->artisan('hoshiask:unlock-login', ['login' => 'lock.admin'])->expectsOutputToContain('Unlocked')->assertSuccessful();
 
         foreach ([self::STRANGER, self::OWNER] as $ip) {
             $this->assertFalse(RateLimiter::tooManyAttempts(LoginThrottle::accountKey('lock.admin', $ip), LoginThrottle::MAX_ATTEMPTS));
@@ -81,6 +81,6 @@ class LoginLockoutPerSourceTest extends TestCase
     {
         $this->adminWithPassword();
 
-        $this->artisan('helpdesk:unlock-login', ['login' => 'lock.admin'])->expectsOutputToContain('not locked')->assertSuccessful();
+        $this->artisan('hoshiask:unlock-login', ['login' => 'lock.admin'])->expectsOutputToContain('not locked')->assertSuccessful();
     }
 }

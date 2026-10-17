@@ -14,8 +14,8 @@ class TicketSlaPresentationTest extends TestCase
 
         Carbon::setTestNow(Carbon::create(2026, 2, 25, 12, 0, 0));
         config([
-            'helpdesk.sla.resolution_target_minutes' => 240,
-            'helpdesk.sla.assignment_reminder_minutes' => 210,
+            'hoshiask.sla.resolution_target_minutes' => 240,
+            'hoshiask.sla.assignment_reminder_minutes' => 210,
         ]);
     }
 
@@ -76,8 +76,8 @@ class TicketSlaPresentationTest extends TestCase
     public function test_sla_badge_uses_configured_thresholds(): void
     {
         config([
-            'helpdesk.sla.resolution_target_minutes' => 60,
-            'helpdesk.sla.assignment_reminder_minutes' => 30,
+            'hoshiask.sla.resolution_target_minutes' => 60,
+            'hoshiask.sla.assignment_reminder_minutes' => 30,
         ]);
 
         $ticket = $this->ticket([

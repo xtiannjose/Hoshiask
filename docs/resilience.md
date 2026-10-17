@@ -22,7 +22,7 @@ These are the numbers to hold the setup to. The first is a fact of the design; t
 
 | Target | Value | Why |
 |---|---|---|
-| **Data loss** (RPO) | At most about 24 hours of tickets and replies | The backup runs nightly at 02:40. A server lost at 02:39 loses the whole day. Running `php artisan helpdesk:backup` by hand before a risky change shortens it |
+| **Data loss** (RPO) | At most about 24 hours of tickets and replies | The backup runs nightly at 02:40. A server lost at 02:39 loses the whole day. Running `php artisan hoshiask:backup` by hand before a risky change shortens it |
 | **Time to be back** (RTO) | 4 hours, to be confirmed by a rehearsal | A new server, the code, the `.env`, the database and the files. Most of it is waiting for downloads and the dump to load |
 
 Both are only true if the **second copy** of the backup exists and the backup key is stored outside the server (see [backup-and-restore.md](backup-and-restore.md)). A backup that only lives on the server is lost with it.
@@ -46,13 +46,13 @@ The status check on the server cannot tell you the server is down. An outside mo
 What the answer means, and the catch:
 
 - Without a token, `/health` does not look at the process list, so it cannot see whether a queue worker runs and says nothing about it: the public answer is `ok` while the database and PHP are fine. A stopped worker only shows with the token.
-- With the token (`HELPDESK_HEALTH_DETAIL_TOKEN`, sent as `Authorization: Bearer ...` or `X-Health-Token: ...`), `status` is `ok` only when the worker runs and nothing else needs fixing, and the answer lists the checks, warnings and advisories. A monitor that can send a header, or a small cron job on another machine, should alert when `status` is not `ok`:
+- With the token (`HOSHIASK_HEALTH_DETAIL_TOKEN`, sent as `Authorization: Bearer ...` or `X-Health-Token: ...`), `status` is `ok` only when the worker runs and nothing else needs fixing, and the answer lists the checks, warnings and advisories. A monitor that can send a header, or a small cron job on another machine, should alert when `status` is not `ok`:
 
   ```bash
-  curl -fsS -H "X-Health-Token: $TOKEN" https://helpdesk.example.com/health | grep -q '"status":"ok"'
+  curl -fsS -H "X-Health-Token: $TOKEN" https://hoshiask.example.com/health | grep -q '"status":"ok"'
   ```
 
-- Backups and reminders have no web address to watch. The detailed answer's `advisories` says when the newest backup is old, and `php artisan helpdesk:ops-status` says the same on the server.
+- Backups and reminders have no web address to watch. The detailed answer's `advisories` says when the newest backup is old, and `php artisan hoshiask:ops-status` says the same on the server.
 
 ## Redis (when it is worth it, and how)
 
@@ -73,7 +73,7 @@ To go back, set the value back to `database`. For the queue, drain the Redis que
 What to know before you do it:
 
 - **Persistence.** Turn on `appendonly yes` in Redis. Mail that sits in a Redis queue that is lost is **not** sent again: the "ticket received" and "resolved" emails are marked as sent when they are queued. With the database queue the same mail survives in the database and its backups.
-- **The status check still sees the queue.** With the database queue it reads the `jobs` table. With Redis it counts waiting jobs from Redis, and every queue worker writes a heartbeat (the time its last job finished) to the cache; `helpdesk:ops-status` then says "jobs are waiting and no job has finished for 15 minutes", and shows the time of the last finished job. Before any job has finished after the switch there is no heartbeat, so it stays quiet until one has. Failed jobs still land in `failed_jobs`. Make the systemd unit restart the worker on failure (`Restart=always` is in [helpdesk-queue-worker.service.example](helpdesk-queue-worker.service.example)) and let the outside monitor watch the detailed `/health`.
+- **The status check still sees the queue.** With the database queue it reads the `jobs` table. With Redis it counts waiting jobs from Redis, and every queue worker writes a heartbeat (the time its last job finished) to the cache; `hoshiask:ops-status` then says "jobs are waiting and no job has finished for 15 minutes", and shows the time of the last finished job. Before any job has finished after the switch there is no heartbeat, so it stays quiet until one has. Failed jobs still land in `failed_jobs`. Make the service that runs the worker (systemd or Supervisor) restart it on failure (systemd: `Restart=always`) and let the outside monitor watch the detailed `/health`.
 - Redis is one more thing to keep running and to patch. Add it to the server's monitoring and to the restore steps (an empty Redis is fine to restore: nothing needed is only in it, apart from queued mail).
 
 ## A second person who can run it
@@ -87,7 +87,7 @@ Today one person knows how everything is set up. If they are unavailable on the 
 | The domain and its DNS | |
 | The GitHub repository (admin or write access for two people) | |
 | The production `.env` | |
-| The backup key (`HELPDESK_BACKUP_ENCRYPTION_KEY`) | |
+| The backup key (`HOSHIASK_BACKUP_ENCRYPTION_KEY`) | |
 | Where the second backup copy goes, and its login | |
 | The SMTP account | |
 | The uptime monitor and who gets its alerts | |
@@ -95,8 +95,8 @@ Today one person knows how everything is set up. If they are unavailable on the 
 
 The test, once, with the second person at the keyboard and the first only answering questions:
 
-- [ ] Sign in to the server and run `php artisan helpdesk:ops-status`.
-- [ ] Deploy `main` with the deploy script ([operations.md](operations.md)).
+- [ ] Sign in to the server and run `php artisan hoshiask:ops-status`.
+- [ ] Put `main` on the server ([operations.md](operations.md)).
 - [ ] Take a backup from the second copy and open it on another computer ([backup-and-restore.md](backup-and-restore.md)).
 - [ ] Read the System Logs for the last day and say what happened.
 - [ ] Add one line to the table above for anything they had to ask.

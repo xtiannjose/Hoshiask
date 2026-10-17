@@ -2,7 +2,7 @@
 
 namespace App\Listeners;
 
-use App\Services\Operations\HelpdeskOperationsStatusService;
+use App\Services\Operations\HoshiaskOperationsStatusService;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Cache;
@@ -27,7 +27,7 @@ class RecordQueueWorkerHeartbeat
 
         self::$lastWrittenAt = $now;
 
-        rescue(static fn () => Cache::forever(HelpdeskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY, $now), null, false);
+        rescue(static fn () => Cache::forever(HoshiaskOperationsStatusService::QUEUE_HEARTBEAT_CACHE_KEY, $now), null, false);
     }
 
     /** For tests: a worker process lives for hours, a test process must not remember an earlier test. */

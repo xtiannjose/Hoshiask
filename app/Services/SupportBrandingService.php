@@ -33,27 +33,27 @@ class SupportBrandingService
 
     public function supportDepartment(): string
     {
-        return trim((string) config('helpdesk.support_department', 'Hoshishi')) ?: 'Hoshishi';
+        return trim((string) config('hoshiask.support_department', 'Hoshishi')) ?: 'Hoshishi';
     }
 
     public function supportBrandName(): string
     {
-        return trim((string) config('helpdesk.support_brand_name', $this->supportDepartment())) ?: $this->supportDepartment();
+        return trim((string) config('hoshiask.support_brand_name', $this->supportDepartment())) ?: $this->supportDepartment();
     }
 
     public function supportOrganizationName(): string
     {
-        return trim((string) config('helpdesk.support_organization_name', 'Hoshishi Corporation')) ?: 'Hoshishi Corporation';
+        return trim((string) config('hoshiask.support_organization_name', 'Hoshishi Corporation')) ?: 'Hoshishi Corporation';
     }
 
     public function supportTeamName(): string
     {
-        return trim((string) config('helpdesk.support_team_name', 'Hoshishi Technical Team')) ?: 'Hoshishi Technical Team';
+        return trim((string) config('hoshiask.support_team_name', 'Hoshishi Technical Team')) ?: 'Hoshishi Technical Team';
     }
 
     public function supportLogoPath(): string
     {
-        return trim((string) config('helpdesk.support_logo_path', 'images/Hoshishi Logo.png')) ?: 'images/Hoshishi Logo.png';
+        return trim((string) config('hoshiask.support_logo_path', 'images/Hoshishi Logo.png')) ?: 'images/Hoshishi Logo.png';
     }
 
     public function supportLogoUrl(): string

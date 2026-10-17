@@ -17,10 +17,10 @@ class SeederPasswordPolicyTest extends TestCase
 
     public function test_seeders_apply_role_based_password_policy_in_fixed_mode(): void
     {
-        config()->set('helpdesk.staff_default_password', 'staff-fixed-password');
-        config()->set('helpdesk.client_password_mode', 'fixed');
-        config()->set('helpdesk.client_default_password', 'client-fixed-password');
-        config()->set('helpdesk.shadow_password', 'shadow-fixed-password');
+        config()->set('hoshiask.staff_default_password', 'staff-fixed-password');
+        config()->set('hoshiask.client_password_mode', 'fixed');
+        config()->set('hoshiask.client_default_password', 'client-fixed-password');
+        config()->set('hoshiask.shadow_password', 'shadow-fixed-password');
 
         $this->seed([
             ShadowSeeder::class,
@@ -63,12 +63,12 @@ class SeederPasswordPolicyTest extends TestCase
     {
         Storage::fake('local');
 
-        config()->set('helpdesk.staff_default_password', 'staff-fixed-password');
-        config()->set('helpdesk.client_password_mode', 'random');
-        config()->set('helpdesk.client_default_password', 'client-fixed-password');
-        config()->set('helpdesk.shadow_password', 'shadow-fixed-password');
-        config()->set('helpdesk.seed_client_credentials_disk', 'local');
-        config()->set('helpdesk.seed_client_credentials_path', 'seeded-client-credentials');
+        config()->set('hoshiask.staff_default_password', 'staff-fixed-password');
+        config()->set('hoshiask.client_password_mode', 'random');
+        config()->set('hoshiask.client_default_password', 'client-fixed-password');
+        config()->set('hoshiask.shadow_password', 'shadow-fixed-password');
+        config()->set('hoshiask.seed_client_credentials_disk', 'local');
+        config()->set('hoshiask.seed_client_credentials_path', 'seeded-client-credentials');
 
         $this->seed([
             ShadowSeeder::class,

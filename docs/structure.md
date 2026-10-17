@@ -1,6 +1,6 @@
 # How the code is organised
 
-Helpdesk is a normal Laravel application. This page shows where things are and how a request travels through them, so you can find the right file quickly.
+Hoshiask is a normal Laravel application. This page shows where things are and how a request travels through them, so you can find the right file quickly.
 
 ## What happens when someone opens a page
 
@@ -38,7 +38,7 @@ A technician sees and works only the tickets assigned to them, and can open othe
 app/
   Console/Commands/      the artisan commands (list in operations.md)
   Enums/                 TicketStatus (statuses, labels, colours), TicketPriority (severity), RootCauseCategory, KnowledgeArticleCategory
-  Events/, Listeners/    how a feature adds a note to helpdesk:ops-status (ProductionAdvisoriesRequested), and the queue worker heartbeat
+  Events/, Listeners/    how a feature adds a note to hoshiask:ops-status (ProductionAdvisoriesRequested), and the queue worker heartbeat
   Http/
     Controllers/         Admin/ = staff console, Client/ = client portal, Concerns/ = shared traits,
                          top level = sign-in, attachments, health check, legal pages, notifications
@@ -54,7 +54,7 @@ app/
     Backup/              backup file, encryption, database dump, tar archive
     Client/              what the client portal lists
     Observability/       slow query logging
-    Operations/          the status behind helpdesk:ops-status and /health
+    Operations/          the status behind hoshiask:ops-status and /health
     Retention/           removing personal details from old tickets
     Security/            ClamAV virus scanner
     TicketImport/        CSV and XLSX import
@@ -62,7 +62,7 @@ app/
   Support/               small helpers: SLA settings and the business-hours clock (BusinessHours), LIKE and date helpers for every database, upload limits, login lockout
   View/Composers/        data every page header needs
 bootstrap/app.php       registers the middleware and the route files
-config/                  helpdesk.php (feature settings), security.php, retention.php, legal.php, observability.php, and Laravel's own
+config/                  hoshiask.php (feature settings), security.php, retention.php, legal.php, observability.php, and Laravel's own
 database/
   migrations/            every table change, in order
   seeders/               StarterDataSeeder (the departments and categories a new installation starts with), sample accounts and tickets; E2eSmokeSeeder is only for the browser tests
@@ -77,7 +77,7 @@ resources/
 routes/
   web.php                every page and action
   console.php           the scheduled jobs
-scripts/                 deploy scripts, Windows helpers for the queue worker, the backup decrypt tool, a fake virus scanner for testing
+scripts/                 Windows helpers for the queue worker, the backup decrypt tool, a fake virus scanner for testing
 storage/app/private/     attachments/, backups/, imports/, seeded-client-credentials/ (no web address serves these)
 storage/app/public/      department logos (served through the public/storage link)
 tests/
@@ -105,12 +105,12 @@ Defined in `routes/console.php`. Each one is protected against running twice at 
 | When | Command | What it does |
 |---|---|---|
 | Every 5 minutes | `tickets:send-alert-emails` | Reminder emails, the merged reply emails to clients, and the heartbeat the status check looks for. |
-| Daily 02:40 | `helpdesk:backup` | The encrypted backup. |
-| Daily 03:10 | `helpdesk:cleanup-runtime` | Removes old backups, exports and import files, old System Logs entries, used-up password handoffs and expired rows of the database cache. |
+| Daily 02:40 | `hoshiask:backup` | The encrypted backup. |
+| Daily 03:10 | `hoshiask:cleanup-runtime` | Removes old backups, exports and import files, old System Logs entries, used-up password handoffs and expired rows of the database cache. |
 | Daily 03:40 | `tickets:auto-close-resolved` | Warns clients, then closes tickets that stayed Resolved for 7 days. |
 | Daily 03:45 | `tickets:auto-cancel-pending` | Cancels Pending tickets with no activity for 14 days. |
-| Daily 03:55 | `helpdesk:enforce-retention` | Removes personal details from old tickets (only when switched on). |
-| Sunday 04:20 | `helpdesk:backup-verify` | Checks the newest backup again. |
+| Daily 03:55 | `hoshiask:enforce-retention` | Removes personal details from old tickets (only when switched on). |
+| Sunday 04:20 | `hoshiask:backup-verify` | Checks the newest backup again. |
 
 The times follow `APP_TIMEZONE`.
 
@@ -131,7 +131,7 @@ The times follow `APP_TIMEZONE`.
 
 ## Switching off or removing canned responses
 
-Canned responses (saved reply templates) sit behind one flag, `HELPDESK_CANNED_REPLIES_ENABLED` (on by default). Set it to `false` and the menu link, the management page and the picker in the reply form disappear, and their pages answer "not found". Nothing in the database is touched, so it is safe to switch back on.
+Canned responses (saved reply templates) sit behind one flag, `HOSHIASK_CANNED_REPLIES_ENABLED` (on by default). Set it to `false` and the menu link, the management page and the picker in the reply form disappear, and their pages answer "not found". Nothing in the database is touched, so it is safe to switch back on.
 
 To remove the feature from the code for good, delete:
 

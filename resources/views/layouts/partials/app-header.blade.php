@@ -84,7 +84,7 @@
                             <a
                                 href="{{ route('admin.online-users.index', ['segment' => 'staff']) }}"
                                 class="app-pressable hidden items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:inline-flex"
-                                title="Staff accounts active in the last {{ config('helpdesk.presence.online_window_minutes') }} minutes"
+                                title="Staff accounts active in the last {{ config('hoshiask.presence.online_window_minutes') }} minutes"
                             >
                                 <span class="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
                                 {{ $headerOnlineStaffCount }} staff online

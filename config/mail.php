@@ -38,7 +38,7 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Helpdesk'),
+        'name' => env('MAIL_FROM_NAME', 'Hoshiask'),
     ],
 
     'reply_to' => [

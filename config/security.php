@@ -32,21 +32,21 @@ return [
 
     // Virus scanning of uploaded ticket and reply attachments. It is on by default in production (ClamAV must
     // be installed on the server for it to do anything; until then uploads are allowed and an advisory shows)
-    // and off elsewhere. Set HELPDESK_UPLOAD_SCAN=off or clamav to decide explicitly; see "Upload scanning"
+    // and off elsewhere. Set HOSHIASK_UPLOAD_SCAN=off or clamav to decide explicitly; see "Upload scanning"
     // in docs/security.md.
     'upload_scan' => [
         // "off" or "clamav". Blank follows APP_ENV. Any other value leaves scanning off.
-        'driver' => strtolower(trim((string) env('HELPDESK_UPLOAD_SCAN'))) ?: (env('APP_ENV') === 'production' ? 'clamav' : 'off'),
+        'driver' => strtolower(trim((string) env('HOSHIASK_UPLOAD_SCAN'))) ?: (env('APP_ENV') === 'production' ? 'clamav' : 'off'),
         'clamav' => [
             // A socket path (for example /var/run/clamav/clamd.ctl) wins over host and port.
-            'socket' => env('HELPDESK_CLAMAV_SOCKET'),
-            'host' => env('HELPDESK_CLAMAV_HOST', '127.0.0.1'),
-            'port' => (int) env('HELPDESK_CLAMAV_PORT', 3310),
+            'socket' => env('HOSHIASK_CLAMAV_SOCKET'),
+            'host' => env('HOSHIASK_CLAMAV_HOST', '127.0.0.1'),
+            'port' => (int) env('HOSHIASK_CLAMAV_PORT', 3310),
         ],
         // Seconds to wait for the scanner to connect and then to answer.
-        'timeout' => (float) env('HELPDESK_UPLOAD_SCAN_TIMEOUT', 10),
+        'timeout' => (float) env('HOSHIASK_UPLOAD_SCAN_TIMEOUT', 10),
         // What to do with an upload when the scanner cannot be reached: "allow" it (and record the
         // problem) or "block" it. Any value other than "block" allows.
-        'on_error' => strtolower(trim((string) env('HELPDESK_UPLOAD_SCAN_ON_ERROR', 'allow'))),
+        'on_error' => strtolower(trim((string) env('HOSHIASK_UPLOAD_SCAN_ON_ERROR', 'allow'))),
     ],
 ];

@@ -111,6 +111,6 @@ describe('session expiry handling', function () {
         expect(errorElement.children[0]).toContain('Your session expired');
         expect(errorElement.children[1].href).toBe('https://example.test/client/tickets/5');
         expect(errorElement.children[1].textContent).toBe('Sign in again');
-        expect(storage.getItem('helpdesk:reply-draft:/client/tickets/9')).toBe('my unsent reply');
+        expect(storage.getItem('hoshiask:reply-draft:/client/tickets/9')).toBe('my unsent reply');
     });
 });

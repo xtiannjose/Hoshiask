@@ -167,7 +167,7 @@ class UserPresenceService
 
     public function onlineWindowMinutes(): int
     {
-        return max(1, (int) config('helpdesk.presence.online_window_minutes', 5));
+        return max(1, (int) config('hoshiask.presence.online_window_minutes', 5));
     }
 
     /**
@@ -205,7 +205,7 @@ class UserPresenceService
 
     private function activeSince(): Carbon
     {
-        $activeWindowMinutes = max(1, (int) config('helpdesk.presence.active_window_minutes', 2));
+        $activeWindowMinutes = max(1, (int) config('hoshiask.presence.active_window_minutes', 2));
 
         return now()->subMinutes(min($activeWindowMinutes, $this->onlineWindowMinutes()));
     }

@@ -6,11 +6,11 @@ use App\Services\Retention\TicketRetentionService;
 use App\Services\SystemLogService;
 use Illuminate\Console\Command;
 
-class HelpdeskEnforceRetention extends Command
+class HoshiaskEnforceRetention extends Command
 {
-    protected $signature = 'helpdesk:enforce-retention
+    protected $signature = 'hoshiask:enforce-retention
         {--dry-run : List the tickets that would be cleaned and change nothing}
-        {--years= : Use this number of years instead of HELPDESK_RETENTION_YEARS}';
+        {--years= : Use this number of years instead of HOSHIASK_RETENTION_YEARS}';
 
     protected $description = 'Remove the personal details from tickets that were closed or cancelled longer ago than the retention period.';
 
@@ -39,8 +39,8 @@ class HelpdeskEnforceRetention extends Command
         }
 
         if (! $retention->isEnabled()) {
-            $this->warn('The clean-up is switched off (HELPDESK_RETENTION_ENABLED=false), so nothing was changed.');
-            $this->line('Review the list with --dry-run, then set HELPDESK_RETENTION_ENABLED=true to switch it on.');
+            $this->warn('The clean-up is switched off (HOSHIASK_RETENTION_ENABLED=false), so nothing was changed.');
+            $this->line('Review the list with --dry-run, then set HOSHIASK_RETENTION_ENABLED=true to switch it on.');
 
             return self::SUCCESS;
         }

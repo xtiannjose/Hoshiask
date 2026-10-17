@@ -7,9 +7,9 @@ use App\Services\Security\ScanResult;
 use Illuminate\Console\Command;
 use RuntimeException;
 
-class HelpdeskUploadScanCheck extends Command
+class HoshiaskUploadScanCheck extends Command
 {
-    protected $signature = 'helpdesk:upload-scan-check';
+    protected $signature = 'hoshiask:upload-scan-check';
 
     protected $description = 'Check that uploaded files are really scanned for viruses, by sending the standard EICAR test file to the scanner.';
 
@@ -19,13 +19,13 @@ class HelpdeskUploadScanCheck extends Command
         $this->line('Upload scanning driver: '.$driver);
 
         if ($driver === 'off') {
-            $this->info('Virus scanning is switched off (HELPDESK_UPLOAD_SCAN=off), so there is nothing to check.');
+            $this->info('Virus scanning is switched off (HOSHIASK_UPLOAD_SCAN=off), so there is nothing to check.');
 
             return self::SUCCESS;
         }
 
         if ($driver !== 'clamav') {
-            $this->error('HELPDESK_UPLOAD_SCAN is "'.$driver.'", which is not recognised. Use "clamav" to switch scanning on or "off" to leave it off.');
+            $this->error('HOSHIASK_UPLOAD_SCAN is "'.$driver.'", which is not recognised. Use "clamav" to switch scanning on or "off" to leave it off.');
 
             return self::FAILURE;
         }

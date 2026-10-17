@@ -29,7 +29,7 @@ class ReportRetentionAdvisories
         $tickets = $waiting === 1 ? '1 ticket is' : "{$waiting} tickets are";
 
         if (! $this->retention->isEnabled()) {
-            $request->add("{$tickets} older than the retention period ({$years} years) and still hold personal details. The clean-up is switched off (HELPDESK_RETENTION_ENABLED=false). Run `php artisan helpdesk:enforce-retention --dry-run` to review them.");
+            $request->add("{$tickets} older than the retention period ({$years} years) and still hold personal details. The clean-up is switched off (HOSHIASK_RETENTION_ENABLED=false). Run `php artisan hoshiask:enforce-retention --dry-run` to review them.");
 
             return;
         }
@@ -37,7 +37,7 @@ class ReportRetentionAdvisories
         $lastRun = rescue(fn () => SystemLog::query()->where('event_type', 'retention.enforced')->max('occurred_at'), null, false);
 
         if ($lastRun === null || ! Carbon::parse($lastRun)->gt(now()->subDays(self::STALE_AFTER_DAYS))) {
-            $request->add("{$tickets} older than the retention period ({$years} years) and the clean-up has not removed anything in the last ".self::STALE_AFTER_DAYS.' days. Check that the scheduler runs, and look in System Logs for failures of helpdesk:enforce-retention.');
+            $request->add("{$tickets} older than the retention period ({$years} years) and the clean-up has not removed anything in the last ".self::STALE_AFTER_DAYS.' days. Check that the scheduler runs, and look in System Logs for failures of hoshiask:enforce-retention.');
         }
     }
 }

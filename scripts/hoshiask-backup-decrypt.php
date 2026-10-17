@@ -1,17 +1,17 @@
 <?php
 
 /*
- * Decrypts a helpdesk backup (helpdesk-*.tar.enc) on any computer that has PHP with the openssl extension.
+ * Decrypts a Hoshiask backup (hoshiask-*.tar.enc) on any computer that has PHP with the openssl extension.
  * No Laravel, no composer: for the day the server is gone.
  *
- *   php helpdesk-backup-decrypt.php helpdesk-20261008-024000.tar.enc helpdesk.tar "base64:...key..."
+ *   php hoshiask-backup-decrypt.php hoshiask-20261008-024000.tar.enc hoshiask.tar "base64:...key..."
  *
- * Then unpack the result with any tar program (tar -xf helpdesk.tar). The format is described in
+ * Then unpack the result with any tar program (tar -xf hoshiask.tar). The format is described in
  * app/Services/Backup/BackupEncryption.php.
  */
 
 if ($argc !== 4) {
-    fwrite(STDERR, "Usage: php helpdesk-backup-decrypt.php <encrypted-file> <output-file> <key>\n");
+    fwrite(STDERR, "Usage: php hoshiask-backup-decrypt.php <encrypted-file> <output-file> <key>\n");
     exit(1);
 }
 
@@ -46,7 +46,7 @@ if (! is_string($key) || strlen($key) !== 32) {
 
 $input = @fopen($inputPath, 'rb') ?: $fail("Cannot open {$inputPath}.");
 if ($readExactly($input, 5) !== "HBK1\n") {
-    $fail('This is not an encrypted helpdesk backup.');
+    $fail('This is not an encrypted Hoshiask backup.');
 }
 $output = @fopen($outputPath, 'wb') ?: $fail("Cannot write {$outputPath}.");
 

@@ -2,7 +2,7 @@
 
 namespace Tests\Support;
 
-use App\Console\Commands\HelpdeskUploadScanCheck;
+use App\Console\Commands\HoshiaskUploadScanCheck;
 use App\Services\Security\ClamAvScanner;
 use App\Services\Security\ScanResult;
 
@@ -13,7 +13,7 @@ use App\Services\Security\ScanResult;
  */
 class FakeClamAvScanner extends ClamAvScanner
 {
-    public const SENTINEL = 'HELPDESK-TEST-VIRUS-SIGNATURE';
+    public const SENTINEL = 'HOSHIASK-TEST-VIRUS-SIGNATURE';
 
     public int $scans = 0;
 
@@ -53,7 +53,7 @@ class FakeClamAvScanner extends ClamAvScanner
             return ScanResult::error($this->problem);
         }
 
-        return str_contains($contents, self::SENTINEL) || str_contains($contents, HelpdeskUploadScanCheck::eicarTestFile())
+        return str_contains($contents, self::SENTINEL) || str_contains($contents, HoshiaskUploadScanCheck::eicarTestFile())
             ? ScanResult::infected(self::SENTINEL)
             : ScanResult::clean();
     }

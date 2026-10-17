@@ -51,7 +51,7 @@ class TicketReplyEditWindowTest extends TestCase
 
     public function test_edit_window_is_configurable(): void
     {
-        config(['helpdesk.reply_edit_window_minutes' => 30]);
+        config(['hoshiask.reply_edit_window_minutes' => 30]);
         [$client, $ticket] = $this->clientTicket();
         $reply = $this->replyBy($client, $ticket, minutesAgo: 45);
 

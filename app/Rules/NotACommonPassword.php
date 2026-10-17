@@ -29,7 +29,7 @@ class NotACommonPassword implements ValidationRule
         'letmein1', 'welcome1', 'monkey12', 'dragon12', 'master12', 'shadow12', 'michael1', 'jennifer',
         'starwars', 'whatever', 'computer', 'internet', 'mustang1', 'passw0rd', 'p@ssw0rd', 'p@ssword',
         'pa$$word', 'admin123', 'admin1234', 'administrator', 'changeme', 'changeme1', 'default1', 'test1234',
-        'testing1', 'guest123', 'user1234', 'login123', 'root1234', 'helpdesk', 'helpdesk1', 'helpdesk123',
+        'testing1', 'guest123', 'user1234', 'login123', 'root1234', 'hoshiask', 'hoshiask1', 'hoshiask123',
     ];
 
     /**
@@ -40,7 +40,7 @@ class NotACommonPassword implements ValidationRule
     private const COMMON_WORDS = [
         'password', 'passw0rd', 'p@ssword', 'p@ssw0rd', 'pa$$word', 'qwerty', 'qwertyuiop', 'letmein', 'welcome',
         'admin', 'administrator', 'iloveyou', 'monkey', 'dragon', 'master', 'shadow', 'sunshine', 'princess',
-        'football', 'baseball', 'superman', 'trustno', 'changeme', 'default', 'helpdesk', 'temp', 'temporary',
+        'football', 'baseball', 'superman', 'trustno', 'changeme', 'default', 'hoshiask', 'temp', 'temporary',
         'abc', 'abcd', 'abcde', 'abcdef', 'secret', 'login', 'guest', 'test', 'user',
     ];
 

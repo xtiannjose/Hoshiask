@@ -44,11 +44,11 @@
                 str_starts_with($tabRouteName, 'client.tickets.show') => isset($ticket) ? 'Ticket #' . $ticket->ticket_number : 'Ticket Details',
                 str_starts_with($tabRouteName, 'client.tickets.') => 'My Tickets',
                 str_starts_with($tabRouteName, 'account.settings') => 'Account Settings',
-                default => 'Helpdesk',
+                default => 'Hoshiask',
             };
         }
 
-        $tabContextLabel = 'Helpdesk';
+        $tabContextLabel = 'Hoshiask';
         if ($tabUser) {
             $tabContextLabel = match ($tabUser->normalizedRole()) {
                 \App\Models\User::ROLE_SHADOW => 'Admin Console',

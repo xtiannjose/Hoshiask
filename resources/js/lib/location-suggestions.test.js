@@ -4,7 +4,7 @@ import { buildMunicipalitiesUrl } from './location-suggestions';
 
 describe('buildMunicipalitiesUrl', function () {
     beforeEach(function () {
-        vi.stubGlobal('window', { location: { origin: 'https://helpdesk.example.test' } });
+        vi.stubGlobal('window', { location: { origin: 'https://hoshiask.example.test' } });
     });
 
     afterEach(function () {
@@ -13,11 +13,11 @@ describe('buildMunicipalitiesUrl', function () {
 
     it('adds the province as an encoded query parameter', function () {
         expect(buildMunicipalitiesUrl('/locations/municipalities', 'Davao del Sur'))
-            .toBe('https://helpdesk.example.test/locations/municipalities?province=Davao+del+Sur');
+            .toBe('https://hoshiask.example.test/locations/municipalities?province=Davao+del+Sur');
     });
 
     it('keeps an absolute base URL as it is', function () {
-        expect(buildMunicipalitiesUrl('https://helpdesk.example.test/locations/municipalities', 'NCR'))
-            .toBe('https://helpdesk.example.test/locations/municipalities?province=NCR');
+        expect(buildMunicipalitiesUrl('https://hoshiask.example.test/locations/municipalities', 'NCR'))
+            .toBe('https://hoshiask.example.test/locations/municipalities?province=NCR');
     });
 });

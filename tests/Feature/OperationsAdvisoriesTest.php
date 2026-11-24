@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 /**
  * Advisories name settings that leave the site up but switch something off (email, log rotation,
- * the scheduler). They are shown, and they must never turn the status into a deploy-failing warning.
+ * the scheduler). They are shown, and they must never become a warning that fails `--fail-on-warning`.
  */
 class OperationsAdvisoriesTest extends TestCase
 {
@@ -71,7 +71,7 @@ class OperationsAdvisoriesTest extends TestCase
         $this->assertStringContainsString('The scheduler last ran 40 minutes ago', $text);
         $this->assertCount(5, $status['advisories']);
 
-        $this->assertSame([], $status['warnings'], 'advisories never fail a deploy');
+        $this->assertSame([], $status['warnings'], 'advisories are never warnings');
         $this->assertSame('ok', $status['status']);
     }
 
@@ -117,7 +117,7 @@ class OperationsAdvisoriesTest extends TestCase
         config(['mail.default' => 'log']);
 
         $this->artisan('hoshiask:ops-status', ['--fail-on-warning' => true])
-            ->expectsOutputToContain('Advisories (the deploy does not stop for these')
+            ->expectsOutputToContain('Advisories (--fail-on-warning does not fail on these')
             ->expectsOutputToContain('MAIL_MAILER is "log"')
             ->expectsOutput('Warnings: none')
             ->assertSuccessful();

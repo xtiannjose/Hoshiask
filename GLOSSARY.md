@@ -197,10 +197,10 @@ The permanent record of security-relevant actions, exports and system events, sh
 _Avoid_: activity log, history
 
 **Advisory**:
-A plain-English note from the production status check about something quietly switched off. Unlike a warning, it never fails a deploy.
+A plain-English note from the production status check about something quietly switched off. Unlike a warning, it never fails `hoshiask:ops-status --fail-on-warning`.
 
 **Warning**:
-A production status check finding that fails the deploy health check.
+A production status check finding that fails `hoshiask:ops-status --fail-on-warning`.
 
 **Credential handoff**:
 A temporary password the shadow account issues for another account, revealed once within 10 minutes and then used up.

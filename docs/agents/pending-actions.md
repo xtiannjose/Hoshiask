@@ -4,7 +4,7 @@ Things only the maintainer can do (they need the live server or the GitHub merge
 
 Status on 2026-10-10: **none of this is done yet.** The maintainer could not do it that day.
 
-**Update 2026-10-11: there is no live server for now.** Sections 1 to 4 all need one, so they are **deferred**, not forgotten: nobody is expected to do them until a server exists, and status reports and decision lists leave them out. The steps stay here so they are ready when a server does exist. Sections 5 and 6 are optional, and section 6 needs no server.
+**Update 2026-10-11: there is no live server for now.** Sections 1 to 3 all need one, so they are **deferred**, not forgotten: nobody is expected to do them until a server exists, and status reports and decision lists leave them out. The steps stay here so they are ready when a server does exist. Sections 4 and 5 are optional, and section 5 needs no server.
 
 ## 1. Change the shadow account password (most urgent)
 
@@ -19,7 +19,7 @@ Steps:
 5. On the server, open `/opt/hoshiask/.env`. If `SHADOW_PASSWORD=` holds the old password, put the new one there. Otherwise re-running the seeder would reset the shadow account to the old password.
 6. Run `cd /opt/hoshiask && php artisan config:clear`.
 7. Sign out and back in as `shadow`, and unlock System Logs with the new password.
-8. If locked out of `shadow` (the command exists in `main` and must be deployed first): `php artisan hoshiask:unlock-login shadow`.
+8. If locked out of `shadow`: `php artisan hoshiask:unlock-login shadow`.
 
 Optional and not recommended: erasing the old password from the history means rewriting history with a force push. It breaks every clone and open pull request, and Claude is not allowed to force-push, so the maintainer would run it. Changing the password is enough for a private repository with two collaborators.
 
@@ -48,46 +48,22 @@ Steps (Ubuntu or Debian):
 
 If step 9 cannot reach the scanner, wait a few more minutes, or look for the socket with `ls /var/run/clamav/`. Until it works, uploads are still allowed. The longer reference is in [docs/security.md](../security.md).
 
-## 3. Deploy `main`
+## 3. The decisions of 2026-10-11 on the server
 
-Every change in the table below is already in `main` (checked in the code on 2026-10-10, after the repository history was reset: the pull request numbers no longer exist on GitHub), together with pull requests #4 and #5 of 2026-10-11 (section 4). They only reach the live site when you deploy.
-
-| Earlier pull request | What it does |
-|---|---|
-| #238 | Closes the web route to private storage, staff "stay signed in" lasts 60 days, typed search text is kept out of export logs, decisions written into the docs |
-| #239 | At most 10 attachments per ticket or reply, virus scanning on by default in production |
-| #240 | A double click no longer posts or emails a reply twice; a late reply cannot reopen a closed ticket; fixes an empty ticket status on JSON replies |
-| #241 | The SLA rules move out of `Ticket` into their own class (no behaviour change) |
-| #242 | The old text of an edited or deleted reply is kept in the shadow account's System Logs only |
-| #243 | PDF and text attachment previews work in the ticket page |
-| #244 | A time-sensitive test no longer flakes |
-| #245 | A stranger cannot lock the real admin out; new command `php artisan hoshiask:unlock-login` |
-| #246 | Route protection and client journey tests; fixes the shared rate-limit counter and the "mark as resolved" button that needed a comment at any rating; the PostgreSQL job fails if it is not really on PostgreSQL |
-
-Deploy as usual ([docs/operations.md](../operations.md)); the deploy runs the migration for the new database indexes. The branch `fix/third-deep-check` adds one more migration (two search indexes on `tickets`; a few seconds at 10,000 tickets).
-
-After deploying:
-
-1. Open one PDF attachment on a ticket. The preview must show the file. This was only tested with a text file.
-2. As a client, upload one Word (`.docx`) and one Excel (`.xlsx`) file made in Microsoft Office to a ticket. Older `.doc` and `.xls` files are refused on purpose.
-3. Run `php artisan hoshiask:ops-status` and read the advisories.
-
-## 4. After deploying the decisions of 2026-10-11
-
-The answers to the third deep check ([plan.md](plan.md)) were merged into `main` on 2026-10-11 as pull requests #4 and #5. Deploy `main` as usual; the deploy runs their three migrations (search indexes, a nullable column on `tickets`, one on `users`). The maintainer's own database was migrated on 2026-10-11.
+The answers to the third deep check ([plan.md](plan.md)) were merged into `main` on 2026-10-11 as pull requests #4 and #5. They add three migrations (search indexes, a nullable column on `tickets`, one on `users`). The maintainer's own database was migrated on 2026-10-11.
 
 1. **Privacy notice.** The text changed (backup and log retention, complaints to the National Privacy Commission) and its version moved to `2026-10-11`. On the server `.env`, set `LEGAL_PRIVACY_VERSION=2026-10-11` and `LEGAL_EFFECTIVE_DATE="October 11, 2026"`, then `php artisan config:clear`. Everyone accepts the new notice at their next sign-in. Have the data protection officer read the new paragraphs first.
 2. **Quiet Pending tickets** are handled on their own: a staff reminder after 3 days (`HOSHIASK_PENDING_FOLLOW_UP_DAYS`) and an automatic cancel after 14 days (`HOSHIASK_PENDING_AUTO_CANCEL_DAYS`); `0` switches either off. Staff, not clients, get the email. The first run cancels every Pending ticket already older than 14 days with no activity: run `php artisan tickets:auto-cancel-pending --dry-run` first to see which.
 3. **Business hours SLA** is off. To switch it on, set `HOSHIASK_SLA_BUSINESS_HOURS_ENABLED=true` (and `_DAYS`, `_START`, `_END` if the office hours differ, and `_CLOSED_DATES`, which `.env.example` already fills with the 2026 nationwide holidays; replace it each January), then `php artisan config:clear`. Report numbers for the Resolution Time bands change from that day on ([report-metrics.md](../report-metrics.md)).
 4. **Resilience** ([resilience.md](../resilience.md)): set up the outside monitor on `/health`, fill in the "where it is kept" table with a second person, do one timed restore and write it in the restore log, and confirm or change the two recovery targets.
 
-## 5. Still open, only if wanted
+## 4. Still open, only if wanted
 
 - Issue #233: measured on 2026-10-11 with 60,000 tickets. The all-time report and the ticket search were fixed (see the third deep check in [plan.md](plan.md)); the first auto-close and reminder runs after a long outage are slow but one-off, and PDFs are built while the user waits (the detailed custom report takes about 3 s).
 - Issue #229: what is left of the larger list (MFA and client password changes were decided against; see [docs/security.md](../security.md)).
 - Popups (issue #202): not built, reasons are on the issue.
 
-## 6. After the rename: GitHub clean-up (optional, no server needed)
+## 5. After the rename: GitHub clean-up (optional, no server needed)
 
 Why: the repository was renamed to Hoshiask on 2026-10-17 and no tracked file carries the former name, but three things on GitHub still do. Claude could not change them (the permission system blocked it, and Claude is not allowed to force-push).
 

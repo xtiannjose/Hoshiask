@@ -55,7 +55,7 @@ class HoshiaskOpsStatus extends Command
         $this->line('Scheduled alert command: '.$status['scheduled_alert_command']);
 
         if ($advisories !== []) {
-            $this->warn('Advisories (the deploy does not stop for these, but something is switched off):');
+            $this->warn('Advisories (--fail-on-warning does not fail on these, but something is switched off):');
             foreach ($advisories as $advisory) {
                 $this->line('- '.$advisory);
             }

@@ -113,7 +113,7 @@ class HoshiaskOperationsStatusService
 
     /**
      * Settings that leave the site running but quietly switch something important off. They are
-     * shown, never counted as warnings: a warning fails the deploy's health check and rolls it back.
+     * shown, never counted as warnings: a warning fails `hoshiask:ops-status --fail-on-warning`.
      *
      * @return list<string>
      */
@@ -122,7 +122,7 @@ class HoshiaskOperationsStatusService
         $advisories = [];
 
         // Queued mail is produced all day, so a job waiting is normal, and one failed email (a mailbox that bounced)
-        // stays in failed_jobs until someone clears it. Neither may fail a deploy or roll it back.
+        // stays in failed_jobs until someone clears it. Neither may fail `--fail-on-warning`.
         if (is_int($failedJobs) && $failedJobs > 0) {
             $advisories[] = sprintf(
                 '%d queued %s failed (an email or alert that could not be sent). Look at %s with `php artisan queue:failed`; `php artisan queue:retry all` tries again, `php artisan queue:flush` forgets %s.',

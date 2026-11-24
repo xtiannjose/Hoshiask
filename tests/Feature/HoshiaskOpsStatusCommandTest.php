@@ -48,7 +48,7 @@ class HoshiaskOpsStatusCommandTest extends TestCase
             ->assertSuccessful();
     }
 
-    public function test_waiting_and_failed_jobs_alone_do_not_fail_a_deploy(): void
+    public function test_waiting_and_failed_jobs_alone_do_not_fail_on_warning(): void
     {
         config()->set('queue.default', 'database');
         config()->set('hoshiask.ops.queue_worker_running', true);
@@ -70,7 +70,6 @@ class HoshiaskOpsStatusCommandTest extends TestCase
             'failed_at' => now()->subDays(3),
         ]);
 
-        // The deploy runs exactly this command.
         $this->artisan('hoshiask:ops-status', ['--fail-on-warning' => true])
             ->expectsOutput('Warnings: none')
             ->assertSuccessful();

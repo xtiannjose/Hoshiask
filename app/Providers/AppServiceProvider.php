@@ -3,10 +3,14 @@
 namespace App\Providers;
 
 use App\Services\SupportBrandingService;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,11 +34,36 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->configureTrustedProxies();
+        $this->logSlowQueries();
 
         // Only `npm run dev` creates the hot file, so there's nothing to check elsewhere.
         if ($this->app->isLocal()) {
             $this->deleteStaleViteHotFile();
         }
+    }
+
+    /**
+     * Logs a warning for each query slower than the threshold. A blank OBSERVABILITY_SLOW_QUERY_ENABLED means on in
+     * staging and production only. The SQL is logged without its values, which can hold personal data.
+     */
+    private function logSlowQueries(): void
+    {
+        $enabled = config('observability.slow_queries.enabled');
+        $thresholdMs = (int) config('observability.slow_queries.threshold_ms');
+
+        if (! (is_bool($enabled) ? $enabled : $this->app->environment(['staging', 'production'])) || $thresholdMs < 1) {
+            return;
+        }
+
+        DB::listen(function (QueryExecuted $query) use ($thresholdMs): void {
+            if ($query->time >= $thresholdMs) {
+                Log::warning('Slow query detected.', [
+                    'connection' => $query->connectionName,
+                    'duration_ms' => round((float) $query->time, 2),
+                    'sql' => Str::limit($query->sql, 4000),
+                ]);
+            }
+        });
     }
 
     private function configureTrustedProxies(): void

@@ -175,10 +175,8 @@ Details and the ClamAV set-up are in [security.md](security.md).
 | `HOSHIASK_HEALTH_DETAIL_TOKEN` | blank | Without it `/health` answers only `ok`, `degraded` or `failed`. With it, a request that sends the token gets the details. |
 | `HOSHIASK_PRESENCE_ONLINE_WINDOW_MINUTES` | `5` | The Online Users page lists people who were active in the last this many minutes. |
 | `HOSHIASK_PRESENCE_ACTIVE_WINDOW_MINUTES` | `2` | Online people quieter than this are shown as idle. |
-| `OBSERVABILITY_SLOW_QUERY_ENABLED` | blank | Log slow database queries. Blank means on in `staging` and `production`, off elsewhere. |
+| `OBSERVABILITY_SLOW_QUERY_ENABLED` | blank | Log slow database queries (the SQL without its values) as warnings in the application log. Blank means on in `staging` and `production`, off elsewhere. |
 | `OBSERVABILITY_SLOW_QUERY_THRESHOLD_MS` | `250` | How many milliseconds make a query slow. |
-| `OBSERVABILITY_SLOW_QUERY_INCLUDE_BINDINGS` | `false` | Also log the values in the query. These can contain personal data, so leave it off. |
-| `OBSERVABILITY_SLOW_QUERY_TO_SYSTEM_LOGS` | `false` | Also write slow queries to System Logs. |
 | `OBSERVABILITY_SYSTEM_LOG_RETENTION_DAYS` | `365` | The daily clean-up deletes System Logs entries older than this. `0` keeps them for ever. |
 
 ## Backups

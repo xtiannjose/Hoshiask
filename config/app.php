@@ -1,7 +1,6 @@
 <?php
 
 use App\Providers\AppServiceProvider;
-use App\Providers\ObservabilityServiceProvider;
 use App\Providers\ViewComposerServiceProvider;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
@@ -166,7 +165,6 @@ return [
          * Application Service Providers...
          */
         AppServiceProvider::class,
-        ObservabilityServiceProvider::class,
         ViewComposerServiceProvider::class,
         // App\Providers\BroadcastServiceProvider::class,
         // App\Providers\EventServiceProvider::class,

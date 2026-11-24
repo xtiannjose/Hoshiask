@@ -53,7 +53,6 @@ app/
     Admin/               ticket status workflow, assignment, merge, index and filters, users, reports (Reports/)
     Backup/              backup file, encryption, database dump, tar archive
     Client/              what the client portal lists
-    Observability/       slow query logging
     Operations/          the status behind hoshiask:ops-status and /health
     Retention/           removing personal details from old tickets
     Security/            ClamAV virus scanner

@@ -92,7 +92,7 @@ class LegacyTicketXlsxImportCommandTest extends TestCase
         $this->assertSame('Butuan City', $ticket->municipality);
         $this->assertSame($supportUser->id, $ticket->assigned_to);
         $this->assertSame('closed', $ticket->status);
-        $this->assertTrue($ticket->isImported());
+        $this->assertTrue($ticket->is_imported);
         $this->assertTrue($ticket->created_at?->equalTo(Carbon::parse('2026-03-17 14:00:00', 'Asia/Manila')->utc()));
         $this->assertTrue($ticket->assigned_at?->equalTo(Carbon::parse('2026-03-17 14:00:00', 'Asia/Manila')->utc()));
         $this->assertTrue($ticket->resolved_at?->equalTo(Carbon::parse('2026-03-17 17:00:00', 'Asia/Manila')->utc()));

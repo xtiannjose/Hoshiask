@@ -54,7 +54,6 @@ use Illuminate\Support\Str;
  * @property-read Collection<int, TicketUserState> $userStates
  *
  * @method static Builder<static> open()
- * @method static Builder<static> closed()
  * @method static Builder<static> byPriority(string $priority)
  */
 class Ticket extends Model
@@ -498,11 +497,6 @@ class Ticket extends Model
         return $query->whereIn('status', self::OPEN_STATUSES);
     }
 
-    public function scopeClosed(Builder $query): Builder
-    {
-        return $query->whereIn('status', self::CLOSED_STATUSES);
-    }
-
     public function scopeByPriority(Builder $query, string $priority): Builder
     {
         return $query->where('priority', self::normalizePriorityValue($priority));
@@ -531,11 +525,6 @@ class Ticket extends Model
     public function isEscalated(): bool
     {
         return $this->escalated_at !== null && $this->escalation_resolved_at === null;
-    }
-
-    public function isImported(): bool
-    {
-        return (bool) $this->is_imported;
     }
 
     public static function normalizePriorityValue(mixed $value): ?string

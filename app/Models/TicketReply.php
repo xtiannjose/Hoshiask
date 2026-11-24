@@ -114,11 +114,6 @@ class TicketReply extends Model
             || $this->created_at->greaterThanOrEqualTo(now()->subMinutes(self::editWindowMinutes()));
     }
 
-    public function scopeInternal($query)
-    {
-        return $query->where('is_internal', true);
-    }
-
     public function scopeVisibleToViewer(Builder $query, ?User $viewer = null): Builder
     {
         if ($viewer?->isShadow()) {

@@ -81,7 +81,7 @@ class LegacyTicketImportCommandTest extends TestCase
         $this->assertTrue($ticket->assigned_at?->equalTo($expectedCreatedAt));
         $this->assertSame($requester->id, $ticket->user_id);
         $this->assertSame($assignedUser->id, $ticket->assigned_to);
-        $this->assertTrue($ticket->isImported());
+        $this->assertTrue($ticket->is_imported);
         $this->assertSame('Requester Snapshot', $ticket->name);
         $this->assertSame('Hoshishi Branch - Re-activation of Starlink', $ticket->subject);
         $this->assertTrue($state->acknowledged_at?->equalTo($expectedCreatedAt));

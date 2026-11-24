@@ -33,8 +33,6 @@ Uploaded import files are removed by the daily clean-up after `HOSHIASK_IMPORT_R
 | `--skip-invalid` | Save the good rows even when some rows have problems, and list the rest. |
 | `--update-existing` | Update tickets that already exist (found by ticket number; `.xlsx` rows without a number by subject and date received). Without it they are skipped. |
 
-The old names `tickets:import-csv` and `tickets:import-xlsx` still work.
-
 ## Notes
 
 - If any row has a problem, nothing is saved. Fix the rows, or add `--skip-invalid`.

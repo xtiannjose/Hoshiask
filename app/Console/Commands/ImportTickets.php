@@ -20,13 +20,6 @@ class ImportTickets extends Command
         {--skip-invalid : Save the valid rows even when some rows have problems}
         {--update-existing : Update tickets that already exist (by ticket number; .xlsx rows without one by subject + date received)}';
 
-    /**
-     * The former per-format commands keep working.
-     *
-     * @var list<string>
-     */
-    protected $aliases = ['tickets:import-csv', 'tickets:import-xlsx'];
-
     protected $description = 'Import tickets from CSV or tracker XLSX files, keeping their original dates.';
 
     public function handle(TicketImporter $importer, SystemLogService $systemLogs): int

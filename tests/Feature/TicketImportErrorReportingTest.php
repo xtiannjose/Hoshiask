@@ -6,7 +6,6 @@ use App\Models\Category;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Tests\Support\ImportFiles;
 use Tests\TestCase;
@@ -86,14 +85,6 @@ class TicketImportErrorReportingTest extends TestCase
 
         $this->assertSame(['Good one', 'Good two'], Ticket::query()->orderBy('subject')->pluck('subject')->all());
         $this->assertSame('resolved', Ticket::query()->where('subject', 'Good two')->value('status'));
-    }
-
-    public function test_former_command_names_still_work(): void
-    {
-        $commands = Artisan::all();
-
-        $this->assertSame('tickets:import', $commands['tickets:import-csv']->getName());
-        $this->assertSame('tickets:import', $commands['tickets:import-xlsx']->getName());
     }
 
     public function test_xlsx_files_require_a_default_user_and_unknown_types_are_rejected(): void

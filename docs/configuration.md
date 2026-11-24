@@ -116,7 +116,7 @@ These are used by `php artisan db:seed` and by account management. The seeder re
 | `SHADOW_PASSWORD` | blank | Password of the hidden `shadow` account. Use a long, unique one. |
 | `CLIENT_PASSWORD_MODE` | `fixed` | `fixed`: every seeded client gets `CLIENT_DEFAULT_PASSWORD`. `random`: each gets a random password written once to a private file. |
 | `CLIENT_DEFAULT_PASSWORD` | blank | Needed when the mode is `fixed`. |
-| `SEED_CLIENT_CREDENTIALS_DISK`, `SEED_CLIENT_CREDENTIALS_PATH` | `local`, `seeded-client-credentials` | Where the random client passwords are written. (The old name `HOSHIASK_SEEDED_CLIENT_CREDENTIALS_PATH` still works.) |
+| `SEED_CLIENT_CREDENTIALS_DISK`, `SEED_CLIENT_CREDENTIALS_PATH` | `local`, `seeded-client-credentials` | Where the random client passwords are written. |
 | `HOSHIASK_SEEDED_CLIENT_CREDENTIAL_RETENTION_DAYS` | `14` | Days the daily clean-up keeps that file. |
 | `HOSHIASK_PASSWORD_HELP_CONTACT` | blank | An email, phone number or name shown as "Forgot your password? Contact your administrator at ...". Blank shows only "Contact your administrator". |
 
@@ -223,7 +223,7 @@ Details in [ticket-import.md](ticket-import.md).
 
 | Setting | Example | What it does |
 |---|---|---|
-| `TICKET_IMPORT_DISK`, `TICKET_IMPORT_PATH` | `local`, `imports` | Where import files are put. (The old name `HOSHIASK_IMPORT_RETENTION_PATH` still works.) |
+| `TICKET_IMPORT_DISK`, `TICKET_IMPORT_PATH` | `local`, `imports` | Where import files are put. |
 | `TICKET_IMPORT_TIMEZONE` | `Asia/Manila` | The time zone of dates in import files that have none. |
 | `HOSHIASK_IMPORT_RETENTION_DAYS` | `7` | Days the daily clean-up keeps uploaded import files. |
 

@@ -30,11 +30,9 @@ return [
     'client_default_password' => env('CLIENT_DEFAULT_PASSWORD'),
     'shadow_password' => env('SHADOW_PASSWORD'),
     'seed_client_credentials_disk' => env('SEED_CLIENT_CREDENTIALS_DISK', 'local'),
-    // HOSHIASK_SEEDED_CLIENT_CREDENTIALS_PATH / HOSHIASK_IMPORT_RETENTION_PATH are older
-    // duplicate names, still honoured so existing .env files keep working.
-    'seed_client_credentials_path' => env('SEED_CLIENT_CREDENTIALS_PATH', env('HOSHIASK_SEEDED_CLIENT_CREDENTIALS_PATH', 'seeded-client-credentials')),
+    'seed_client_credentials_path' => env('SEED_CLIENT_CREDENTIALS_PATH', 'seeded-client-credentials'),
     'ticket_import_disk' => env('TICKET_IMPORT_DISK', 'local'),
-    'ticket_import_path' => env('TICKET_IMPORT_PATH', env('HOSHIASK_IMPORT_RETENTION_PATH', 'imports')),
+    'ticket_import_path' => env('TICKET_IMPORT_PATH', 'imports'),
     'ticket_import_timezone' => env('TICKET_IMPORT_TIMEZONE', env('APP_TIMEZONE', 'UTC')),
     'attachments_disk' => env('ATTACHMENTS_DISK', 'local'),
     // How long clients may edit or delete their own chat messages.

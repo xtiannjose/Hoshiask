@@ -74,8 +74,6 @@ class CannedResponseController extends Controller
 
     public function list(Request $request): JsonResponse
     {
-        abort_unless(config('hoshiask.features.canned_replies'), 404);
-
         $term = $request->string('q')->toString();
 
         $query = CannedResponse::query()
@@ -92,8 +90,6 @@ class CannedResponseController extends Controller
 
     private function authorizeManage(): void
     {
-        abort_unless(config('hoshiask.features.canned_replies'), 404);
-
         $user = auth()->user();
 
         if (! $user || ! $user->canManageTickets()) {

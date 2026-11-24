@@ -26,7 +26,7 @@
             $menuItems[] = ['label' => 'Reports', 'icon' => 'chart', 'href' => route('admin.reports.index'), 'active' => request()->routeIs('admin.reports.*'), 'disabled' => false];
         }
 
-        if ($canManageConsole && config('hoshiask.features.canned_replies')) {
+        if ($canManageConsole) {
             $menuItems[] = ['label' => 'Canned Responses', 'icon' => 'canned', 'href' => route('admin.canned-responses.index'), 'active' => request()->routeIs('admin.canned-responses.*'), 'disabled' => false];
         }
 

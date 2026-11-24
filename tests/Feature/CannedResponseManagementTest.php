@@ -80,36 +80,4 @@ class CannedResponseManagementTest extends TestCase
         $response->assertDontSeeText('Network Outage');
     }
 
-    public function test_feature_flag_disables_all_canned_response_routes(): void
-    {
-        config(['hoshiask.features.canned_replies' => false]);
-
-        $admin = $this->createUser('Disabled Admin', 'disabled-admin@example.com', User::ROLE_ADMIN);
-        $cannedResponse = CannedResponse::create([
-            'created_by_user_id' => $admin->id,
-            'title' => 'Still In Database',
-            'body' => 'Body text.',
-        ]);
-
-        $this->actingAs($admin)->get(route('admin.canned-responses.index'))->assertNotFound();
-        $this->actingAs($admin)->getJson(route('admin.canned-responses.list'))->assertNotFound();
-        $this->actingAs($admin)->post(route('admin.canned-responses.store'), [
-            'title' => 'Blocked',
-            'body' => 'Blocked body',
-        ])->assertNotFound();
-        $this->actingAs($admin)->delete(route('admin.canned-responses.destroy', $cannedResponse))->assertNotFound();
-    }
-
-    public function test_feature_flag_hides_the_navigation_link_and_reply_form_picker(): void
-    {
-        config(['legal.require_acceptance' => false]);
-        config(['hoshiask.features.canned_replies' => false]);
-
-        $admin = $this->createUser('Nav Admin', 'nav-admin@example.com', User::ROLE_ADMIN);
-
-        $response = $this->actingAs($admin)->get(route('admin.dashboard'));
-
-        $response->assertOk();
-        $response->assertDontSee('Canned Responses');
-    }
 }

@@ -311,7 +311,7 @@ Clients are never emailed about their own actions, internal notes, assignment ch
 
 ### Canned responses
 
-Staff can insert saved reply templates when replying. Super users, admins and the shadow account write and manage them (Canned Responses in the menu). The red trash icon on a row deletes it, after a confirmation pop-up. The whole feature can be switched off with `HOSHIASK_CANNED_REPLIES_ENABLED=false`: the menu link, the management page and the picker in the reply form disappear, and nothing in the database is touched.
+Staff can insert saved reply templates when replying. Super users, admins and the shadow account write and manage them (Canned Responses in the menu). The red trash icon on a row deletes it, after a confirmation pop-up.
 
 ### Knowledge base
 

@@ -128,11 +128,9 @@ The times follow `APP_TIMEZONE`.
 | A word shown to people | Use the term in [GLOSSARY.md](../GLOSSARY.md) |
 | A note in the production status check | A listener for `ProductionAdvisoriesRequested` in `app/Listeners` |
 
-## Switching off or removing canned responses
+## Removing canned responses
 
-Canned responses (saved reply templates) sit behind one flag, `HOSHIASK_CANNED_REPLIES_ENABLED` (on by default). Set it to `false` and the menu link, the management page and the picker in the reply form disappear, and their pages answer "not found". Nothing in the database is touched, so it is safe to switch back on.
-
-To remove the feature from the code for good, delete:
+Canned responses (saved reply templates) are always on. To remove the feature from the code, delete:
 
 - `app/Models/CannedResponse.php` and `app/Http/Controllers/Admin/CannedResponseController.php`
 - `resources/views/admin/canned-responses/`

@@ -141,7 +141,6 @@ These are used by `php artisan db:seed` and by account management. The seeder re
 | `HOSHIASK_PENDING_FOLLOW_UP_DAYS` | `3` | A Pending ticket with no status change and no reply for this many days is listed in one reminder email to its assignees (the super users when nobody is assigned), and again after the same number of days while it stays quiet. `0` switches the reminder off. The client is not emailed. |
 | `HOSHIASK_PENDING_AUTO_CANCEL_DAYS` | `14` | A Pending ticket with no status change and no reply for this many days is cancelled by the daily `tickets:auto-cancel-pending`, with the reason written in its notes. `0` switches it off. The client is not emailed. Keep it above `HOSHIASK_PENDING_FOLLOW_UP_DAYS`, or staff are not reminded first (`hoshiask:ops-status` says so). |
 | `HOSHIASK_ASSIGNMENT_ROTATION_WINDOW_DAYS` | `30` | The "rotating counter" assignment compares each technician's share of a category over this many days. |
-| `HOSHIASK_CANNED_REPLIES_ENABLED` | `true` | `false` hides canned responses everywhere without touching the database. |
 
 ## Emails to clients
 

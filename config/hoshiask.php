@@ -119,10 +119,4 @@ return [
     'ops' => [
         'queue_worker_running' => env('HOSHIASK_QUEUE_WORKER_RUNNING'),
     ],
-    'features' => [
-        // Toggle off to instantly hide/disable canned replies without touching code;
-        // see docs/structure.md for the full list of files to delete if
-        // removing the feature entirely.
-        'canned_replies' => (bool) env('HOSHIASK_CANNED_REPLIES_ENABLED', true),
-    ],
 ];

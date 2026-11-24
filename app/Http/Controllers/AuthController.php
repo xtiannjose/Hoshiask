@@ -340,7 +340,7 @@ class AuthController extends Controller
 
     private function userCanAccessPostLoginPath(User $user, string $path): bool
     {
-        if (in_array($path, ['/', '/login', '/logout', '/register'], true)) {
+        if (in_array($path, ['/', '/login', '/logout'], true)) {
             return false;
         }
 

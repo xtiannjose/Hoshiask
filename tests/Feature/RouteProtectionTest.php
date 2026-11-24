@@ -15,7 +15,7 @@ class RouteProtectionTest extends TestCase
 {
     /** Pages anyone may open. The storage routes only exist while the private disk is served (see config/filesystems.php). */
     private const PUBLIC_ROUTES = [
-        'home', 'health', 'login', 'login.attempt', 'logout', 'register', 'register.store',
+        'home', 'health', 'login', 'login.attempt', 'logout',
         'legal.privacy', 'legal.terms', 'legal.ticket-consent',
         'storage.local', 'storage.local.upload',
     ];

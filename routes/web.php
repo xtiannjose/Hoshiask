@@ -51,8 +51,6 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])
     ->middleware('throttle:60,1')
     ->name('login.attempt');
-Route::get('/register', fn () => redirect('/login'))->name('register');
-Route::post('/register', fn () => redirect('/login'))->name('register.store');
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('throttle:20,1')->name('logout');
 
 Route::middleware(['auth', 'active', 'consent.accepted', 'throttle:120,1'])

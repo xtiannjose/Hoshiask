@@ -13,10 +13,8 @@ class UserDepartmentBrandTest extends TestCase
 
     public function test_unknown_client_department_falls_back_to_others_brand(): void
     {
-        $brandKey = User::departmentBrandKey('Unknown Agency', User::ROLE_CLIENT);
         $brandAssets = User::departmentBrandAssets('Unknown Agency', User::ROLE_CLIENT);
 
-        $this->assertSame('others', $brandKey);
         $this->assertSame('others', $brandAssets['key']);
         $this->assertSame('Others', $brandAssets['name']);
     }
@@ -31,7 +29,7 @@ class UserDepartmentBrandTest extends TestCase
 
     public function test_staff_without_a_department_use_the_support_department(): void
     {
-        $this->assertSame('hoshishi', User::departmentBrandKey('', User::ROLE_TECHNICAL));
+        $this->assertSame('hoshishi', User::departmentBrandAssets('', User::ROLE_TECHNICAL)['key']);
         $this->assertSame('Hoshishi', User::departmentBrandAssets(null, User::ROLE_ADMIN)['name']);
     }
 
@@ -53,10 +51,8 @@ class UserDepartmentBrandTest extends TestCase
             'logo_path' => 'images/departments/meadow.png',
         ]);
 
-        $brandKey = User::departmentBrandKey('Meadow', User::ROLE_TECHNICAL);
         $brandAssets = User::departmentBrandAssets('Meadow', User::ROLE_TECHNICAL);
 
-        $this->assertSame('meadow', $brandKey);
         $this->assertSame('meadow', $brandAssets['key']);
         $this->assertSame('Meadow', $brandAssets['name']);
     }

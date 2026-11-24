@@ -31,47 +31,6 @@ class SupportBrandingService
         app()->forgetInstance(self::class);
     }
 
-    public function supportDepartment(): string
-    {
-        return trim((string) config('hoshiask.support_department', 'Hoshishi')) ?: 'Hoshishi';
-    }
-
-    public function supportBrandName(): string
-    {
-        return trim((string) config('hoshiask.support_brand_name', $this->supportDepartment())) ?: $this->supportDepartment();
-    }
-
-    public function supportOrganizationName(): string
-    {
-        return trim((string) config('hoshiask.support_organization_name', 'Hoshishi Corporation')) ?: 'Hoshishi Corporation';
-    }
-
-    public function supportTeamName(): string
-    {
-        return trim((string) config('hoshiask.support_team_name', 'Hoshishi Technical Team')) ?: 'Hoshishi Technical Team';
-    }
-
-    public function supportLogoPath(): string
-    {
-        return trim((string) config('hoshiask.support_logo_path', 'images/Hoshishi Logo.png')) ?: 'images/Hoshishi Logo.png';
-    }
-
-    public function supportLogoUrl(): string
-    {
-        $logoPath = $this->supportLogoPath();
-
-        if (! file_exists(public_path($logoPath))) {
-            $logoPath = 'images/Hoshishi Logo.png';
-        }
-
-        return asset($logoPath);
-    }
-
-    public function departmentBrandKey(?string $department, ?string $role = null): string
-    {
-        return $this->resolveDepartment($department, $role)->slug ?? self::FALLBACK_DEPARTMENT_SLUG;
-    }
-
     /**
      * @return array{key: string, name: string, logo_path: string, logo_url: string}
      */
@@ -106,7 +65,7 @@ class SupportBrandingService
     {
         $name = trim((string) $department);
         if ($name === '' && in_array(User::normalizeRole($role), User::TICKET_CONSOLE_ROLES, true)) {
-            $name = $this->supportDepartment();
+            $name = User::supportDepartment();
         }
 
         if ($name === '') {

@@ -20,8 +20,6 @@ class User extends Authenticatable
 {
     use Notifiable;
 
-    protected static array $departmentBrandAssetCache = [];
-
     protected static ?array $allowedDepartmentCache = null;
 
     public const ROLE_CLIENT = 'client';
@@ -342,32 +340,29 @@ class User extends Authenticatable
 
     public static function supportDepartment(): string
     {
-        return app(SupportBrandingService::class)->supportDepartment();
+        return (string) config('hoshiask.support_department');
     }
 
     public static function supportBrandName(): string
     {
-        return app(SupportBrandingService::class)->supportBrandName();
+        return (string) config('hoshiask.support_brand_name');
     }
 
     public static function supportOrganizationName(): string
     {
-        return app(SupportBrandingService::class)->supportOrganizationName();
+        return (string) config('hoshiask.support_organization_name');
     }
 
     public static function supportTeamName(): string
     {
-        return app(SupportBrandingService::class)->supportTeamName();
-    }
-
-    public static function supportLogoPath(): string
-    {
-        return app(SupportBrandingService::class)->supportLogoPath();
+        return (string) config('hoshiask.support_team_name');
     }
 
     public static function supportLogoUrl(): string
     {
-        return app(SupportBrandingService::class)->supportLogoUrl();
+        $logoPath = (string) config('hoshiask.support_logo_path');
+
+        return asset(file_exists(public_path($logoPath)) ? $logoPath : 'images/Hoshishi Logo.png');
     }
 
     public static function normalizeRole(?string $role): string
@@ -408,23 +403,12 @@ class User extends Authenticatable
         return str_ends_with(strtolower(trim((string) $email)), self::SYSTEM_RESERVED_EMAIL_DOMAIN);
     }
 
-    public static function departmentBrandKey(?string $department, ?string $role = null): string
-    {
-        return app(SupportBrandingService::class)->departmentBrandKey($department, $role);
-    }
-
+    /**
+     * @return array{key: string, name: string, logo_path: string, logo_url: string}
+     */
     public static function departmentBrandAssets(?string $department, ?string $role = null): array
     {
-        $cacheKey = mb_strtolower(trim((string) $department)).'|'.self::normalizeRole($role);
-
-        if (isset(self::$departmentBrandAssetCache[$cacheKey])) {
-            return self::$departmentBrandAssetCache[$cacheKey];
-        }
-        $assets = app(SupportBrandingService::class)->departmentBrandAssets($department, $role);
-
-        self::$departmentBrandAssetCache[$cacheKey] = $assets;
-
-        return $assets;
+        return app(SupportBrandingService::class)->departmentBrandAssets($department, $role);
     }
 
     public static function allowedDepartments(): array
@@ -443,7 +427,6 @@ class User extends Authenticatable
     public static function flushDepartmentCaches(): void
     {
         self::$allowedDepartmentCache = null;
-        self::$departmentBrandAssetCache = [];
     }
 
     public static function generateAvailableUsername(string $name, ?int $ignoreUserId = null): string

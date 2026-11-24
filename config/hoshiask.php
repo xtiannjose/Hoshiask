@@ -8,13 +8,14 @@ return [
     |
     | These values keep user-facing product copy aligned while still allowing
     | the support organization and support department to be configured.
+    | A blank value falls back to the default.
     |
     */
-    'support_department' => env('HOSHIASK_SUPPORT_DEPARTMENT', 'Hoshishi'),
-    'support_brand_name' => env('HOSHIASK_SUPPORT_BRAND_NAME', 'Hoshishi'),
-    'support_organization_name' => env('HOSHIASK_SUPPORT_ORGANIZATION_NAME', 'Hoshishi Corporation'),
-    'support_team_name' => env('HOSHIASK_SUPPORT_TEAM_NAME', 'Hoshishi Technical Team'),
-    'support_logo_path' => env('HOSHIASK_SUPPORT_LOGO_PATH', 'images/Hoshishi Logo.png'),
+    'support_department' => trim((string) env('HOSHIASK_SUPPORT_DEPARTMENT')) ?: 'Hoshishi',
+    'support_brand_name' => trim((string) env('HOSHIASK_SUPPORT_BRAND_NAME', 'Hoshishi')) ?: (trim((string) env('HOSHIASK_SUPPORT_DEPARTMENT')) ?: 'Hoshishi'),
+    'support_organization_name' => trim((string) env('HOSHIASK_SUPPORT_ORGANIZATION_NAME')) ?: 'Hoshishi Corporation',
+    'support_team_name' => trim((string) env('HOSHIASK_SUPPORT_TEAM_NAME')) ?: 'Hoshishi Technical Team',
+    'support_logo_path' => trim((string) env('HOSHIASK_SUPPORT_LOGO_PATH')) ?: 'images/Hoshishi Logo.png',
 
     /*
     |--------------------------------------------------------------------------

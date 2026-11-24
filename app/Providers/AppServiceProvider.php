@@ -3,12 +3,15 @@
 namespace App\Providers;
 
 use App\Services\SupportBrandingService;
+use App\View\Composers\HeaderNotificationsComposer;
+use App\View\Composers\OnlineStaffBadgeComposer;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 
@@ -35,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
 
         $this->configureTrustedProxies();
         $this->logSlowQueries();
+
+        View::composer('layouts.app', HeaderNotificationsComposer::class);
+        View::composer('layouts.partials.app-header', OnlineStaffBadgeComposer::class);
 
         // Only `npm run dev` creates the hot file, so there's nothing to check elsewhere.
         if ($this->app->isLocal()) {

@@ -9,24 +9,6 @@ use Illuminate\Support\Collection;
 
 class TicketIndexSnapshotService
 {
-    public function buildTicketListSnapshotToken(Builder $query): string
-    {
-        $qualifiedUpdatedAtColumn = $query->getModel()->qualifyColumn('updated_at');
-        $snapshot = (clone $query)
-            ->toBase()
-            ->selectRaw("COUNT(*) as total_tickets, MAX({$qualifiedUpdatedAtColumn}) as latest_updated_at")
-            ->first();
-        $latestUpdatedTimestamp = $snapshot?->latest_updated_at
-            ? strtotime((string) $snapshot->latest_updated_at)
-            : 0;
-        $totalTickets = (int) ($snapshot->total_tickets ?? 0);
-
-        return sha1(json_encode([
-            'latest_updated_at' => $latestUpdatedTimestamp,
-            'total_tickets' => $totalTickets,
-        ]));
-    }
-
     public function buildTicketListPageSnapshotToken(Builder $orderedQuery, int $page, int $perPage): string
     {
         $idColumn = $orderedQuery->getModel()->qualifyColumn('id');

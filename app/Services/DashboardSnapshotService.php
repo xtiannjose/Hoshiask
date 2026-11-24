@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Ticket;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
 class DashboardSnapshotService
@@ -25,5 +27,24 @@ class DashboardSnapshotService
             'latest_updated_at' => $latestUpdatedTimestamp,
             ...$extraSignals,
         ]));
+    }
+
+    /**
+     * The token of a ticket list: it changes when a ticket is added, removed or updated.
+     *
+     * @param  Builder<Ticket>  $query
+     */
+    public function buildTokenForQuery(Builder $query): string
+    {
+        $updatedAtColumn = $query->getModel()->qualifyColumn('updated_at');
+        $snapshot = (clone $query)
+            ->toBase()
+            ->selectRaw("COUNT(*) as total_tickets, MAX({$updatedAtColumn}) as latest_updated_at")
+            ->first();
+
+        return $this->buildToken(
+            $snapshot?->latest_updated_at ? (string) $snapshot->latest_updated_at : null,
+            ['total_tickets' => (int) ($snapshot->total_tickets ?? 0)]
+        );
     }
 }

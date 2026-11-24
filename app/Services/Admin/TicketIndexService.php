@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Models\User;
+use App\Services\DashboardSnapshotService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -15,6 +16,7 @@ class TicketIndexService
         private TicketIndexOptionService $options,
         private TicketIndexScopeService $scopes,
         private TicketIndexSnapshotService $snapshots,
+        private DashboardSnapshotService $listSnapshots,
     ) {}
 
     public function resolveActiveTab(string $requestedTab, ?User $user = null): string
@@ -63,7 +65,7 @@ class TicketIndexService
 
     public function buildTicketListSnapshotToken(Builder $query): string
     {
-        return $this->snapshots->buildTicketListSnapshotToken($query);
+        return $this->listSnapshots->buildTokenForQuery($query);
     }
 
     public function buildTicketListPageSnapshotToken(Builder $orderedQuery, int $page, int $perPage): string

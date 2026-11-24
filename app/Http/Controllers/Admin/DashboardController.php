@@ -24,7 +24,7 @@ class DashboardController extends Controller
         $scopedTickets = $this->scopedTicketQueryForUser($user);
         $monthStart = now()->startOfMonth();
         $monthEnd = now()->endOfMonth();
-        $liveSnapshotToken = $this->buildDashboardSnapshotToken(clone $scopedTickets);
+        $liveSnapshotToken = $this->dashboardSnapshot->buildTokenForQuery($scopedTickets);
 
         if ($request->boolean('heartbeat')) {
             return response()->json([
@@ -165,19 +165,5 @@ class DashboardController extends Controller
         }
 
         return $query;
-    }
-
-    /**
-     * @param  Builder<Ticket>  $scopedTickets
-     */
-    private function buildDashboardSnapshotToken(Builder $scopedTickets): string
-    {
-        $latestUpdatedAt = (clone $scopedTickets)->max('updated_at');
-        $totalTickets = (clone $scopedTickets)->count();
-
-        return $this->dashboardSnapshot->buildToken(
-            $latestUpdatedAt ? (string) $latestUpdatedAt : null,
-            ['total' => $totalTickets]
-        );
     }
 }

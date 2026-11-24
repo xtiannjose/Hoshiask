@@ -4,7 +4,6 @@ namespace App\Services\Admin\Reports;
 
 use App\Models\Ticket;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -71,9 +70,7 @@ class ReportPageDataService
         $dailySelectedDate = $dailyScope['dailySelectedDate'];
         $dailySelectedDateValue = $dailyScope['dailySelectedDateValue'];
 
-        $kpiSummary = $this->reportStatistics->buildKpiSummary(clone $scopedTickets);
-        $totalTickets = (int) ($kpiSummary['total_tickets'] ?? 0);
-        $stats = $this->insights->buildStats($kpiSummary);
+        $stats = $this->insights->buildStats($this->reportStatistics->buildKpiSummary(clone $scopedTickets));
 
         $periodStatusSummary = $this->queryMetrics->statusBreakdownForScope(
             clone $scopedTickets,
@@ -99,22 +96,8 @@ class ReportPageDataService
         );
 
         $mixBreakdownData = $this->insights->buildMixBreakdownData(clone $scopedTickets);
-        $ticketHistoryScope = $mixBreakdownData['ticketHistoryScope'];
         $ticketsBreakdownOverview = $mixBreakdownData['ticketsBreakdownOverview'];
-        $categoryBreakdownBuckets = $mixBreakdownData['categoryBreakdownBuckets'];
-        $priorityBreakdownBuckets = $mixBreakdownData['priorityBreakdownBuckets'];
 
-        $dailyVolumeStart = $selectedMonthIsAllTime ? now()->copy()->startOfDay()->subDays(29) : $selectedPeriodStart;
-        $dailyVolumeEnd = $selectedMonthIsAllTime ? now()->copy()->endOfDay() : $selectedPeriodEnd;
-        $volumeSeries = [
-            'daily' => $this->reportStatistics->buildDailyVolumeSeries(clone $scopedTickets, $dailyVolumeStart, $dailyVolumeEnd),
-            'weekly' => $this->reportStatistics->buildWeeklyVolumeSeries(clone $scopedTickets, 12),
-            'monthly' => $monthlyReportRows->map(fn (array $row) => [
-                'label' => Carbon::createFromFormat('!Y-m', $row['month_key'])->format('M'),
-                'count' => (int) $row['received'],
-                'key' => $row['month_key'],
-            ])->values(),
-        ];
         $dailySelectedStats = $dailyAllDaysSelected
             ? $this->reportStatistics->buildDailyTicketStatisticsForRange(
                 clone $scopedTickets,
@@ -131,31 +114,15 @@ class ReportPageDataService
             (string) $selectedMonthRange['label']
         );
 
-        $monthlyPerformanceGraphPoints = $monthlyGraphPoints;
         $monthlyPerformanceFocusMonthKey = $selectedMonthIsAllTime
             ? $this->reportScopes->latestAvailableMonthKey($monthlyReportRows)
             : $selectedMonthKey;
         $reportVisuals = $this->visuals->build(
-            ($monthlyPerformanceGraphPoints ?? $monthlyGraphPoints)->values()->all(),
+            $monthlyGraphPoints->values()->all(),
             (string) $monthlyPerformanceFocusMonthKey,
             $ticketsBreakdownOverview,
-            $categoryBreakdownBuckets,
-            $priorityBreakdownBuckets,
-            $ticketHistoryScope
-        );
-
-        $ticketsByStatus = $this->queryMetrics->statusCountsForScope(clone $scopedTickets);
-        $ticketsByPriority = $this->queryMetrics->priorityCountsForScope(clone $scopedTickets);
-        $categoryCounts = $this->queryMetrics->categoryCountsForScope(clone $scopedTickets);
-        $ticketsByCategory = $this->insights->buildTicketsByCategory($categoryCounts, $totalTickets);
-        [
-            'selectedMonthStatuses' => $selectedMonthStatuses,
-            'selectedMonthPriorities' => $selectedMonthPriorities,
-            'selectedMonthCategories' => $selectedMonthCategories,
-        ] = $this->insights->buildSelectedMonthBreakdowns(
-            clone $scopedTickets,
-            $selectedMonthIsAllTime,
-            $selectedMonthRange
+            $mixBreakdownData['categoryBreakdownBuckets'],
+            $mixBreakdownData['priorityBreakdownBuckets'],
         );
 
         $monthOptions = $monthlyReportRows
@@ -164,36 +131,20 @@ class ReportPageDataService
             ->prepend(['key' => ReportScopeService::ALL_TIME_MONTH_KEY, 'label' => 'All Time'])
             ->values();
 
-        $ticketTrend = $this->insights->buildTicketTrend(clone $scopedTickets);
-
         return compact(
             'stats',
-            'ticketsByStatus',
-            'ticketsByPriority',
-            'ticketsByCategory',
-            'ticketTrend',
-            'monthlyReportRows',
-            'monthlyGraphPoints',
-            'monthlyPerformanceGraphPoints',
             'monthlyPerformanceFocusMonthKey',
             'monthOptions',
             'selectedMonthKey',
             'selectedMonthIsAllTime',
             'selectedMonthRow',
-            'selectedMonthStatuses',
-            'selectedMonthPriorities',
-            'selectedMonthCategories',
             'periodOverview',
             'majorIssueSummary',
-            'categoryBreakdownBuckets',
-            'priorityBreakdownBuckets',
-            'volumeSeries',
             'ticketsBreakdownOverview',
             'dailyMonthKey',
             'dailySelectedDateValue',
             'dailyDateOptions',
             'dailySelectedStats',
-            'ticketHistoryScope',
             'reportVisuals',
             'slaReport'
         );

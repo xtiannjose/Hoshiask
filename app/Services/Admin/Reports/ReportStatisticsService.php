@@ -5,7 +5,6 @@ namespace App\Services\Admin\Reports;
 use App\Models\Ticket;
 use App\Services\Admin\ReportBreakdownService;
 use App\Services\Admin\Reports\Concerns\BuildsReportQueryCacheKey;
-use App\Support\DatabaseDateExpressions;
 use App\Support\TicketCategoryBuckets;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,8 +24,6 @@ class ReportStatisticsService
     private array $majorIssueSummaryCache = [];
 
     private array $dailyTicketStatisticsCache = [];
-
-    private array $weeklyVolumeSeriesCache = [];
 
     public function __construct(
         private ReportBreakdownService $reportBreakdowns,
@@ -121,21 +118,6 @@ class ReportStatisticsService
         return $breakdown;
     }
 
-    public function buildPriorityBreakdownForAllTime(Builder $scopedTickets): array
-    {
-        $cacheKey = $this->cacheKeyForAllTime($scopedTickets, 'priority_breakdown');
-        if (array_key_exists($cacheKey, $this->priorityBreakdownCache)) {
-            return $this->priorityBreakdownCache[$cacheKey];
-        }
-
-        $priorityCounts = (clone $scopedTickets)
-            ->selectRaw('priority, COUNT(*) as count')
-            ->groupBy('priority')
-            ->pluck('count', 'priority');
-
-        return $this->priorityBreakdownCache[$cacheKey] = $this->formatPriorityBreakdownFromCounts($priorityCounts);
-    }
-
     public function buildCategoryBreakdownForPeriod(Builder $scopedTickets, Carbon $start, Carbon $end): Collection
     {
         $cacheKey = $this->queryScopeSignature($scopedTickets)
@@ -154,36 +136,6 @@ class ReportStatisticsService
         $this->categoryBreakdownCache[$cacheKey] = $breakdown;
 
         return $breakdown;
-    }
-
-    public function buildCategoryBreakdownForAllTime(Builder $scopedTickets): Collection
-    {
-        $cacheKey = $this->cacheKeyForAllTime($scopedTickets, 'category_breakdown');
-        if (array_key_exists($cacheKey, $this->categoryBreakdownCache)) {
-            return $this->categoryBreakdownCache[$cacheKey];
-        }
-
-        return $this->categoryBreakdownCache[$cacheKey] = $this->formatCategoryBreakdownFromCounts(
-            $this->reportBreakdowns->categoryCountsForScope(clone $scopedTickets)
-        );
-    }
-
-    public function formatPriorityBreakdownFromCounts(Collection $priorityCounts): array
-    {
-        return array_merge([
-            'pending_review' => (int) ($priorityCounts[''] ?? $priorityCounts[null] ?? 0),
-        ], collect(Ticket::PRIORITIES)->mapWithKeys(fn (string $priority) => [
-            $priority => (int) ($priorityCounts[$priority] ?? 0),
-        ])->all());
-    }
-
-    public function formatCategoryBreakdownFromCounts(Collection $categoryCounts): Collection
-    {
-        return $categoryCounts
-            ->map(fn (object $row): array => [
-                'category_name' => (string) ($row->category_name ?? ''),
-                'count' => (int) ($row->count ?? 0),
-            ]);
     }
 
     public function buildCategoryBucketsFromCounts(Collection $categoryCounts): array
@@ -227,69 +179,6 @@ class ReportStatisticsService
             600,
             fn () => $this->buildMajorIssueAggregate((clone $scopedTickets)->where('priority', 'severity_1'))
         );
-    }
-
-    public function buildDailyVolumeSeries(Builder $scopedTickets, Carbon $start, Carbon $end): Collection
-    {
-        $counts = (clone $scopedTickets)
-            ->selectRaw('DATE(created_at) as point_date, COUNT(*) as count')
-            ->whereBetween('created_at', [$start, $end])
-            ->groupBy('point_date')
-            ->orderBy('point_date')
-            ->pluck('count', 'point_date');
-
-        $series = collect();
-        for ($cursor = $start->copy()->startOfDay(); $cursor->lte($end); $cursor->addDay()) {
-            $date = $cursor->toDateString();
-            $series->push([
-                'key' => $date,
-                'label' => $cursor->format('M j'),
-                'short_label' => $cursor->format('m/d'),
-                'count' => (int) ($counts[$date] ?? 0),
-            ]);
-        }
-
-        return $series;
-    }
-
-    public function buildWeeklyVolumeSeries(Builder $scopedTickets, int $weeks = 12): Collection
-    {
-        $weeks = max(4, $weeks);
-        $cacheKey = $this->cacheKeyForAllTime($scopedTickets, "weekly_volume_series:{$weeks}");
-        if (array_key_exists($cacheKey, $this->weeklyVolumeSeriesCache)) {
-            return $this->weeklyVolumeSeriesCache[$cacheKey];
-        }
-
-        $rows = Cache::remember(
-            'report:'.$cacheKey,
-            600,
-            function () use ($scopedTickets, $weeks): array {
-                $start = now()->copy()->startOfWeek()->subWeeks($weeks - 1);
-                $end = now()->copy()->endOfWeek();
-                $weekKeyExpression = DatabaseDateExpressions::weekStartDate('created_at', $scopedTickets);
-                $counts = (clone $scopedTickets)
-                    ->whereBetween('created_at', [$start, $end])
-                    ->selectRaw("{$weekKeyExpression} as week_key, COUNT(*) as count")
-                    ->groupBy('week_key')
-                    ->orderBy('week_key')
-                    ->pluck('count', 'week_key');
-
-                $series = [];
-                for ($cursor = $start->copy(); $cursor->lte($end); $cursor->addWeek()) {
-                    $weekKey = $cursor->toDateString();
-                    $series[] = [
-                        'key' => $weekKey,
-                        'label' => 'Wk '.$cursor->isoWeek,
-                        'short_label' => $cursor->format('M j'),
-                        'count' => (int) ($counts[$weekKey] ?? 0),
-                    ];
-                }
-
-                return $series;
-            }
-        );
-
-        return $this->weeklyVolumeSeriesCache[$cacheKey] = collect($rows);
     }
 
     public function buildDailyTicketStatisticsForDate(Builder $scopedTickets, Carbon $date): array
@@ -378,11 +267,6 @@ class ReportStatisticsService
         $this->dailyTicketStatisticsCache[$cacheKey] = $statistics;
 
         return $statistics;
-    }
-
-    private function cacheKeyForAllTime(Builder $scopedTickets, string $suffix): string
-    {
-        return $this->queryScopeSignature($scopedTickets).'|all_time|'.$suffix;
     }
 
     private function cacheKeyForRange(Builder $scopedTickets, Carbon $start, Carbon $end, string $suffix): string

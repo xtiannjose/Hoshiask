@@ -4,7 +4,6 @@ namespace App\Services\Admin\Reports;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 
 class ReportPageInsightsService
 {
@@ -55,49 +54,6 @@ class ReportPageInsightsService
         ];
     }
 
-    /**
-     * @return array{selectedMonthStatuses: array<string, int>, selectedMonthPriorities: array<string, int>, selectedMonthCategories: Collection<int, array<string, int|string>>}
-     */
-    public function buildSelectedMonthBreakdowns(
-        Builder $scopedTickets,
-        bool $selectedMonthIsAllTime,
-        array $selectedMonthRange,
-    ): array {
-        return [
-            'selectedMonthStatuses' => $this->queryMetrics->statusBreakdownForScope(
-                clone $scopedTickets,
-                $selectedMonthIsAllTime,
-                $selectedMonthRange['start'],
-                $selectedMonthRange['end']
-            ),
-            'selectedMonthPriorities' => $selectedMonthIsAllTime
-                ? $this->reportStatistics->buildPriorityBreakdownForAllTime(clone $scopedTickets)
-                : $this->reportStatistics->buildPriorityBreakdownForPeriod(
-                    clone $scopedTickets,
-                    $selectedMonthRange['start'],
-                    $selectedMonthRange['end']
-                ),
-            'selectedMonthCategories' => $selectedMonthIsAllTime
-                ? $this->reportStatistics->buildCategoryBreakdownForAllTime(clone $scopedTickets)
-                : $this->reportStatistics->buildCategoryBreakdownForPeriod(
-                    clone $scopedTickets,
-                    $selectedMonthRange['start'],
-                    $selectedMonthRange['end']
-                ),
-        ];
-    }
-
-    public function buildTicketsByCategory(Collection $categoryCounts, int $totalTickets): Collection
-    {
-        return $categoryCounts
-            ->map(fn (object $row) => [
-                'name' => (string) $row->category_name,
-                'count' => (int) $row->count,
-                'share' => $totalTickets > 0 ? round(((int) $row->count / $totalTickets) * 100, 1) : 0.0,
-            ])
-            ->values();
-    }
-
     public function buildMixBreakdownData(
         Builder $scopedTickets,
     ): array {
@@ -107,8 +63,6 @@ class ReportPageInsightsService
         $categoryCounts = $this->queryMetrics->categoryCountsForScope(clone $scopedTickets);
 
         return [
-            'mixScopeLabel' => 'All Time',
-            'ticketHistoryScope' => [],
             'ticketsBreakdownOverview' => [
                 'label' => 'All Time',
                 'start' => null,
@@ -124,24 +78,5 @@ class ReportPageInsightsService
             'categoryBreakdownBuckets' => $this->reportStatistics->buildCategoryBucketsFromCounts($categoryCounts),
             'priorityBreakdownBuckets' => $this->reportStatistics->buildPriorityBucketsFromCounts($priorityCounts),
         ];
-    }
-
-    public function buildTicketTrend(Builder $scopedTickets): Collection
-    {
-        $trendStart = Carbon::now()->startOfDay()->subDays(29);
-        $trendEnd = Carbon::now()->startOfDay();
-        $trendCounts = (clone $scopedTickets)
-            ->selectRaw('DATE(created_at) as ticket_date, COUNT(*) as count')
-            ->whereBetween('created_at', [$trendStart, $trendEnd->copy()->endOfDay()])
-            ->groupBy('ticket_date')
-            ->orderBy('ticket_date')
-            ->pluck('count', 'ticket_date');
-        $ticketTrend = collect();
-        for ($cursor = $trendStart->copy(); $cursor->lte($trendEnd); $cursor->addDay()) {
-            $dateLabel = $cursor->toDateString();
-            $ticketTrend->push(['date' => $dateLabel, 'count' => (int) ($trendCounts[$dateLabel] ?? 0)]);
-        }
-
-        return $ticketTrend;
     }
 }

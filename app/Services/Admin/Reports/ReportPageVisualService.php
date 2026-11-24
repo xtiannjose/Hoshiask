@@ -12,7 +12,6 @@ class ReportPageVisualService
      * @param  array<int, array<string, mixed>>  $monthlyPerformanceSeries
      * @param  array<int, array<string, mixed>>  $categoryBreakdownBuckets
      * @param  array<int, array<string, mixed>>  $priorityBreakdownBuckets
-     * @param  array<string, mixed>  $ticketHistoryScope
      */
     public function build(
         array $monthlyPerformanceSeries,
@@ -20,25 +19,21 @@ class ReportPageVisualService
         array $ticketsBreakdownOverview,
         array $categoryBreakdownBuckets,
         array $priorityBreakdownBuckets,
-        array $ticketHistoryScope,
     ): array {
         $mixScopeLabel = (string) ($ticketsBreakdownOverview['label'] ?? 'All Time');
-        $ticketHistoryScopeParams = collect($ticketHistoryScope)
-            ->filter(fn ($value) => $value !== null && $value !== '')
-            ->all();
         $pieRadius = 58;
         $pieCircumference = 2 * pi() * $pieRadius;
 
         $ticketPie = $this->buildPieVisualization(
-            $this->buildTicketPieSlices($ticketsBreakdownOverview, $ticketHistoryScopeParams),
+            $this->buildTicketPieSlices($ticketsBreakdownOverview),
             $pieCircumference
         );
         $categoryPie = $this->buildPieVisualization(
-            $this->buildCategoryPieSlices($categoryBreakdownBuckets, $ticketHistoryScopeParams),
+            $this->buildCategoryPieSlices($categoryBreakdownBuckets),
             $pieCircumference
         );
         $priorityPie = $this->buildPieVisualization(
-            $this->buildPriorityPieSlices($priorityBreakdownBuckets, $ticketHistoryScopeParams),
+            $this->buildPriorityPieSlices($priorityBreakdownBuckets),
             $pieCircumference
         );
 
@@ -163,10 +158,9 @@ class ReportPageVisualService
 
     /**
      * @param  array<string, mixed>  $ticketsBreakdownOverview
-     * @param  array<string, mixed>  $ticketHistoryScopeParams
      * @return array<int, array<string, mixed>>
      */
-    private function buildTicketPieSlices(array $ticketsBreakdownOverview, array $ticketHistoryScopeParams): array
+    private function buildTicketPieSlices(array $ticketsBreakdownOverview): array
     {
         $pieResolved = (int) ($ticketsBreakdownOverview['resolved'] ?? 0);
         $pieClosed = (int) ($ticketsBreakdownOverview['closed'] ?? 0);
@@ -190,8 +184,8 @@ class ReportPageVisualService
             ['label' => TicketStatus::Closed->label(), 'count' => $pieClosed, 'display_count' => $pieClosed, 'color' => TicketStatus::Closed->chartColor(), 'tab' => 'history', 'status' => TicketStatus::Closed->value],
             // The card's total counts cancelled tickets too, so they need a slice for the slices to add up to it.
             ['label' => TicketStatus::Cancelled->label(), 'count' => $cancelledCount, 'display_count' => $cancelledCount, 'color' => TicketStatus::Cancelled->chartColor(), 'tab' => 'history', 'status' => TicketStatus::Cancelled->value],
-        ])->map(function (array $slice) use ($ticketHistoryScopeParams): array {
-            $statusLinkParams = array_merge($ticketHistoryScopeParams, ['tab' => $slice['tab']]);
+        ])->map(function (array $slice): array {
+            $statusLinkParams = ['tab' => $slice['tab']];
             if ($slice['status'] !== null) {
                 $statusLinkParams['status'] = $slice['status'];
             }
@@ -204,23 +198,22 @@ class ReportPageVisualService
 
     /**
      * @param  array<int, array<string, mixed>>  $categoryBreakdownBuckets
-     * @param  array<string, mixed>  $ticketHistoryScopeParams
      * @return array<int, array<string, mixed>>
      */
-    private function buildCategoryPieSlices(array $categoryBreakdownBuckets, array $ticketHistoryScopeParams): array
+    private function buildCategoryPieSlices(array $categoryBreakdownBuckets): array
     {
         return collect($categoryBreakdownBuckets)
-            ->map(function (array $bucket) use ($ticketHistoryScopeParams): array {
+            ->map(function (array $bucket): array {
                 $label = (string) ($bucket['name'] ?? TicketCategoryBuckets::OTHER);
 
                 return [
                     'label' => $label,
                     'count' => (int) ($bucket['count'] ?? 0),
                     'color' => TicketCategoryBuckets::color($label),
-                    'link' => route('admin.tickets.index', array_merge($ticketHistoryScopeParams, [
+                    'link' => route('admin.tickets.index', [
                         'tab' => 'all',
                         'category_bucket' => TicketCategoryBuckets::filterKey($label),
-                    ])),
+                    ]),
                 ];
             })
             ->filter(fn (array $slice): bool => $slice['count'] > 0)
@@ -230,13 +223,12 @@ class ReportPageVisualService
 
     /**
      * @param  array<int, array<string, mixed>>  $priorityBreakdownBuckets
-     * @param  array<string, mixed>  $ticketHistoryScopeParams
      * @return array<int, array<string, mixed>>
      */
-    private function buildPriorityPieSlices(array $priorityBreakdownBuckets, array $ticketHistoryScopeParams): array
+    private function buildPriorityPieSlices(array $priorityBreakdownBuckets): array
     {
         return collect($priorityBreakdownBuckets)
-            ->map(function (array $bucket) use ($ticketHistoryScopeParams): array {
+            ->map(function (array $bucket): array {
                 $priority = TicketPriority::tryFromValue($bucket['value'] ?? null);
 
                 return [
@@ -244,10 +236,10 @@ class ReportPageVisualService
                     'count' => (int) ($bucket['count'] ?? 0),
                     'color' => $priority?->chartColor() ?? TicketPriority::SEVERITY_NOT_SET_CHART_COLOR,
                     // The ticket list's "unassigned" priority filter means "no severity yet".
-                    'link' => route('admin.tickets.index', array_merge($ticketHistoryScopeParams, [
+                    'link' => route('admin.tickets.index', [
                         'tab' => 'all',
                         'priority' => $priority->value ?? 'unassigned',
-                    ])),
+                    ]),
                 ];
             })
             ->filter(fn (array $slice): bool => $slice['count'] > 0)

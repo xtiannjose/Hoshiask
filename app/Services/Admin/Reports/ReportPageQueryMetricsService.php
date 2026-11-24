@@ -18,8 +18,6 @@ class ReportPageQueryMetricsService
 
     private array $openTicketCutoffCache = [];
 
-    private array $statusCountCache = [];
-
     private array $priorityCountCache = [];
 
     private array $categoryCountsCache = [];
@@ -61,19 +59,6 @@ class ReportPageQueryMetricsService
             clone $scopedTickets,
             $cutoff
         );
-    }
-
-    public function statusCountsForScope(Builder $scopedTickets): Collection
-    {
-        $cacheKey = $this->queryScopeSignature($scopedTickets);
-        if (array_key_exists($cacheKey, $this->statusCountCache)) {
-            return $this->statusCountCache[$cacheKey];
-        }
-
-        return $this->statusCountCache[$cacheKey] = (clone $scopedTickets)
-            ->selectRaw('status, COUNT(*) as count')
-            ->groupBy('status')
-            ->pluck('count', 'status');
     }
 
     public function priorityCountsForScope(Builder $scopedTickets): Collection

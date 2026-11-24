@@ -53,7 +53,7 @@ class SystemPerformanceGuardTest extends TestCase
         DB::disableQueryLog();
 
         $this->assertLessThanOrEqual(
-            38,
+            24,
             $queryCount,
             "Admin reports index query budget exceeded. Queries executed: {$queryCount}"
         );

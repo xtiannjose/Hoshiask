@@ -59,10 +59,6 @@ const initAdminReportsPage = () => {
             return;
         }
 
-        const sourceChartHeight = 192;
-        const enlargedChartHeight = 416;
-        const barScale = enlargedChartHeight / sourceChartHeight;
-
         const clearModalContent = () => {
             modalContent.innerHTML = '';
         };
@@ -74,44 +70,9 @@ const initAdminReportsPage = () => {
         if (!modalController) return;
 
         const tuneModalChartLayout = (clone) => {
-            const chartArea = clone.querySelector('.h-48');
-            if (chartArea) {
-                chartArea.classList.remove('h-48', 'overflow-x-auto');
-                chartArea.classList.add('h-[26rem]', 'overflow-hidden');
-            }
-
-            const pieCharts = clone.querySelectorAll('.js-total-pie-chart');
-            pieCharts.forEach((pie) => {
+            clone.querySelectorAll('.js-total-pie-chart').forEach((pie) => {
                 pie.classList.remove('h-40', 'w-40', 'h-44', 'w-44');
                 pie.classList.add('h-72', 'w-72');
-            });
-
-            const charts = clone.querySelectorAll('.js-volume-bars');
-            charts.forEach((chart) => {
-                chart.classList.remove('min-w-[760px]', 'min-w-[720px]', 'pb-6');
-                chart.classList.add('w-full', 'min-w-0', 'justify-between', 'pb-10');
-
-                const groups = chart.querySelectorAll('.group');
-                groups.forEach((group) => {
-                    group.classList.remove('min-w-[16px]', 'min-w-[34px]');
-                    group.classList.add('flex-1', 'min-w-0');
-                });
-
-                const bars = chart.querySelectorAll('.js-volume-bar');
-                bars.forEach((bar) => {
-                    const originalHeight = Number.parseFloat(bar.style.height || '0');
-                    if (!Number.isFinite(originalHeight) || originalHeight <= 0) {
-                        return;
-                    }
-
-                    const scaledHeight = Math.round(originalHeight * barScale);
-                    bar.style.height = `${Math.min(340, Math.max(8, scaledHeight))}px`;
-                });
-
-                const labels = chart.querySelectorAll('span.text-\\[10px\\]');
-                labels.forEach((label) => {
-                    label.classList.add('text-xs');
-                });
             });
         };
 
@@ -237,19 +198,9 @@ const initAdminReportsPage = () => {
         });
     };
 
-    const bindClearLink = () => {
-        shell.querySelectorAll('[data-admin-reports-clear]').forEach((link) => {
-            link.addEventListener('click', (event) => {
-                event.preventDefault();
-                void loadReports(link.href, { history: 'replace' });
-            });
-        });
-    };
-
     bindVolumeModal();
     bindFilterForms();
     bindAutoSubmitControls();
-    bindClearLink();
 
     if (slaDetails) {
         reportsUiState.slaOverviewOpen = slaDetails.open;

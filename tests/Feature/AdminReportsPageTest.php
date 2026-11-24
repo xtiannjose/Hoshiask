@@ -697,9 +697,9 @@ class AdminReportsPageTest extends TestCase
             return (int) ($overview['resolved'] ?? 0) === 1
                 && (int) ($overview['closed'] ?? 0) === 1;
         });
-        $response->assertViewHas('selectedMonthStatuses', function (array $statuses) {
-            return (int) ($statuses['resolved'] ?? 0) === 1
-                && (int) ($statuses['closed'] ?? 0) === 1;
+        $response->assertViewHas('periodOverview', function (array $overview) {
+            return (int) ($overview['resolved'] ?? 0) === 1
+                && (int) ($overview['closed'] ?? 0) === 1;
         });
     }
 
@@ -1066,22 +1066,14 @@ class AdminReportsPageTest extends TestCase
             'updated_at' => Carbon::create(2026, 1, 10, 9, 0, 0),
         ]);
 
-        $response = $this->actingAs($superUser)->get(route('admin.reports.index', [
-            'month' => '2026-01',
-        ]));
-
-        $response->assertOk();
-        $response->assertViewHas('monthlyReportRows', function ($rows) {
-            $decemberRow = $rows->firstWhere('month_key', '2025-12');
-            $januaryRow = $rows->firstWhere('month_key', '2026-01');
-
-            return $decemberRow
-                && $januaryRow
-                && (int) $decemberRow['completed_in_period'] === 1
-                && (int) $decemberRow['open_end_of_month'] === 1
-                && (int) $januaryRow['completed_in_period'] === 0
-                && (int) $januaryRow['open_end_of_month'] === 1;
-        });
+        $this->actingAs($superUser)->get(route('admin.reports.index', ['month' => '2025-12']))
+            ->assertOk()
+            ->assertViewHas('selectedMonthRow', fn (array $row) => (int) $row['completed_in_period'] === 1
+                && (int) $row['open_end_of_month'] === 1);
+        $this->actingAs($superUser)->get(route('admin.reports.index', ['month' => '2026-01']))
+            ->assertOk()
+            ->assertViewHas('selectedMonthRow', fn (array $row) => (int) $row['completed_in_period'] === 0
+                && (int) $row['open_end_of_month'] === 1);
     }
 
     public function test_monthly_resolution_rate_counts_tickets_completed_after_the_creation_month(): void
@@ -1155,7 +1147,6 @@ class AdminReportsPageTest extends TestCase
         ]));
 
         $response->assertOk();
-        $response->assertViewHas('ticketHistoryScope', []);
         $response->assertSee('tab=all&amp;category_bucket=', false);
         $response->assertSee('tab=all&amp;priority=severity_1', false);
         $response->assertDontSee('created_from=', false);

@@ -111,6 +111,7 @@ These each cost a failed run once.
 - `php -r '...'` loses double quotes in PowerShell. Put the code in a script file.
 - A script pasted as a here-document loses its backslashes (`'\\'` becomes `'\'`, a `\U` in a namespace is a Python error). Write scripts with the editor's Write tool and run the file.
 - A script that rewrites repository files in text mode turns LF into CRLF, and `vendor/bin/pint --test` then fails. Open files with `newline=''`, or use the Edit and Write tools. Check with `git ls-files --eol -- <file>`.
+- A subagent started with `isolation: "worktree"` refuses to run here: the harness compares `c:\...` with git's `C:/...` and reads the drive-letter case as a redirect, and it leaves a locked, empty worktree under `.claude/worktrees/` behind. Remove those with `git worktree remove -f -f <path>` and `git branch -d worktree-<name>`. Instead, create each worktree yourself (`git worktree add -b fix/<name> <scratchpad>/wt/<name> <base>`), copy `.env` into it, and tell the agent to `cd` there and use absolute paths inside it. Each worktree needs its own `composer install` and `npm ci`.
 
 **Editor hooks**
 

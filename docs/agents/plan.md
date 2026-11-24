@@ -2,11 +2,11 @@
 
 Where the work to improve Hoshiask with Claude Code stands, what was decided, and what comes next. Claude reads this at the start of a session (`CLAUDE.md` points here) and updates it when a step finishes, so the plan survives a new device or a new conversation.
 
-Last updated: 2026-10-17. The app was renamed to Hoshiask (see "Rename to Hoshiask (2026-10-17)" below). Before that, on 2026-10-11: pull requests #4 (the third deep check) and #5 (the maintainer's decisions and the small gaps that followed) are merged into `main`, the local database was migrated, and the tooling inventory was added ([tooling.md](tooling.md)). Before that: the second deep check and a rewrite of the docs, and the first check, the audit by QA, security and senior developer reviewers.
+Last updated: 2026-11-24. The fourth deep check found 32 public issues (#15 to #46) and nine security fixes; the fixes are on five pull requests that are open or being written, and the work that is not started yet is listed in "Fourth deep check (2026-11-24)" below. Before that, on 2026-10-17, the app was renamed to Hoshiask (see "Rename to Hoshiask (2026-10-17)" below). Before that, on 2026-10-11: pull requests #4 (the third deep check) and #5 (the maintainer's decisions and the small gaps that followed) are merged into `main`, the local database was migrated, and the tooling inventory was added ([tooling.md](tooling.md)). Before that: the second deep check and a rewrite of the docs, and the first check, the audit by QA, security and senior developer reviewers.
 
-**Waiting on the maintainer:** only the optional GitHub clean-up after the rename ([pending-actions.md](pending-actions.md), section 6). There is no live server (stated 2026-10-11), so everything in [pending-actions.md](pending-actions.md) that needs one (change the shadow password, install ClamAV, deploy `main`, the server settings, monitor and restore rehearsal that follow the decisions of 2026-10-11) is deferred until a server exists. Do not list server steps as pending; keep working on code, tests and docs. The maintainer merges every pull request.
+**Waiting on the maintainer:** merging the fourth deep check's pull requests in the order given in "Fourth deep check (2026-11-24)" below, confirming or overruling the defaults listed there, two GitHub settings (Dependabot security updates, and checking that the repository from before the 2026-10-10 reset is not public), the design direction for #39, and the optional GitHub clean-up after the rename ([pending-actions.md](pending-actions.md), section 6). There is no live server (stated 2026-10-11), so everything in [pending-actions.md](pending-actions.md) that needs one (change the shadow password, install ClamAV, deploy `main`, the server settings, monitor and restore rehearsal that follow the decisions of 2026-10-11) is deferred until a server exists. Do not list server steps as pending; keep working on code, tests and docs. The maintainer merges every pull request.
 
-**Issue and pull request numbers.** The numbers below (#190 to #246) belong to the repository's history before it was reset to a single "Initial commit" on 2026-10-10. The tracker on GitHub now starts again at #1 and has no open issues, so those numbers do not resolve there (the real pull requests #1 to #5 are all merged). The changes themselves are all in `main`: the deep check of 2026-10-10 found each of them in the code (the 10-file cap, the double-submit guard, `TicketSla`, `hoshiask:unlock-login`, the PDF preview, the 10-minute alert lock, the blank-`SESSION_SECURE_COOKIE` rule, `ThrottlePerLimit` and the two index migrations).
+**Issue and pull request numbers.** The numbers below (#190 to #246) belong to the repository's history before it was reset to a single "Initial commit" on 2026-10-10. The tracker on GitHub now starts again at #1 and has no open issues, so those numbers do not resolve there (the real pull requests #1 to #5 are all merged). Numbers from #14 on, used in the fourth deep check, are real issues and pull requests on the current tracker. The changes themselves are all in `main`: the deep check of 2026-10-10 found each of them in the code (the 10-file cap, the double-submit guard, `TicketSla`, `hoshiask:unlock-login`, the PDF preview, the 10-minute alert lock, the blank-`SESSION_SECURE_COOKIE` rule, `ThrottlePerLimit` and the two index migrations).
 
 ## The plan
 
@@ -17,15 +17,63 @@ Last updated: 2026-10-17. The app was renamed to Hoshiask (see "Rename to Hoshia
 | 2. Plan each change | `/grill-with-docs` → `/to-spec` → `/to-tickets` for new ideas | Not needed yet; Phase 1 issues were small enough to fix directly |
 | 3. Build | Fix one issue per commit, with a test that fails before the fix | Done for #192 (#204) and #193 to #203 (#205). #202 front end merged: page transitions #207, modals #208, date picker #209, and #215 (keep the seconds of an unedited ticket date, found by review). Popups declined (see Decisions). Review fixes #210 to #212 merged in #214 |
 | 4. Review and ship | `/code-review`, `/security-review`, `/pr`; the maintainer merges | Ongoing for every PR |
-| 5. Keep improving | Architecture review done 2026-10-10 (#210 to #213, merged). Whole-app audit done the same day by three reviewers (QA tester, security tester, senior developer): findings are issues #219 to #233; fixes are in PRs #230, #234, #235 and #236. `/retro` after a session, `/handoff` when a chat gets long, optional scheduled `/triage` | Audit done; habits not started |
+| 5. Keep improving | Architecture review done 2026-10-10 (#210 to #213, merged). Whole-app audit done the same day by three reviewers (QA tester, security tester, senior developer): findings are issues #219 to #233; fixes are in PRs #230, #234, #235 and #236. `/retro` after a session, `/handoff` when a chat gets long, optional scheduled `/triage`. Fourth deep check 2026-11-24: issues #15 to #46 on the current tracker, fixes in PR #14 and four more (see below) | Fourth check: fixes in review; architecture (#43 to #45), design (#39) and tooling not started. Habits not started |
 
 ## Next steps, in order
 
-1. **Nothing needs a server right now.** There is no live server (stated 2026-10-11), so every server step is deferred in [pending-actions.md](pending-actions.md) and is not reported as pending. They become live work when a server exists.
-2. **Before real people and real data go in**, revisit the gaps left open on purpose while this is a demo app: [docs/security.md](../security.md), "Left open on purpose while this is a demo app" (password length, no MFA, shared client password, unencrypted backups, example database password, upload scanning that fails open).
-3. **Nothing is waiting for a decision** except whether to rewrite git history after the rename (recommended: no; see "Rename to Hoshiask" below). The small gaps are built or recorded as left on purpose (see "Small gaps" below).
-4. **New work** goes through the full loop: idea, `/grill-with-docs`, `/to-spec`, `/to-tickets`, `/triage`, fix, `/code-review`, PR.
-5. **Phase 5 habits**: run `/retro` at the end of a working session, and `/handoff` before a conversation gets too long.
+1. **Merge the fourth deep check's pull requests** in the order under "Fourth deep check (2026-11-24)", then do its "Not done yet" list from the top: the three architecture issues (#43 to #45) first, because they touch the files those pull requests change.
+2. **Nothing needs a server right now.** There is no live server (stated 2026-10-11), so every server step is deferred in [pending-actions.md](pending-actions.md) and is not reported as pending. They become live work when a server exists.
+3. **Before real people and real data go in**, revisit the gaps left open on purpose while this is a demo app: [docs/security.md](../security.md), "Left open on purpose while this is a demo app" (password length, no MFA, shared client password, unencrypted backups, example database password, upload scanning that fails open).
+4. **Waiting for a decision:** the defaults of the fourth deep check (listed under it), the design direction for #39, and whether to rewrite git history after the rename (recommended: no; see "Rename to Hoshiask" below). The small gaps of the third check are built or recorded as left on purpose (see "Small gaps" below).
+5. **New work** goes through the full loop: idea, `/grill-with-docs`, `/to-spec`, `/to-tickets`, `/triage`, fix, `/code-review`, PR.
+6. **Phase 5 habits**: run `/retro` at the end of a working session, and `/handoff` before a conversation gets too long.
+
+## Fourth deep check (2026-11-24)
+
+Done on a new device (dependencies installed from the lock files). Four reviewers read the whole app as a security tester, a QA tester and senior developer, a front-end and accessibility designer (with the `ui-ux-pro-max`, `design-taste-frontend`, `apple-design` and `motion` skills), and an over-engineering auditor (`/ponytail-audit` and `codebase-design`). The main session re-checked the most serious findings in the code, ran every gate and the `claude-code-setup` automation recommender, and read the GitHub state.
+
+Gates on `main` before the fixes: PHPUnit 1184 passed (2 skipped on purpose), Vitest 105, PHPStan, Pint, ESLint and the build clean. `composer audit` failed on `laravel/framework` 13.36.0 (GHSA-63hm-g96r-2m2q), and the weekly **Dependency audit** workflow had failed unnoticed since 2026-11-09. `npm audit` had 3 moderate findings (`minimatch` through ESLint). Not run in this check: the Playwright browser tests and the PostgreSQL suite.
+
+Found on GitHub: the repository is now **public** (the docs said private). The reachable history only holds placeholder passwords (checked 2026-11-24). The Dependabot and triage labels did not exist, so Dependabot pull requests #10 to #12 got none; they were created on 2026-11-24. Dependabot security updates are switched off.
+
+### Pull requests, in merge order
+
+Merge #14 first: the four fix branches are based on it, so each shows its commit until it is merged.
+
+| Order | Pull request | Branch | What |
+|---|---|---|---|
+| 1 | #14 | `fix/dependency-advisories` | Laravel 13.43.0 and ESLint 10.15.0; both audits pass |
+| 2 | to come | `fix/security-hardening` | Nine security fixes, described without exploit detail as `SECURITY.md` asks, so they have no public issues |
+| 3 | to come | `fix/ticket-workflow-and-import` | #15, #16, #18 to #25, and a separate confirmation before merging tickets from different requesters |
+| 4 | to come | `fix/front-end-accessibility` | #17, #26 to #38, and unused Tailwind theme values |
+| 5 | to come | `fix/remove-dead-code` | #40, #41, #42, #46 |
+
+If two of them touch the same lines, the later one is rebased after the earlier one merges. Fill in the numbers when the pull requests exist.
+
+### Defaults chosen during the fixes (confirm or overrule)
+
+- **Merge** refuses when any selected ticket is not Open, In Progress or Pending; staff reopen it or leave it out (#15). The oldest ticket stays the primary.
+- **Closed back to Resolved** starts a fresh resolved period and a fresh auto-close warning (#18).
+- **Update Dates** refuses a blank resolved date on a Resolved or Closed ticket and a blank closed date on a Closed one (#19).
+- **Import** reports over-long or non-UTF-8 values as invalid rows before anything is saved (#21), and fills a missing resolved or closed date from the row's own dates (#22).
+- **Sign-in throttling** groups IPv6 addresses by /64. There is no hard lock per account across addresses, because anyone could then lock a real user out; instead a System Logs entry is written when one login passes about 20 failed sign-ins in an hour.
+- **"Open Tickets"** becomes "Active tickets" where it counts Open, In Progress and Pending, unless `GLOSSARY.md` already has a term (#35).
+- **Page motion** in the signed-in pages is cut to a short crossfade; list and report refreshes no longer animate (#37).
+- **Config files** that only repeat the framework's defaults are deleted only when a dump of the resulting configuration is identical before and after (#42).
+- **Kept on purpose:** `audit.yml` (a reviewer suggested Dependabot alerts replace it, but it is what caught this advisory) and the CodeQL workflow (only its stale "private repository" comment and `continue-on-error` go).
+
+### Not done yet
+
+In this order:
+
+1. **Architecture (#43, #44, #45).** The status workflow takes plain values instead of an HTTP request, so the scheduled commands stop building fake requests (#43). Ticket list queries become one call instead of a six-step sequence in every caller (#44). Reply posting becomes one module used by both controllers (#45). Start after pull requests 2 to 5 are merged, because these touch the same files.
+2. **Claude Code setup.** Add an ESLint-on-edit hook for `resources/js` next to `pint-on-edit.mjs`; a project reviewer agent in `.claude/agents/` that reads "Decisions already made" before reporting, so a deep check does not have to repeat them; and a pinned Playwright MCP server in `.mcp.json` so Claude can drive the pages. Update [tooling.md](tooling.md) in the same pull request. Held back while the fix agents were running, so a new hook would not fire on their edits.
+3. **Design direction for #39 (the maintainer).** Hand-made buttons and inline icons next to the shared components, dark mode built from about 170 `!important` overrides instead of tokens, and the login page's blurred orbs and glow. A redesign, not a bug: it waits for a decision on the look.
+4. **GitHub settings (the maintainer).** Turn on Dependabot security updates (Settings, Code security), so an advisory like GHSA-63hm-g96r-2m2q opens its own pull request. Confirm that the repository from before the 2026-10-10 reset is not public, since it held the old shadow password (see [pending-actions.md](pending-actions.md), section 1).
+5. **Run the browser tests and the PostgreSQL suite** on the merged result (see [testing.md](../testing.md)).
+6. **Optional:** a `database/schema/sqlite-schema.sql` dump so the test suite stops replaying 83 migrations for every database test. Measure the suite before and after; keep it only if it is clearly faster.
+
+Found on the way: Claude Code's `isolation: "worktree"` for subagents refuses to start on this machine, because the harness compares `c:\...` with git's `C:/...` and treats the drive-letter case as a redirect. Create the worktrees with `git worktree add` in the session's scratchpad folder and point each agent at its folder instead (see [tooling.md](tooling.md)).
 
 ## Rename to Hoshiask (2026-10-17)
 
